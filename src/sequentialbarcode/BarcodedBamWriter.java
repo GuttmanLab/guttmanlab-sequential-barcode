@@ -1,5 +1,8 @@
 package sequentialbarcode;
 
+import general.CommandLineParser;
+import general.StringParser;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -15,22 +18,20 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
+import pipeline.Job;
+import pipeline.JobUtils;
+import pipeline.OGSJob;
 import pipeline.Scheduler;
 import pipeline.util.BamUtils;
 
 import sequentialbarcode.fragmentgroup.FragmentGroup;
 import sequentialbarcode.fragmentgroup.NamedBarcodedFragmentGroup;
 
-import broad.core.parser.CommandLineParser;
-import broad.core.parser.StringParser;
 
 import net.sf.samtools.BAMFileWriter;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
-import nextgen.core.job.Job;
-import nextgen.core.job.JobUtils;
-import nextgen.core.job.OGSJob;
 import nextgen.core.pipeline.util.OGSUtils;
 import nextgen.core.utils.CountLogger;
 

@@ -1,5 +1,7 @@
 package sequentialbarcode.berkeleydb;
 
+import general.CommandLineParser;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,7 +10,6 @@ import java.util.Collection;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
-import nextgen.core.job.OGSJob;
 import nextgen.core.pipeline.util.OGSUtils;
 
 import org.apache.log4j.Level;
@@ -16,12 +17,12 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
+import pipeline.OGSJob;
 import pipeline.util.BamUtils;
 
 import sequentialbarcode.BarcodedBamWriter;
 import sequentialbarcode.BarcodedFragmentImpl;
 
-import broad.core.parser.CommandLineParser;
 
 public class DatabaseWriter {
 	

@@ -1,5 +1,7 @@
 package sequentialbarcode;
 
+import general.StringParser;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -10,7 +12,6 @@ import sequentialbarcode.readlayout.Barcode;
 
 import com.sleepycat.persist.model.Persistent;
 
-import broad.core.parser.StringParser;
 
 import net.sf.samtools.SAMRecord;
 

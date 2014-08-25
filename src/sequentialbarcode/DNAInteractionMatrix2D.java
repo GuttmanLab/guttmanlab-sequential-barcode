@@ -1,5 +1,8 @@
 package sequentialbarcode;
 
+import general.CommandLineParser;
+import general.StringParser;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,8 +21,6 @@ import org.apache.log4j.Logger;
 import sequentialbarcode.fragmentgroup.FragmentGroup;
 import sequentialbarcode.fragmentgroup.NamedBarcodedFragmentGroup;
 
-import broad.core.parser.CommandLineParser;
-import broad.core.parser.StringParser;
 
 import nextgen.core.annotation.Annotation;
 import nextgen.core.coordinatesystem.GenomicSpace;

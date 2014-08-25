@@ -1,5 +1,7 @@
 package sequentialbarcode.fragmentgroup;
 
+import general.StringParser;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -9,7 +11,6 @@ import sequentialbarcode.BarcodedBamWriter;
 import sequentialbarcode.BarcodedFragment;
 import sequentialbarcode.BarcodedFragmentImpl;
 
-import broad.core.parser.StringParser;
 
 import net.sf.samtools.SAMRecord;
 import nextgen.core.annotation.Annotation;

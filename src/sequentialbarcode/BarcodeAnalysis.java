@@ -1,5 +1,8 @@
 package sequentialbarcode;
 
+import general.CommandLineParser;
+import general.StringParser;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -22,13 +25,11 @@ import sequentialbarcode.readlayout.FixedSequence;
 import sequentialbarcode.readlayout.ReadLayout;
 import sequentialbarcode.readlayout.ReadLayoutFactory;
 
-import nextgen.core.job.Job;
-import nextgen.core.job.JobUtils;
-import nextgen.core.job.OGSJob;
+import pipeline.Job;
+import pipeline.JobUtils;
+import pipeline.OGSJob;
 import pipeline.util.FastqUtils;
 import nextgen.core.pipeline.util.OGSUtils;
-import broad.core.parser.CommandLineParser;
-import broad.core.parser.StringParser;
 import broad.pda.seq.fastq.FastqParser;
 import broad.pda.seq.fastq.FastqSequence;
 

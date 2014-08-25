@@ -1,25 +1,35 @@
 package sequentialbarcode.avro;
 
+import general.CommandLineParser;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.sf.samtools.Cigar;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
+import net.sf.samtools.TextCigarCodec;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.log4j.Logger;
 
+import broad.core.parser.StringParser;
+
+import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedBamWriter;
 import serialize.AvroIndex;
 import serialize.AvroStringIndex;
 
-import broad.core.parser.CommandLineParser;
 
 /**
  * 
@@ -28,7 +38,9 @@ import broad.core.parser.CommandLineParser;
  */
 public class Query3DBarcode {
 	
+	@SuppressWarnings("unused")
 	private static Logger logger = Logger.getLogger(Query3DBarcode.class.getName());
+	private static int MIN_NUM_BARCODES_PER_FRAGMENT = 0;
 		
 	/**
 	 * Get the collection of barcode attributes for all reads overlapping a region
@@ -43,7 +55,11 @@ public class Query3DBarcode {
 		SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
 		while(iter.hasNext()) {
 			SAMRecord record = iter.next();
-			rtrn.add((String) record.getAttribute(BarcodedBamWriter.BARCODES_SAM_TAG));
+			String barcodeString = (String) record.getAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
+			BarcodeSequence barcodes = BarcodeSequence.fromSamAttributeString(barcodeString);
+			if(barcodes.getNumBarcodes() >= MIN_NUM_BARCODES_PER_FRAGMENT) {
+				rtrn.add(barcodeString);
+			}
 		}
 		return rtrn;
 	}
@@ -147,6 +163,18 @@ public class Query3DBarcode {
 		printReadsWithBarcodes(index, barcodes);
 	}
 	
+	private static Map<String, Integer> readChrSizes(String file) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		StringParser s = new StringParser();
+		Map<String, Integer> rtrn = new HashMap<String, Integer>();
+		while(reader.ready()) {
+			s.parse(reader.readLine());
+			rtrn.put(s.asString(0), Integer.valueOf(s.asInt(1)));
+		}
+		reader.close();
+		return rtrn;
+	}
+	
 	public static void main(String[] args) throws IOException {
 				
 		CommandLineParser p = new CommandLineParser();
@@ -158,6 +186,8 @@ public class Query3DBarcode {
 		p.addIntArg("-rs", "Print locations of all reads with barcodes matching some read mapped to region: start", false, -1);
 		p.addIntArg("-re", "Print locations of all reads with barcodes matching some read mapped to region: end", false, -1);
 		p.addStringArg("-rbs", "Coordinate sorted bam file needed for query by region", false);
+		p.addStringArg("-c", "Chromosome size file if querying entire chromosome. Leave out -rs and -re.", false, null);
+		p.addIntArg("-mb", "Minimum number of barcodes to consider a fragment", false, MIN_NUM_BARCODES_PER_FRAGMENT);
 		p.parse(args);
 		String avroFile = p.getStringArg("-a");
 		String barcode = p.getStringArg("-b");
@@ -167,6 +197,8 @@ public class Query3DBarcode {
 		int regionStart = p.getIntArg("-rs");
 		int regionEnd = p.getIntArg("-re");
 		String bam = p.getStringArg("-rbs");
+		String sizeFile = p.getStringArg("-c");
+		MIN_NUM_BARCODES_PER_FRAGMENT = p.getIntArg("-mb");
 		
 		if(barcode != null && regionChr != null) {
 			throw new IllegalArgumentException("Choose one: query by barcode or query by region");
@@ -180,7 +212,17 @@ public class Query3DBarcode {
 			System.out.println();
 		}
 		
-		if(regionChr != null) {
+		if(regionChr != null && regionStart < 0 && regionEnd < 0) {
+			if(sizeFile == null) {
+				throw new IllegalArgumentException("Must provide chr size file to query entire chromosome");
+			}
+			Map<String, Integer> sizes = readChrSizes(sizeFile);
+			int size = sizes.get(regionChr).intValue();
+			regionStart = 0;
+			regionEnd = size;
+		}
+
+		if(regionChr != null && regionStart >= 0 && regionEnd >= 0) {
 			if(bam == null) {
 				throw new IllegalArgumentException("Must provide bam file for query by region");
 			}
@@ -195,6 +237,7 @@ public class Query3DBarcode {
 			System.out.println();
 		}
 		
+		
 		System.out.println("");
 		System.out.println("All done.");
 	}
@@ -204,7 +247,13 @@ public class Query3DBarcode {
 	 * @return A string representation of mapped location
 	 */
 	public static String getPositionAsUCSC(GenericRecord samRecord) {
-		return samRecord.get("rname") + ":" + samRecord.get("pos");
+		String cigarString = samRecord.get("cigar").toString();
+		TextCigarCodec codec = new TextCigarCodec();
+		Cigar cigar = codec.decode(cigarString);
+		int length = cigar.getReferenceLength();
+		int start = (int) samRecord.get("pos");
+		int end = start + length;
+		return samRecord.get("rname") + ":" + start + "-" + end;
 	}
 	
 }

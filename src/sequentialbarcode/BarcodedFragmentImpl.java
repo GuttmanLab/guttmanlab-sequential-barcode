@@ -3,6 +3,8 @@ package sequentialbarcode;
 
 import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
 
+import general.StringParser;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +29,6 @@ import com.sleepycat.persist.model.Entity;
 import com.sleepycat.persist.model.PrimaryKey;
 import com.sleepycat.persist.model.SecondaryKey;
 
-import broad.core.parser.StringParser;
 
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;

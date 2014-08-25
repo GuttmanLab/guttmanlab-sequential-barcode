@@ -1,5 +1,7 @@
 package sequentialbarcode.berkeleydb;
 
+import general.CommandLineParser;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,7 +22,6 @@ import nextgen.core.coordinatesystem.TranscriptomeSpace;
 import nextgen.core.feature.GeneWindow;
 import nextgen.core.feature.Window;
 import nextgen.core.model.AlignmentModel;
-import broad.core.parser.CommandLineParser;
 import broad.pda.annotation.BEDFileParser;
 
 public class DatabaseQueryTest {

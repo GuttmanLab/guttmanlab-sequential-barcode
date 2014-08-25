@@ -1,6 +1,9 @@
 package sequentialbarcode.berkeleydb;
 
 
+import general.CommandLineParser;
+import general.StringParser;
+
 import org.apache.log4j.Logger;
 
 import sequentialbarcode.BarcodedFragmentImpl;
@@ -9,8 +12,6 @@ import com.sleepycat.persist.EntityCursor;
 
 import nextgen.core.annotation.BasicAnnotation;
 import nextgen.core.berkeleydb.JoinedEntityCursor;
-import broad.core.parser.CommandLineParser;
-import broad.core.parser.StringParser;
 
 public class DatabaseQuery {
 	

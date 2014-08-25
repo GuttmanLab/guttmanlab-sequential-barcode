@@ -1,5 +1,7 @@
 package sequentialbarcode.readlayout;
 
+import general.StringParser;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -10,7 +12,6 @@ import org.apache.log4j.Logger;
 
 import com.sleepycat.persist.model.Persistent;
 
-import broad.core.parser.StringParser;
 
 import nextgen.core.utils.AlignmentUtils;
 import nextgen.core.utils.FileUtil;
