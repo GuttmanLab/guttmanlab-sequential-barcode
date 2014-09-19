@@ -1,6 +1,7 @@
 package sequentialbarcode;
 
 import general.CommandLineParser;
+import general.CountLogger;
 import general.StringParser;
 
 import java.io.BufferedReader;
@@ -33,7 +34,6 @@ import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
 import nextgen.core.pipeline.util.OGSUtils;
-import nextgen.core.utils.CountLogger;
 
 /**
  * Tools to add barcode tag to a bam file and write new bam file
