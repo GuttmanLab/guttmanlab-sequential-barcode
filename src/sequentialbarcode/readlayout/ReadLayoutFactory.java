@@ -27,7 +27,7 @@ public class ReadLayoutFactory {
 	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
 	 * @return The read layout specified by the parameters
 	 */
-	public static ReadLayout getRead2LayoutRnaDna3D(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String rpm, int readLength, int maxMismatchBarcode, int maxMismatchRpm, boolean enforceOddEven) {
+	public static ReadLayout getRead2LayoutRnaDna3DPairedDesign(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String rpm, int readLength, int maxMismatchBarcode, int maxMismatchRpm, boolean enforceOddEven) {
 		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
 			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
 		}

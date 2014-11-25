@@ -151,7 +151,7 @@ public class BarcodeAnalysis {
 		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
 		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
 		FileWriter w = new FileWriter(outFile);
-		ReadLayout layout = ReadLayoutFactory.getRead2LayoutRnaDna3D(evenBarcodes, oddBarcodes, 6, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
+		ReadLayout layout = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodes, oddBarcodes, 6, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
 		FastqParser iter = new FastqParser();
 		iter.start(new File(fastq));
 		int numDone = 0;
@@ -215,7 +215,7 @@ public class BarcodeAnalysis {
 		for(Barcode b : evenBarcodes) {
 			barcodeCounts.put(b, Integer.valueOf(0));
 		}
-		ReadLayout layout = ReadLayoutFactory.getRead2LayoutRnaDna3D(evenBarcodes, oddBarcodes, 6, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, false);
+		ReadLayout layout = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodes, oddBarcodes, 6, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, false);
 		FastqParser iter = new FastqParser();
 		iter.start(new File(fastq));
 		int numDone = 0;

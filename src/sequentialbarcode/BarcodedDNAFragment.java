@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import sequentialbarcode.readlayout.ReadLayout;
 
 /**
- * Barcoded fragment that originates from RNA
+ * Barcoded fragment that originates from DNA
  * @author prussell
  *
  */
