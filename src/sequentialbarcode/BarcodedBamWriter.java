@@ -1,8 +1,8 @@
 package sequentialbarcode;
 
-import general.CommandLineParser;
-import general.CountLogger;
-import general.StringParser;
+import guttmanlab.core.util.CommandLineParser;
+import guttmanlab.core.util.CountLogger;
+import guttmanlab.core.util.StringParser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,11 +19,11 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
-import pipeline.Job;
-import pipeline.JobUtils;
-import pipeline.OGSJob;
-import pipeline.Scheduler;
-import pipeline.util.BamUtils;
+import guttmanlab.core.pipeline.Job;
+import guttmanlab.core.pipeline.JobUtils;
+import guttmanlab.core.pipeline.OGSJob;
+import guttmanlab.core.pipeline.Scheduler;
+import guttmanlab.core.pipeline.util.BamUtils;
 
 import sequentialbarcode.fragmentgroup.FragmentGroup;
 import sequentialbarcode.fragmentgroup.NamedBarcodedFragmentGroup;

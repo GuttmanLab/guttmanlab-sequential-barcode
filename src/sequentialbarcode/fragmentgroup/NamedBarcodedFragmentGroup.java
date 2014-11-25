@@ -1,6 +1,6 @@
 package sequentialbarcode.fragmentgroup;
 
-import general.StringParser;
+import guttmanlab.core.util.StringParser;
 
 import java.util.Collection;
 import java.util.Iterator;

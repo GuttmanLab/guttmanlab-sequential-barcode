@@ -1,7 +1,7 @@
 package sequentialbarcode;
 
-import general.CommandLineParser;
-import general.StringParser;
+import guttmanlab.core.util.CommandLineParser;
+import guttmanlab.core.util.StringParser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,10 +25,10 @@ import sequentialbarcode.readlayout.FixedSequence;
 import sequentialbarcode.readlayout.ReadLayout;
 import sequentialbarcode.readlayout.ReadLayoutFactory;
 
-import pipeline.Job;
-import pipeline.JobUtils;
-import pipeline.OGSJob;
-import pipeline.util.FastqUtils;
+import guttmanlab.core.pipeline.Job;
+import guttmanlab.core.pipeline.JobUtils;
+import guttmanlab.core.pipeline.OGSJob;
+import guttmanlab.core.pipeline.util.FastqUtils;
 import nextgen.core.pipeline.util.OGSUtils;
 import broad.pda.seq.fastq.FastqParser;
 import broad.pda.seq.fastq.FastqSequence;

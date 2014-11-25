@@ -3,7 +3,7 @@ package sequentialbarcode;
 
 import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
 
-import general.StringParser;
+import guttmanlab.core.util.StringParser;
 
 import java.io.File;
 import java.util.ArrayList;

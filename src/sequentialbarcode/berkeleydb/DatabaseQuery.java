@@ -1,8 +1,8 @@
 package sequentialbarcode.berkeleydb;
 
 
-import general.CommandLineParser;
-import general.StringParser;
+import guttmanlab.core.util.CommandLineParser;
+import guttmanlab.core.util.StringParser;
 
 import org.apache.log4j.Logger;
 

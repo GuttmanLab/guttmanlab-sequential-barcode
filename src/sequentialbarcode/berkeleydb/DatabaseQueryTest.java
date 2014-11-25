@@ -1,6 +1,6 @@
 package sequentialbarcode.berkeleydb;
 
-import general.CommandLineParser;
+import guttmanlab.core.util.CommandLineParser;
 
 import java.io.File;
 import java.util.ArrayList;

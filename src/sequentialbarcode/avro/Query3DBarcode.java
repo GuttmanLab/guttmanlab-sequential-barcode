@@ -1,6 +1,6 @@
 package sequentialbarcode.avro;
 
-import general.CommandLineParser;
+import guttmanlab.core.util.CommandLineParser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -20,13 +20,13 @@ import net.sf.samtools.SAMRecordIterator;
 
 import org.apache.log4j.Logger;
 
-import annotationcollection.FeatureCollection;
+import guttmanlab.core.annotationcollection.FeatureCollection;
 import broad.core.parser.StringParser;
 
 import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedBamWriter;
-import serialize.sam.AvroSamRecord;
-import serialize.sam.AvroSamStringIndex;
+import guttmanlab.core.serialize.sam.AvroSamRecord;
+import guttmanlab.core.serialize.sam.AvroSamStringIndex;
 
 
 /**

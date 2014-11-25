@@ -1,6 +1,6 @@
 package sequentialbarcode;
 
-import general.StringParser;
+import guttmanlab.core.util.StringParser;
 
 import java.util.ArrayList;
 import java.util.Iterator;

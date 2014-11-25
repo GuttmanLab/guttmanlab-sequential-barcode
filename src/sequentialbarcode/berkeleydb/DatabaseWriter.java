@@ -1,6 +1,6 @@
 package sequentialbarcode.berkeleydb;
 
-import general.CommandLineParser;
+import guttmanlab.core.util.CommandLineParser;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +17,8 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
-import pipeline.OGSJob;
-import pipeline.util.BamUtils;
+import guttmanlab.core.pipeline.OGSJob;
+import guttmanlab.core.pipeline.util.BamUtils;
 
 import sequentialbarcode.BarcodedBamWriter;
 import sequentialbarcode.BarcodedFragmentImpl;
