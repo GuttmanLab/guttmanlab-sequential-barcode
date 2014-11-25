@@ -67,6 +67,13 @@ public class BarcodeSet implements ReadSequenceElement {
 		length = len;
 	}
 	
+	/**
+	 * @return The barcodes
+	 */
+	public Collection<Barcode> getBarcodes() {
+		return barcodes;
+	}
+	
 	@Override
 	public int getLength() {
 		return length;

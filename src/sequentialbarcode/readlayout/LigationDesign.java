@@ -1,5 +1,10 @@
 package sequentialbarcode.readlayout;
 
+/**
+ * A design for the layout of the reads
+ * @author prussell
+ *
+ */
 public enum LigationDesign {
 	
 	/**
@@ -12,14 +17,42 @@ public enum LigationDesign {
 	
 	/**
 	 * The design from late 2014
-	 * All barcodes, RPM, and RNA sequence are in read2
+	 * All barcodes, RPM+RNA, DPM+DNA are in read2
 	 */
-	SINGLE_DESIGN_RNA_BARCODE_IN_READ2,
+	SINGLE_DESIGN_BARCODE_IN_READ2;
+		
+	public String toString() {
+		switch(this) {
+		case PAIRED_DESIGN_BARCODE_IN_READ2:
+			return "paired_design_barcode_in_read2";
+		case SINGLE_DESIGN_BARCODE_IN_READ2:
+			return "single_design_barcode_in_read2";
+		default:
+			throw new UnsupportedOperationException("Not implemented");
+		}
+	}
 	
 	/**
-	 * The design from late 2014
-	 * All barcodes, DPM, and DNA sequence are in read2
+	 * Create from name
+	 * @param name Design name
+	 * @return The design
 	 */
-	SINGLE_DESIGN_DNA_BARCODE_IN_READ2;
+	public static LigationDesign fromString(String name) {
+		if(name.equals(PAIRED_DESIGN_BARCODE_IN_READ2.toString())) return PAIRED_DESIGN_BARCODE_IN_READ2;
+		if(name.equals(SINGLE_DESIGN_BARCODE_IN_READ2.toString())) return SINGLE_DESIGN_BARCODE_IN_READ2;
+		throw new IllegalArgumentException("Name " + name + " not recognized. Options: " + getNamesAsCommaSeparatedList());
+	}
+	
+	/**
+	 * @return Comma separated list of names
+	 */
+	public static String getNamesAsCommaSeparatedList() {
+		LigationDesign[] values = LigationDesign.values();
+		String rtrn = values[0].toString();
+		for(int i = 1; i < values.length; i++) {
+			rtrn += ", " + values[i].toString();
+		}
+		return rtrn;
+	}
 	
 }
