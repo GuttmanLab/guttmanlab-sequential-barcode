@@ -1,4 +1,4 @@
-package sequentialbarcode.readlayout;
+package readlayout;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -6,6 +6,11 @@ import java.util.Collection;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
+
+import readelement.Barcode;
+import readelement.BarcodeSet;
+import readelement.FixedSequence;
+import readelement.ReadSequenceElement;
 
 /**
  * Static factory methods for read layouts

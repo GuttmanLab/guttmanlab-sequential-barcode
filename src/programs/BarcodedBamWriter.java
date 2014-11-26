@@ -1,5 +1,7 @@
-package sequentialbarcode;
+package programs;
 
+import fragmentgroup.FragmentGroup;
+import fragmentgroup.NamedBarcodedFragmentGroup;
 import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.CountLogger;
 import guttmanlab.core.util.StringParser;
@@ -24,11 +26,9 @@ import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.Scheduler;
 import guttmanlab.core.pipeline.util.BamUtils;
-
-import sequentialbarcode.fragmentgroup.FragmentGroup;
-import sequentialbarcode.fragmentgroup.NamedBarcodedFragmentGroup;
-
-
+import sequentialbarcode.BarcodeSequence;
+import sequentialbarcode.BarcodedFragment;
+import sequentialbarcode.BarcodedFragmentImpl;
 import net.sf.samtools.BAMFileWriter;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;

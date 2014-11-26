@@ -1,4 +1,4 @@
-package sequentialbarcode.readlayout;
+package readlayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +9,8 @@ import java.util.Map;
 import nextgen.core.alignment.SmithWatermanAlignment;
 
 import org.apache.log4j.Logger;
+
+import readelement.ReadSequenceElement;
 
 import com.sleepycat.persist.model.Persistent;
 

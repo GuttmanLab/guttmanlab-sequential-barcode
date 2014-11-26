@@ -1,4 +1,4 @@
-package sequentialbarcode.readlayout;
+package readelement;
 
 import java.util.Collection;
 import java.util.Map;

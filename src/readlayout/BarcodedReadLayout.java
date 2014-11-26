@@ -1,8 +1,12 @@
-package sequentialbarcode.readlayout;
+package readlayout;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
+
+import readelement.Barcode;
+import readelement.BarcodeSet;
+import readelement.ReadSequenceElement;
 
 /**
  * A read layout including barcodes

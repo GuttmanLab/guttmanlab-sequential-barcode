@@ -8,10 +8,10 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import sequentialbarcode.readlayout.Barcode;
+import programs.BarcodedBamWriter;
+import readelement.Barcode;
 
 import com.sleepycat.persist.model.Persistent;
-
 
 import net.sf.samtools.SAMRecord;
 

@@ -4,7 +4,7 @@ import nextgen.core.annotation.Annotation;
 
 import org.apache.log4j.Logger;
 
-import sequentialbarcode.readlayout.ReadLayout;
+import readlayout.ReadLayout;
 
 /**
  * Barcoded fragment that originates from DNA

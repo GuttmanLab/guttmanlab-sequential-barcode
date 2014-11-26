@@ -1,4 +1,4 @@
-package sequentialbarcode.berkeleydb;
+package berkeleydb;
 
 import guttmanlab.core.util.CommandLineParser;
 

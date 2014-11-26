@@ -1,7 +1,7 @@
 package sequentialbarcode;
 
-import sequentialbarcode.fragmentgroup.FragmentGroup;
-import sequentialbarcode.readlayout.ReadLayout;
+import fragmentgroup.FragmentGroup;
+import readlayout.ReadLayout;
 import nextgen.core.annotation.Annotation;
 
 /**

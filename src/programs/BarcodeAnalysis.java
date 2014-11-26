@@ -1,4 +1,4 @@
-package sequentialbarcode;
+package programs;
 
 import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.StringParser;
@@ -18,14 +18,19 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
-import sequentialbarcode.readlayout.AnySequence;
-import sequentialbarcode.readlayout.Barcode;
-import sequentialbarcode.readlayout.BarcodeSet;
-import sequentialbarcode.readlayout.BarcodedReadLayout;
-import sequentialbarcode.readlayout.FixedSequence;
-import sequentialbarcode.readlayout.ReadLayout;
-import sequentialbarcode.readlayout.ReadLayoutFactory;
-import sequentialbarcode.readlayout.LigationDesign;
+import readelement.AnySequence;
+import readelement.Barcode;
+import readelement.BarcodeSet;
+import readelement.FixedSequence;
+import readlayout.BarcodedReadLayout;
+import readlayout.LigationDesign;
+import readlayout.ReadLayout;
+import readlayout.ReadLayoutFactory;
+import sequentialbarcode.BarcodeSequence;
+import sequentialbarcode.BarcodedDNAFragment;
+import sequentialbarcode.BarcodedFragment;
+import sequentialbarcode.BarcodedFragmentImpl;
+import sequentialbarcode.BarcodedRNAFragment;
 import guttmanlab.core.pipeline.Job;
 import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;

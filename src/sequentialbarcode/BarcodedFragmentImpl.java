@@ -2,7 +2,8 @@ package sequentialbarcode;
 
 
 import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
-
+import fragmentgroup.FragmentGroup;
+import fragmentgroup.NamedBarcodedFragmentGroup;
 import guttmanlab.core.util.StringParser;
 
 import java.io.File;
@@ -13,12 +14,11 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import sequentialbarcode.fragmentgroup.FragmentGroup;
-import sequentialbarcode.fragmentgroup.NamedBarcodedFragmentGroup;
-import sequentialbarcode.readlayout.Barcode;
-import sequentialbarcode.readlayout.BarcodeSet;
-import sequentialbarcode.readlayout.ReadLayout;
-import sequentialbarcode.readlayout.ReadSequenceElement;
+import programs.BarcodedBamWriter;
+import readelement.Barcode;
+import readelement.BarcodeSet;
+import readelement.ReadSequenceElement;
+import readlayout.ReadLayout;
 
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.EnvironmentMutableConfig;
@@ -28,7 +28,6 @@ import com.sleepycat.persist.SecondaryIndex;
 import com.sleepycat.persist.model.Entity;
 import com.sleepycat.persist.model.PrimaryKey;
 import com.sleepycat.persist.model.SecondaryKey;
-
 
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;

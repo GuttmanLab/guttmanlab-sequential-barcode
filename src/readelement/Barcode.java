@@ -1,4 +1,4 @@
-package sequentialbarcode.readlayout;
+package readelement;
 
 import guttmanlab.core.util.StringParser;
 
@@ -11,7 +11,6 @@ import java.util.TreeSet;
 import org.apache.log4j.Logger;
 
 import com.sleepycat.persist.model.Persistent;
-
 
 import nextgen.core.utils.AlignmentUtils;
 import nextgen.core.utils.FileUtil;

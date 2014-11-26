@@ -1,4 +1,4 @@
-package sequentialbarcode.readlayout;
+package readlayout;
 
 /**
  * A design for the layout of the reads

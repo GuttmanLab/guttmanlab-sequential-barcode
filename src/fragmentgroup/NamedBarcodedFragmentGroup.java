@@ -1,4 +1,4 @@
-package sequentialbarcode.fragmentgroup;
+package fragmentgroup;
 
 import guttmanlab.core.util.StringParser;
 
@@ -6,12 +6,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.TreeSet;
 
+import programs.BarcodedBamWriter;
 import sequentialbarcode.BarcodeSequence;
-import sequentialbarcode.BarcodedBamWriter;
 import sequentialbarcode.BarcodedFragment;
 import sequentialbarcode.BarcodedFragmentImpl;
-
-
 import net.sf.samtools.SAMRecord;
 import nextgen.core.annotation.Annotation;
 import nextgen.core.annotation.BasicAnnotation;

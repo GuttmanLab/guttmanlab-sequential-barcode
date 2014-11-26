@@ -1,4 +1,4 @@
-package sequentialbarcode.fragmentgroup;
+package fragmentgroup;
 
 import java.util.Collection;
 import java.util.Map;

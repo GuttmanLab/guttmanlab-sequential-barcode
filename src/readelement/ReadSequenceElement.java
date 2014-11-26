@@ -1,4 +1,4 @@
-package sequentialbarcode.readlayout;
+package readelement;
 
 /**
  * An element that can be found in a read sequence
