@@ -25,6 +25,14 @@ public class ReadLayout {
 	
 	private ArrayList<ReadSequenceElement> elements;
 	private int readLen;
+	
+	/*
+	 * The length of the part of the read up to the end of the last matched element
+	 * Includes positions before and between elements if allowed
+	 * This is not a constant; it changes every time we match a new read sequence
+	 */
+	private int totalLengthMatchedEltSection;
+	
 	public static Logger logger = Logger.getLogger(ReadLayout.class.getName());
 	
 	/**
@@ -39,6 +47,7 @@ public class ReadLayout {
 	 */
 	public ReadLayout(ArrayList<ReadSequenceElement> elementSequence, int readLength) {
 		// Check that all lengths add up to at most read length
+		totalLengthMatchedEltSection = -1;
 		int totalLen = 0;
 		for(ReadSequenceElement elt : elementSequence) {
 			totalLen += elt.getLength();
@@ -68,6 +77,20 @@ public class ReadLayout {
 	 */
 	public ArrayList<ReadSequenceElement> getElements() {
 		return elements;
+	}
+	
+	/**
+	 * Get the length in the read of all the matched elements including positions before and between them
+	 * i.e., the length of the read minus anything that comes after the last matched element
+	 * @param readSequence Read sequence
+	 * @return Total length of all matched elements and positions before and between them
+	 */
+	public int matchedElementsLengthInRead(String readSequence) {
+		getMatchedElements(readSequence);
+		if(totalLengthMatchedEltSection == -1) {
+			throw new IllegalArgumentException("Read does not match layout");
+		}
+		return totalLengthMatchedEltSection;
 	}
 	
 	/**
@@ -127,6 +150,8 @@ public class ReadLayout {
 			// If too far along in the read and have not found everything required, return null
 			if(currStart + currElt.getLength() > readLen) {
 				logger.debug("NO_MATCH_FOR_LAYOUT\tNo match for element " + currElt.elementName() + " in read " + readSequence);
+				// Change the length of matched elements section
+				totalLengthMatchedEltSection = -1;
 				return null;
 			}
 			// If current element is repeatable, look for next element at this position
@@ -144,6 +169,8 @@ public class ReadLayout {
 							if(!found[elements.indexOf(currElt)]) {
 								// Next element was found before any instance of current element
 								logger.debug("FOUND_NEXT_BEFORE_CURRENT\tFound match for next element " + nextElt.elementName() + " before any instance of " + currElt.elementName());
+								// Change the length of matched elements section
+								totalLengthMatchedEltSection = -1;
 								return null;
 							}
 							logger.debug("FOUND_NEXT_OK\tFound match for next element " + nextElt.elementName() + " at start position " + currStart + " of read " + readSequence);
@@ -154,6 +181,8 @@ public class ReadLayout {
 							if(!elementIter.hasNext()) {
 								// We have found a match for the last element; return
 								logger.debug("MATCHED_LAYOUT\tFound match for entire read layout");
+								// Change the length of matched elements section
+								totalLengthMatchedEltSection = currStart;
 								return rtrn;
 							} 
 							// Now look for the element after "nextElt"
@@ -194,6 +223,8 @@ public class ReadLayout {
 			logger.debug("No match for element " + currElt.elementName() + " at start position " + currStart + " of read " + readSequence);
 			currStart++;
 		}
+		// Change the length of matched elements section
+		totalLengthMatchedEltSection = -1;
 		return null;
 	}
 	

@@ -17,6 +17,7 @@ import java.util.TreeSet;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
+import net.sf.samtools.util.CloseableIterator;
 
 import org.apache.log4j.Logger;
 
@@ -191,6 +192,59 @@ public class Query3DBarcode {
 	}
 	
 	/**
+	 * Get number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
+	 * @param index Avro index
+	 * @param samReader SAM reader for bam file of read mappings
+	 * @param chr Region chromosome
+	 * @param start Region start
+	 * @param end Region end
+	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
+	 * @return Map of reference name to number of reads
+	 * @throws IOException
+	 */
+	public static Map<String, Integer> getChrCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+		Collection<String> barcodes = getBarcodes(samReader, chr, start, end);
+		Collection<String> ids = null;
+		if(excludeSelfMatches) {
+			ids = getReadIDs(samReader, chr, start, end);
+		}
+		Map<String, Integer> rtrn = new TreeMap<String, Integer>();
+		for(String barcode : barcodes) {
+			FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
+			CloseableIterator<AvroSamRecord> iter = records.sortedIterator();
+			while(iter.hasNext()) {
+				AvroSamRecord record = iter.next();
+				String ref = record.getReferenceName();
+				if(!rtrn.containsKey(ref)) {
+					rtrn.put(ref, Integer.valueOf(0));
+				}
+				rtrn.put(ref, Integer.valueOf(rtrn.get(ref).intValue() + 1));
+			}
+			iter.close();
+		}
+		return rtrn;
+	}
+	
+	
+	/**
+	 * Print number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
+	 * @param index Avro index
+	 * @param samReader SAM reader for bam file of read mappings
+	 * @param chr Region chromosome
+	 * @param start Region start
+	 * @param end Region end
+	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
+	 * @throws IOException
+	 */
+	public static void printReferenceCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+		Map<String, Integer> counts = getChrCountsOfAllReadsWithBarcodesInRegion(index, samReader, chr, start, end, excludeSelfMatches);
+		for(String c : counts.keySet()) {
+			System.out.println(c + "\t" + counts.get(c));
+		}
+	}
+
+	
+	/**
 	 * Print string representations of the mapped locations of all reads that share the same barcode as some read mapping to the region of interest
 	 * @param index Avro index
 	 * @param samReader SAM reader for bam file of read mappings
@@ -289,7 +343,9 @@ public class Query3DBarcode {
 		p.addStringArg("-c", "Chromosome size file if querying entire chromosome. Leave out -rs and -re.", false, null);
 		p.addIntArg("-mb", "Minimum number of barcodes to consider a fragment", false, MIN_NUM_BARCODES_PER_FRAGMENT);
 		p.addBooleanArg("-es", "Exclude barcode matches if the read ID matches any read mapping to the query region", false, true);
-		p.addBooleanArg("-p", "Print pairs of locations that interact", false, true);
+		p.addBooleanArg("-pp", "Print pairs of locations that interact", false, false);
+		p.addBooleanArg("-pl", "Print list of unique interacting locations", false, false);
+		p.addBooleanArg("-pc", "Print counts of interacting reads mapped to each reference sequence", false, false);
 		p.parse(args);
 		String avroFile = p.getStringArg("-a");
 		String barcode = p.getStringArg("-b");
@@ -301,7 +357,9 @@ public class Query3DBarcode {
 		String bam = p.getStringArg("-rbs");
 		String sizeFile = p.getStringArg("-c");
 		boolean excludeSelf = p.getBooleanArg("-es");
-		boolean printPairs = p.getBooleanArg("-p");
+		boolean printPairs = p.getBooleanArg("-pp");
+		boolean printLocations = p.getBooleanArg("-pl");
+		boolean printRefCounts = p.getBooleanArg("-pc");
 		MIN_NUM_BARCODES_PER_FRAGMENT = p.getIntArg("-mb");
 		
 		if(barcode != null && regionChr != null) {
@@ -340,11 +398,17 @@ public class Query3DBarcode {
 				System.out.println("");
 				printInteractorPairsForRegion(index, samReader, regionChr, regionStart, regionEnd, excludeSelf);
 				System.out.println();
-			} else {
+			} else if(printLocations) {
 				System.out.println();
 				System.out.println("Locations of reads with barcodes matching some read in region " + regionChr + ":" + regionStart + "-" + regionEnd + ":");
 				System.out.println("");
 				printUniqueLocationsOfAllReadsWithBarcodesInRegion(index, samReader, regionChr, regionStart, regionEnd, excludeSelf);
+				System.out.println();
+			} else if(printRefCounts) {
+				System.out.println();
+				System.out.println("Reference counts of reads with barcodes matching some read in region " + regionChr + ":" + regionStart + "-" + regionEnd + ":");
+				System.out.println("");
+				printReferenceCountsOfAllReadsWithBarcodesInRegion(index, samReader, regionChr, regionStart, regionEnd, excludeSelf);
 				System.out.println();
 			}
 		}

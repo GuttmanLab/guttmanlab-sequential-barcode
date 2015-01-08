@@ -4,6 +4,7 @@ import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.StringParser;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -82,13 +83,18 @@ public class BarcodeAnalysis {
 		String designName = p.getStringArg(designNameOption);
 		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
+		boolean writeSuffixFastq = p.getBooleanArg(writeSuffixFastqOption);
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
 		Map<String, String> splitTables = new TreeMap<String, String>();
 		int i = 0;
 		for(String fq : splitFastqs) {
-			splitTables.put(fq, outPrefix + "." + i);
+			splitTables.put(fq, outPrefix + "." + i); // Create split table names and index by associated input fastq
 			i++;
+		}
+		Collection<String> splitSuffixFastqs = new ArrayList<String>();
+		for(String fq : splitFastqs) {
+			splitSuffixFastqs.add(makeSuffixFastqName(fq));
 		}
 		Collection<Job> jobs = new ArrayList<Job>();
 		for(String fq : splitTables.keySet()) {
@@ -108,6 +114,7 @@ public class BarcodeAnalysis {
 			cmmd += " " + designNameOption + " " + designName;
 			cmmd += " " + totalNumBarcodesOption + " " + totalNumBarcodes;
 			cmmd += " " + splitOutFilesBySwitchesOption + " " + splitOutputBySwitchesInLayout;
+			cmmd += " " + writeSuffixFastqOption + " " + writeSuffixFastq;
 			String jobName = "OGS_job_" + fq;
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
 			job.submit();
@@ -116,25 +123,44 @@ public class BarcodeAnalysis {
 		JobUtils.waitForAll(jobs);
 		// Only try to concatenate the files if they were not split by switches
 		if(!splitOutputBySwitchesInLayout) {
-			FileWriter w = new FileWriter(outPrefix);
+			
+			FileWriter tableWriter = new FileWriter(outPrefix);
 			for(String fq : splitTables.keySet()) {
 				String table = splitTables.get(fq);
 				FileReader r = new FileReader(table);
 				BufferedReader b = new BufferedReader(r);
 				while(b.ready()) {
-					w.write(b.readLine() + "\n");
+					tableWriter.write(b.readLine() + "\n");
 				}
 				r.close();
 				b.close();
 				File f = new File(table);
 				f.delete();
 			}
-			w.close();
-			for(String fq : splitFastqs) {
+			tableWriter.close();
+
+			FileWriter fastqWriter = new FileWriter(makeSuffixFastqName(outPrefix));
+			for(String fq : splitSuffixFastqs) {
+				FileReader r = new FileReader(fq);
+				BufferedReader b = new BufferedReader(r);
+				while(b.ready()) {
+					fastqWriter.write(b.readLine() + "\n");
+				}
+				r.close();
+				b.close();
 				File f = new File(fq);
 				f.delete();
 			}
+			fastqWriter.close();
 		}
+	}
+	
+	/**
+	 * @param outFilePrefix
+	 * @return Name of fastq file to write read suffixes to (removing matched element section)
+	 */
+	private static String makeSuffixFastqName(String outFilePrefix) {
+		return outFilePrefix.replaceAll(".fq", "").replaceAll(".fastq", "") + ".suffix.fq";
 	}
 	
 	/**
@@ -148,12 +174,40 @@ public class BarcodeAnalysis {
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
 	 * @throws IOException
 	 */
+	@SuppressWarnings("unused")
 	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
+		findBarcodes(fastq, layout, maxMismatchBarcode, outFilePrefix, verbose, splitOutputBySwitchesInLayout, false);
+	}
+	
+	/**
+	 * For RNA-DNA 3D barcoding method
+	 * Identify barcodes in reads and write to a table
+	 * @param fastq Fastq file
+	 * @param layout Barcoded read layout
+	 * @param maxMismatchBarcode Max number of mismatches when matching barcodes to reads
+	 * @param outFilePrefix Output table
+	 * @param verbose Verbose table output
+	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
+	 * @param writeSuffixFastq Also write new fastq file(s) of the reads with all layout elements 
+	 * and positions before/between them removed. In other words, keep the part of the read after the last matched element.
+	 * Obeys the switch scenario, so if using switches, this will also write multiple fastq files, one for each switch
+	 * @throws IOException
+	 */
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout, boolean writeSuffixFastq) throws IOException {
 		logger.info("");
-		logger.info("Identifying read2 barcodes for RNA-DNA-3D and writing to table " + outFilePrefix + "...");
-		FileWriter w = new FileWriter(outFilePrefix);
-		Map<String, FileWriter> switchWriters = new HashMap<String, FileWriter>();
-		FastqParser iter = new FastqParser();
+		logger.info("Identifying read2 barcodes for RNA-DNA-3D and writing to table(s)...");
+		if(splitOutputBySwitchesInLayout) {
+			logger.info("Splitting output by value of switches in reads...");
+		}
+		if(writeSuffixFastq) {
+			logger.info("Also writing fastq file(s) of reads without matched elements...");
+		}
+		FileWriter tableWriter = new FileWriter(outFilePrefix); // Write to table
+		String outSingleFastq = makeSuffixFastqName(fastq); // Output fastq file if using
+		BufferedWriter singleFastqWriter = writeSuffixFastq ? new BufferedWriter(new FileWriter(outSingleFastq)) : null; // Fastq writer if using and not using switches
+		Map<String, FileWriter> switchTableWriters = new HashMap<String, FileWriter>(); // Writers for tables if using switches
+		Map<String, BufferedWriter> switchFastqWriters = new HashMap<String, BufferedWriter>(); // Writers for fastq files if using and if using switches
+		FastqParser iter = new FastqParser(); // Reader for input fastq file
 		iter.start(new File(fastq));
 		int numDone = 0;
 		while(iter.hasNext()) {
@@ -175,15 +229,25 @@ public class BarcodeAnalysis {
 				if(verbose) line += barcodes.getNumBarcodes() + "\t";
 				line += barcodes.toString() + "\t";
 				if(verbose) line += seq + "\t";
-				if(splitOutputBySwitchesInLayout) {
+				// Fastq sequence with layout elements removed if writing fastq
+				FastqSequence trimmedRecord = writeSuffixFastq ? record.trimFirstNBPs(layout.matchedElementsLengthInRead(record.getSequence())) : null;
+				if(splitOutputBySwitchesInLayout) { // Write to switch-specific table file
 					Map<Switch, List<FixedSequence>> switchValues = f.getSwitchValues();
-					String fileName = makeOutFileName(outFilePrefix, switchValues);
-					if(!switchWriters.containsKey(fileName)) {
-						switchWriters.put(fileName, new FileWriter(fileName));
+					String switchTableName = makeOutTableName(outFilePrefix, switchValues); // Create name of switch-specific table file
+					if(!switchTableWriters.containsKey(switchTableName)) {
+						switchTableWriters.put(switchTableName, new FileWriter(switchTableName));
 					}
-					switchWriters.get(fileName).write(line + "\n");
+					switchTableWriters.get(switchTableName).write(line + "\n");
+					if(writeSuffixFastq) { // Write to switch-specific fastq file
+						String suffixFastqName = makeOutFastqName(fastq, switchValues); // Make name of switch-specific fastq file
+						if(!switchFastqWriters.containsKey(suffixFastqName)) {
+							switchFastqWriters.put(suffixFastqName, new BufferedWriter(new FileWriter(suffixFastqName)));
+						}
+						trimmedRecord.write(switchFastqWriters.get(suffixFastqName));
+					}
 				} else {
-					w.write(line + "\n");
+					tableWriter.write(line + "\n");
+					if(writeSuffixFastq) trimmedRecord.write(singleFastqWriter);
 				}
 				f = null;
 				seq = null;
@@ -197,9 +261,15 @@ public class BarcodeAnalysis {
 			line = null;
 			record = null;
 		}
-		w.close();
-		for(FileWriter fw : switchWriters.values()) {
+		tableWriter.close();
+		for(FileWriter fw : switchTableWriters.values()) {
 			fw.close();
+		}
+		if(writeSuffixFastq) {
+			singleFastqWriter.close();
+			for(BufferedWriter fw : switchFastqWriters.values()) {
+				fw.close();
+			}
 		}
 	}
 	
@@ -209,13 +279,30 @@ public class BarcodeAnalysis {
 	 * @param switchValues Switch values
 	 * @return Output file name
 	 */
-	private static String makeOutFileName(String outFilePrefix, Map<Switch, List<FixedSequence>> switchValues) {
+	private static String makeOutTableName(String outFilePrefix, Map<Switch, List<FixedSequence>> switchValues) {
 		String rtrn = outFilePrefix;
 		for(Switch s : switchValues.keySet()) {
 			for(FixedSequence seq : switchValues.get(s)) {
 				rtrn += "_" + seq.getId();
 			}
 		}
+		return rtrn;
+	}
+	
+	/**
+	 * Make name of output fastq file based on prefix and switch values
+	 * @param outFilePrefix File prefix
+	 * @param switchValues Switch values
+	 * @return Output file name
+	 */
+	private static String makeOutFastqName(String outFilePrefix, Map<Switch, List<FixedSequence>> switchValues) {
+		String rtrn = outFilePrefix.replaceAll(".fq", "").replaceAll(".fastq", "");
+		for(Switch s : switchValues.keySet()) {
+			for(FixedSequence seq : switchValues.get(s)) {
+				rtrn += "_" + seq.getId();
+			}
+		}
+		rtrn += ".fq";
 		return rtrn;
 	}
 	
@@ -376,6 +463,7 @@ public class BarcodeAnalysis {
 	private static String designNameOption = "-l";
 	private static String totalNumBarcodesOption = "-nb";
 	private static String splitOutFilesBySwitchesOption = "-ss";
+	private static String writeSuffixFastqOption = "-wsf";
 
 	
 	/**
@@ -419,6 +507,7 @@ public class BarcodeAnalysis {
 		p.addStringArg(designNameOption, "Ligation design. Options: " + LigationDesign.getNamesAsCommaSeparatedList(), true);
 		p.addIntArg(totalNumBarcodesOption, "Total number of barcode ligations", false, -1);
 		p.addBooleanArg(splitOutFilesBySwitchesOption, "Split output files by switch values in reads", false, false);
+		p.addBooleanArg(writeSuffixFastqOption, "Also write fastq file(s) of the part of each read after the last matched layout element", false, false);
 		p.parse(args);
 		if(p.getBooleanArg(debugOption)) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
@@ -452,6 +541,7 @@ public class BarcodeAnalysis {
 		LigationDesign design = LigationDesign.fromString(designName);
 		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
+		boolean writeSuffixFastq = p.getBooleanArg(writeSuffixFastqOption);
 		
 		validateCommandLine(p);
 		
@@ -463,11 +553,11 @@ public class BarcodeAnalysis {
 				switch(design) {
 				case PAIRED_DESIGN_BARCODE_IN_READ2:
 					BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
-					findBarcodes(fastq, layout1, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout);
+					findBarcodes(fastq, layout1, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
 					break;
 				case SINGLE_DESIGN_BARCODE_IN_READ2:
 					BarcodedReadLayout layout2 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
-					findBarcodes(fastq, layout2, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout);
+					findBarcodes(fastq, layout2, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
 					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
