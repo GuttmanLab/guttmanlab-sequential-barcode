@@ -139,19 +139,21 @@ public class BarcodeAnalysis {
 			}
 			tableWriter.close();
 
-			FileWriter fastqWriter = new FileWriter(makeSuffixFastqName(outPrefix));
-			for(String fq : splitSuffixFastqs) {
-				FileReader r = new FileReader(fq);
-				BufferedReader b = new BufferedReader(r);
-				while(b.ready()) {
-					fastqWriter.write(b.readLine() + "\n");
+			if(writeSuffixFastq) {
+				FileWriter fastqWriter = new FileWriter(makeSuffixFastqName(outPrefix));
+				for(String fq : splitSuffixFastqs) {
+					FileReader r = new FileReader(fq);
+					BufferedReader b = new BufferedReader(r);
+					while(b.ready()) {
+						fastqWriter.write(b.readLine() + "\n");
+					}
+					r.close();
+					b.close();
+					File f = new File(fq);
+					f.delete();
 				}
-				r.close();
-				b.close();
-				File f = new File(fq);
-				f.delete();
+				fastqWriter.close();
 			}
-			fastqWriter.close();
 		}
 	}
 	
