@@ -64,6 +64,27 @@ public class ReadLayoutFactory {
 	}
 	
 	/**
+	 * Create a read layout for sequential 3D barcoding project with single end design and ligations of an odd set and even set of barcodes
+	 * DPM separates barcodes from rest of read
+	 * @param evenBarcodes Even barcodes Table of even barcodes (line format: barcode_ID   barcode_sequence)
+	 * @param oddBarcodes Odd barcodes Table of odd barcodes (line format: barcode_ID   barcode_sequence)
+	 * @param totalNumBarcodes Total number of barcode ligations
+	 * @param dpm DPM sequence
+	 * @param readLength Full length of sequencing reads
+	 * @param maxMismatchBarcode Max number of mismatches in barcode sequence
+	 * @param maxMismatchDpm Max number of mismatches in DPM sequence
+	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
+	 * @return The read layout specified by the parameters
+	 * @throws IOException 
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DSingleDesign(String evenBarcodeTableFile, String oddBarcodeTableFile, int totalNumBarcodes, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchDpm, boolean enforceOddEven) throws IOException {
+		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
+		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
+		return getRead2LayoutRnaDna3DSingleDesign(evenBarcodes, oddBarcodes, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
+	}
+	
+
+	/**
 	 * Create a read layout for sequential 3D barcoding project with paired end design and ligations of an odd set and even set of barcodes
 	 * @param evenBarcodes Even barcodes
 	 * @param oddBarcodes Odd barcodes
@@ -124,9 +145,6 @@ public class ReadLayoutFactory {
 		}
 		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
 		
-		// Add fixed sequence at beginning of read
-		//TODO
-		
 		// Add barcodes
 		Collection<Barcode> allBarcodes = new TreeSet<Barcode>();
 		allBarcodes.addAll(oddBarcodes);
@@ -153,5 +171,54 @@ public class ReadLayoutFactory {
 		
 		return new BarcodedReadLayout(eltsSequence, readLength);
 	}
+	
+	
+	/**
+	 * Create a read layout for sequential 3D barcoding project with single end design and ligations of an odd set and even set of barcodes
+	 * DPM separates barcodes from rest of read
+	 * @param evenBarcodes Even barcodes
+	 * @param oddBarcodes Odd barcodes
+	 * @param totalNumBarcodes Total number of barcode ligations
+	 * @param dpm DPM sequence
+	 * @param readLength Full length of sequencing reads
+	 * @param maxMismatchBarcode Max number of mismatches in barcode sequence
+	 * @param maxMismatchDpm Max number of mismatches in DPM sequence
+	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
+	 * @return The read layout specified by the parameters
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DSingleDesign(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchDpm, boolean enforceOddEven) {
+		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
+			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
+		}
+		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
+		
+		// Add barcodes
+		Collection<Barcode> allBarcodes = new TreeSet<Barcode>();
+		allBarcodes.addAll(oddBarcodes);
+		allBarcodes.addAll(evenBarcodes);
+		
+		if(enforceOddEven) {
+			BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes, maxMismatchBarcode);
+			BarcodeSet evenBarcodesSet = new BarcodeSet("even_barcodes", evenBarcodes, maxMismatchBarcode);
+			for(int i = 0; i < totalNumBarcodes; i++) {
+				if(i % 2 == 0) {
+					eltsSequence.add(evenBarcodesSet);
+				} else {
+					eltsSequence.add(oddBarcodesSet);
+				}
+			}
+		} else {
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, dpm);
+			eltsSequence.add(allBarcodesSet);
+		}
+		
+		// Add switch for DPM
+		eltsSequence.add(new FixedSequence("dpm", dpm, maxMismatchDpm));
+		
+		
+		return new BarcodedReadLayout(eltsSequence, readLength);
+	}
+	
+	
 
 }

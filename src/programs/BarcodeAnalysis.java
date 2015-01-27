@@ -53,6 +53,8 @@ public class BarcodeAnalysis {
 
 	public static Logger logger = Logger.getLogger(BarcodeAnalysis.class.getName());
 	private static Session drmaaSession;
+	private static boolean GET_LAST_BARCODES = false;
+	private static int NUM_LAST_BARCODES = Integer.MAX_VALUE;
 	
 	/**
 	 * For RNA-DNA 3D barcoding method
@@ -84,6 +86,8 @@ public class BarcodeAnalysis {
 		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
 		boolean writeSuffixFastq = p.getBooleanArg(writeSuffixFastqOption);
+		boolean getLastBarcodes = p.getBooleanArg(getLastBarcodesOption);
+		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
 		Map<String, String> splitTables = new TreeMap<String, String>();
@@ -115,6 +119,8 @@ public class BarcodeAnalysis {
 			cmmd += " " + totalNumBarcodesOption + " " + totalNumBarcodes;
 			cmmd += " " + splitOutFilesBySwitchesOption + " " + splitOutputBySwitchesInLayout;
 			cmmd += " " + writeSuffixFastqOption + " " + writeSuffixFastq;
+			cmmd += " " + getLastBarcodesOption + " " + getLastBarcodes;
+			cmmd += " " + lastNumBarcodesOption + " " + lastNumBarcodes;
 			String jobName = "OGS_job_" + fq;
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
 			job.submit();
@@ -230,6 +236,10 @@ public class BarcodeAnalysis {
 				BarcodeSequence barcodes = f.getBarcodes();
 				if(verbose) line += barcodes.getNumBarcodes() + "\t";
 				line += barcodes.toString() + "\t";
+				if(GET_LAST_BARCODES) {
+					BarcodeSequence lastBarcodes = barcodes.getLastBarcodes(NUM_LAST_BARCODES);
+					line += lastBarcodes.toString() + "\t";
+				}
 				if(verbose) line += seq + "\t";
 				// Fastq sequence with layout elements removed if writing fastq
 				FastqSequence trimmedRecord = writeSuffixFastq ? record.trimFirstNBPs(layout.matchedElementsLengthInRead(record.getSequence())) : null;
@@ -410,33 +420,56 @@ public class BarcodeAnalysis {
 				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
 			}
 			break;
-		case SINGLE_DESIGN_BARCODE_IN_READ2:
+		case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
 			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(rpm == null) {
-				throw new IllegalArgumentException("Must provide RPM sequence for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide RPM sequence for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(dpm == null) {
-				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(maxMismatchRpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
 			}
 			if(maxMismatchDpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+			}
+			break;
+		case SINGLE_DESIGN_BARCODE_IN_READ2:
+			if(oddBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+			}
+			if(evenBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+			}
+			if(totalNumBarcodes < 1) {
+				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+			}
+			if(dpm == null) {
+				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+			}
+			if(readLength < 1) {
+				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+			}
+			if(maxMismatchBarcode < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+			}
+			if(maxMismatchDpm < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
 			}
 			break;
 		default:
@@ -466,6 +499,8 @@ public class BarcodeAnalysis {
 	private static String totalNumBarcodesOption = "-nb";
 	private static String splitOutFilesBySwitchesOption = "-ss";
 	private static String writeSuffixFastqOption = "-wsf";
+	private static String getLastBarcodesOption = "-lb";
+	private static String lastNumBarcodesOption = "-nlb";
 
 	
 	/**
@@ -510,6 +545,8 @@ public class BarcodeAnalysis {
 		p.addIntArg(totalNumBarcodesOption, "Total number of barcode ligations", false, -1);
 		p.addBooleanArg(splitOutFilesBySwitchesOption, "Split output files by switch values in reads", false, false);
 		p.addBooleanArg(writeSuffixFastqOption, "Also write fastq file(s) of the part of each read after the last matched layout element", false, false);
+		p.addBooleanArg(getLastBarcodesOption, "Also get the last N barcodes from each fragment and write as a column in table", false, false);
+		p.addIntArg(lastNumBarcodesOption, "Number of last barcodes to get for " + getLastBarcodesOption + " option", false, -1);
 		p.parse(args);
 		if(p.getBooleanArg(debugOption)) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
@@ -544,6 +581,11 @@ public class BarcodeAnalysis {
 		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
 		boolean writeSuffixFastq = p.getBooleanArg(writeSuffixFastqOption);
+		GET_LAST_BARCODES = p.getBooleanArg(getLastBarcodesOption);
+		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
+		if(lastNumBarcodes > 0) {
+			NUM_LAST_BARCODES = lastNumBarcodes;
+		}
 		
 		validateCommandLine(p);
 		
@@ -557,10 +599,13 @@ public class BarcodeAnalysis {
 					BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
 					findBarcodes(fastq, layout1, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
 					break;
-				case SINGLE_DESIGN_BARCODE_IN_READ2:
+				case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
 					BarcodedReadLayout layout2 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
 					findBarcodes(fastq, layout2, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
 					break;
+				case SINGLE_DESIGN_BARCODE_IN_READ2:
+					BarcodedReadLayout layout3 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
+					findBarcodes(fastq, layout3, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
 				default:
 					throw new IllegalArgumentException("Not implemented");
 				}
@@ -574,7 +619,7 @@ public class BarcodeAnalysis {
 				BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
 				countBarcodes(fastq, layout1, maxMismatchBarcode);
 				break;
-			case SINGLE_DESIGN_BARCODE_IN_READ2:
+			case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
 				BarcodedReadLayout layout2 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
 				countBarcodes(fastq, layout2, maxMismatchBarcode);
 				break;

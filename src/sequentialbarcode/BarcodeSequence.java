@@ -176,6 +176,21 @@ public class BarcodeSequence implements Comparable<BarcodeSequence> {
 		return barcodes;
 	}
 	
-	
+	/**
+	 * Get the last N barcodes
+	 * @param numToGet Number of barcodes to get
+	 * @return The last N barcodes or all barcodes if N > number of barcodes
+	 */
+	public BarcodeSequence getLastBarcodes(int numToGet) {
+		if(numToGet >= barcodes.size()) {
+			return new BarcodeSequence(barcodes);
+		}
+		int firstToGet = barcodes.size() - numToGet;
+		List<Barcode> rtrn = new ArrayList<Barcode>();
+		for(int i = firstToGet; i < barcodes.size(); i++) {
+			rtrn.add(barcodes.get(i));
+		}
+		return new BarcodeSequence(rtrn);
+	}
 	
 }
