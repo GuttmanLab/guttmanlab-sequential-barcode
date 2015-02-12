@@ -6,9 +6,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -22,9 +24,14 @@ import net.sf.samtools.util.CloseableIterator;
 import org.apache.log4j.Logger;
 
 import programs.BarcodedBamWriter;
+import guttmanlab.core.annotation.Gene;
+import guttmanlab.core.annotation.SingleInterval;
+import guttmanlab.core.annotation.io.BEDFileIO;
+import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
 import broad.core.parser.StringParser;
 import sequentialbarcode.BarcodeSequence;
+import guttmanlab.core.serialize.AvroStringIndex;
 import guttmanlab.core.serialize.sam.AvroSamRecord;
 import guttmanlab.core.serialize.sam.AvroSamStringIndex;
 
@@ -36,7 +43,6 @@ import guttmanlab.core.serialize.sam.AvroSamStringIndex;
  */
 public class Query3DBarcode {
 	
-	@SuppressWarnings("unused")
 	private static Logger logger = Logger.getLogger(Query3DBarcode.class.getName());
 	private static int MIN_NUM_BARCODES_PER_FRAGMENT = 0;
 	
@@ -132,8 +138,13 @@ public class Query3DBarcode {
 			ids = new HashSet<String>();
 			ids.addAll(readIDsToExclude);
 		}
-		FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
-		rtrn.addAll(getUniqueLocations(records));
+		try {
+			FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
+			rtrn.addAll(getUniqueLocations(records));
+		} catch(IllegalArgumentException e) {
+			logger.warn("Skipping key: " + e.getMessage());
+			return new TreeSet<String>();
+		}
 		return rtrn;
 	}
 	
@@ -167,6 +178,24 @@ public class Query3DBarcode {
 	}
 	
 	/**
+	 * Get barcodes that are shared among multiple regions
+	 * @param samReader SAM reader for bam file of read mappings
+	 * @param regions The regions whose barcodes will be intersected
+	 * @return The intersection of barcode sets for all the regions
+	 */
+	public static Collection<String> getSharedBarcodes(SAMFileReader samReader, Collection<SingleInterval> regions) {
+		java.util.Iterator<SingleInterval> regionIter = regions.iterator();
+		SingleInterval firstRegion = regionIter.next();
+		Collection<String> rtrn = getBarcodes(samReader, firstRegion.getReferenceName(), firstRegion.getReferenceStartPosition(), firstRegion.getReferenceEndPosition());
+		while(regionIter.hasNext()) {
+			SingleInterval region = regionIter.next();
+			Collection<String> barcodes = getBarcodes(samReader, region.getReferenceName(), region.getReferenceStartPosition(), region.getReferenceEndPosition());
+			rtrn.retainAll(barcodes);
+		}
+		return rtrn;
+	}
+	
+	/**
 	 * Get string representations of the mapped locations of all reads that share the same barcode as some read mapping to the region of interest
 	 * @param index Avro index
 	 * @param samReader SAM reader for bam file of read mappings
@@ -185,8 +214,13 @@ public class Query3DBarcode {
 		}
 		Set<String> rtrn = new TreeSet<String>();
 		for(String barcode : barcodes) {
-			FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
-			rtrn.addAll(getUniqueLocations(records));
+			try {
+				FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
+				rtrn.addAll(getUniqueLocations(records));
+			} catch(IllegalArgumentException e) {
+				logger.warn("Skipping key: " + e.getMessage());
+				continue;
+			}
 		}
 		return rtrn;
 	}
@@ -210,17 +244,22 @@ public class Query3DBarcode {
 		}
 		Map<String, Integer> rtrn = new TreeMap<String, Integer>();
 		for(String barcode : barcodes) {
-			FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
-			CloseableIterator<AvroSamRecord> iter = records.sortedIterator();
-			while(iter.hasNext()) {
-				AvroSamRecord record = iter.next();
-				String ref = record.getReferenceName();
-				if(!rtrn.containsKey(ref)) {
-					rtrn.put(ref, Integer.valueOf(0));
+			try {
+				FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
+				CloseableIterator<AvroSamRecord> iter = records.sortedIterator();
+				while(iter.hasNext()) {
+					AvroSamRecord record = iter.next();
+					String ref = record.getReferenceName();
+					if(!rtrn.containsKey(ref)) {
+						rtrn.put(ref, Integer.valueOf(0));
+					}
+					rtrn.put(ref, Integer.valueOf(rtrn.get(ref).intValue() + 1));
 				}
-				rtrn.put(ref, Integer.valueOf(rtrn.get(ref).intValue() + 1));
+				iter.close();
+			} catch(IllegalArgumentException e) {
+				logger.warn("Skipping key: " + e.getMessage());
+				continue;
 			}
-			iter.close();
 		}
 		return rtrn;
 	}
@@ -287,8 +326,12 @@ public class Query3DBarcode {
 	 * @throws IOException
 	 */
 	public static void printReadsWithBarcode(AvroSamStringIndex index, String barcode) throws IOException {
-		FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode);
-		printRecords(records);
+		try {
+			FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode);
+			printRecords(records);
+		} catch(IllegalArgumentException e) {
+			logger.warn("Skipping key: " + e.getMessage());
+		}
 	}
 	
 	/**
@@ -340,12 +383,15 @@ public class Query3DBarcode {
 		p.addIntArg("-rs", "Print locations of all reads with barcodes matching some read mapped to region: start", false, -1);
 		p.addIntArg("-re", "Print locations of all reads with barcodes matching some read mapped to region: end", false, -1);
 		p.addStringArg("-rbs", "Coordinate sorted bam file needed for query by region", false);
-		p.addStringArg("-c", "Chromosome size file if querying entire chromosome. Leave out -rs and -re.", false, null);
+		p.addStringArg("-c", "Chromosome size file (to exclude regions with -be, or for entire chromosome with -rc; leave out -rs and -re)", false, null);
 		p.addIntArg("-mb", "Minimum number of barcodes to consider a fragment", false, MIN_NUM_BARCODES_PER_FRAGMENT);
 		p.addBooleanArg("-es", "Exclude barcode matches if the read ID matches any read mapping to the query region", false, true);
 		p.addBooleanArg("-pp", "Print pairs of locations that interact", false, false);
 		p.addBooleanArg("-pl", "Print list of unique interacting locations", false, false);
 		p.addBooleanArg("-pc", "Print counts of interacting reads mapped to each reference sequence", false, false);
+		p.addStringArg("-be", "Bed file of regions to exclude from matches (remove matches that overlap this annotation", false, null);
+		p.addStringArg("-cbi", "Print barcodes that are present on all of this comma-separated list of chromosomes", false, null);
+		p.addLongArg("-mr", "Max records to get for each barcode. If more than this amount, don't get any", false, AvroStringIndex.MAX_RECORDS_TO_GET);
 		p.parse(args);
 		String avroFile = p.getStringArg("-a");
 		String barcode = p.getStringArg("-b");
@@ -361,12 +407,59 @@ public class Query3DBarcode {
 		boolean printLocations = p.getBooleanArg("-pl");
 		boolean printRefCounts = p.getBooleanArg("-pc");
 		MIN_NUM_BARCODES_PER_FRAGMENT = p.getIntArg("-mb");
+		String excludeBed = p.getStringArg("-be");
+		String chrBarcodeIntersection = p.getStringArg("-cbi");
+		long maxRecordsPerBarcode = p.getLongArg("-mr");
+		
+		AvroStringIndex.MAX_RECORDS_TO_GET = maxRecordsPerBarcode;
+		
+		if(chrBarcodeIntersection != null) {
+			StringParser s = new StringParser();
+			s.parse(chrBarcodeIntersection, ",");
+			List<String> chrs = s.getStringList();
+			if(sizeFile == null) {
+				throw new IllegalArgumentException("Must provide chr size file to query entire chromosome");
+			}
+			if(bam == null) {
+				throw new IllegalArgumentException("Must provide bam file for query by region");
+			}
+			SAMFileReader samReader = new SAMFileReader(new File(bam));
+			Map<String, Integer> sizes = readChrSizes(sizeFile);
+			Collection<SingleInterval> intervals = new ArrayList<SingleInterval>();
+			for(String chr : chrs) {
+				int size = sizes.get(chr).intValue();
+				int start = 0;
+				int end = size;
+				SingleInterval interval = new SingleInterval(chr, start, end);
+				intervals.add(interval);
+			}
+			Collection<String> sharedBarcodes = getSharedBarcodes(samReader, intervals);
+			System.out.println();
+			if(sharedBarcodes.isEmpty()) {
+				System.out.println("No shared barcodes");
+			} else {
+				for(String sharedBarcode : sharedBarcodes) {
+					System.out.println(sharedBarcode.toString());
+				}
+			}
+			System.out.println();
+			return;
+		}
 		
 		if(barcode != null && regionChr != null) {
 			throw new IllegalArgumentException("Choose one: query by barcode or query by region");
 		}
 		
-		AvroSamStringIndex index = new AvroSamStringIndex(avroFile, schemaFile, indexedField);
+		AnnotationCollection<Gene> regionsToExclude = null;
+		
+		if(excludeBed != null) {
+			if(sizeFile == null) {
+				throw new IllegalArgumentException("If excluding regions with -be, must provide chromosome size file with -c.");
+			}
+			regionsToExclude = BEDFileIO.loadFromFile(excludeBed, sizeFile);
+		}
+		
+		AvroSamStringIndex index = new AvroSamStringIndex(avroFile, schemaFile, indexedField, regionsToExclude);
 
 		if(barcode != null) {
 			System.out.println();

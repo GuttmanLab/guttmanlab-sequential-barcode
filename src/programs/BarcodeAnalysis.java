@@ -606,6 +606,7 @@ public class BarcodeAnalysis {
 				case SINGLE_DESIGN_BARCODE_IN_READ2:
 					BarcodedReadLayout layout3 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
 					findBarcodes(fastq, layout3, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
+					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
 				}

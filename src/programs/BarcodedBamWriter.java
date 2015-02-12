@@ -32,6 +32,7 @@ import sequentialbarcode.BarcodedFragment;
 import sequentialbarcode.BarcodedFragmentImpl;
 import net.sf.samtools.BAMFileWriter;
 import net.sf.samtools.SAMFileReader;
+import net.sf.samtools.SAMFormatException;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
 import nextgen.core.pipeline.util.OGSUtils;
@@ -334,24 +335,29 @@ public class BarcodedBamWriter {
 			if(numDone != 0 && numDone % 100000 == 0) {
 				logger.info("Finished " + numDone + " reads. Skipped " + unmapped + " unmapped reads and " + skipped + " reads not in map.");
 			}
-			SAMRecord record = iter.next();
-			String oldName = record.getReadName();
-			//String newName = "r" + recordNum;
-			//nw.write(oldName + "\t" + newName + "\n");
-			//recordNum++;
-			
-			if(record.getReadUnmappedFlag()) {
-				unmapped++;
+			try {
+				SAMRecord record = iter.next();
+				String oldName = record.getReadName();
+				//String newName = "r" + recordNum;
+				//nw.write(oldName + "\t" + newName + "\n");
+				//recordNum++;
+				
+				if(record.getReadUnmappedFlag()) {
+					unmapped++;
+					continue;
+				}
+				if(!barcodesByReadId.containsKey(oldName)) {
+					logger.debug("READ_NOT_FOUND\t" + oldName);
+					skipped++;
+					continue;
+				}
+				BarcodeSequence barcodes = barcodesByReadId.get(oldName);
+				setBarcodes(record, barcodes);
+				w.addAlignment(record);
+			} catch(SAMFormatException e) {
+				logger.info("Caught SAM format exception. Skipping read.");
 				continue;
 			}
-			if(!barcodesByReadId.containsKey(oldName)) {
-				logger.debug("READ_NOT_FOUND\t" + oldName);
-				skipped++;
-				continue;
-			}
-			BarcodeSequence barcodes = barcodesByReadId.get(oldName);
-			setBarcodes(record, barcodes);
-			w.addAlignment(record);
 		}
 		
 		r.close();		
