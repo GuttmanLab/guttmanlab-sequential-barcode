@@ -258,13 +258,30 @@ public class Query3DBarcode {
 	 * @return Map of reference name to number of reads
 	 * @throws IOException
 	 */
-	public static Map<String, Integer> getChrCountsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+	public static Map<String, Double> getChrCountsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+		return getChrCountsOfAllReadsWithBarcodesMatchingRegion(index, samReader, chr, start, end, excludeSelfMatches, false, -1);
+	}
+	
+	/**
+	 * Get number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
+	 * @param index Avro index
+	 * @param samReader SAM reader for bam file of read mappings
+	 * @param chr Region chromosome
+	 * @param start Region start
+	 * @param end Region end
+	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
+	 * @param normalizeByQueryRegionRPKM Normalize all returned counts by RPKM of the query region
+	 * @param totalMappedReads Total number of mapped reads for RPKM calculation, or pass a nonpositive number to calculate on the fly
+	 * @return Map of reference name to number of reads
+	 * @throws IOException
+	 */
+	public static Map<String, Double> getChrCountsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, boolean normalizeByQueryRegionRPKM, long totalMappedReads) throws IOException {
 		Collection<String> barcodes = getBarcodesOfReadsInRegion(samReader, chr, start, end);
 		Collection<String> ids = null;
 		if(excludeSelfMatches) {
 			ids = getReadIDs(samReader, chr, start, end);
 		}
-		Map<String, Integer> rtrn = new TreeMap<String, Integer>();
+		Map<String, Double> rtrn = new TreeMap<String, Double>();
 		for(String barcode : barcodes) {
 			try {
 				FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode, "qname", ids);
@@ -273,9 +290,9 @@ public class Query3DBarcode {
 					AvroSamRecord record = iter.next();
 					String ref = record.getReferenceName();
 					if(!rtrn.containsKey(ref)) {
-						rtrn.put(ref, Integer.valueOf(0));
+						rtrn.put(ref, Double.valueOf(0));
 					}
-					rtrn.put(ref, Integer.valueOf(rtrn.get(ref).intValue() + 1));
+					rtrn.put(ref, Double.valueOf(rtrn.get(ref).intValue() + 1));
 				}
 				iter.close();
 			} catch(IllegalArgumentException e) {
@@ -283,9 +300,35 @@ public class Query3DBarcode {
 				continue;
 			}
 		}
+		if(normalizeByQueryRegionRPKM) {
+			if(totalMappedReads < 0) {
+				logger.info("No total read count provided for RPKM calculation. Calculating from bam file...");
+				SAMRecordIterator samRecordIter = samReader.iterator();
+				totalMappedReads = 0;
+				while(samRecordIter.hasNext()) {
+					SAMRecord record = samRecordIter.next();
+					if(!record.getReadUnmappedFlag()) {
+						totalMappedReads++;
+					}
+				}
+				logger.info("There are " + totalMappedReads + " mapped reads.");
+			}
+			double regionKb = (double) (end - start + 1) / 1000;
+			SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
+			double regionCount = 0;
+			while(iter.hasNext()) {
+				iter.next();
+				regionCount++;
+			}
+			double millionsOfReads = (double) totalMappedReads / 1000000;
+			double rpkm = (regionCount / regionKb) / millionsOfReads;
+			logger.info("RPKM of " + chr + ":" + start + "-" + end + " is " + rpkm + ".");
+			for(String ref : rtrn.keySet()) {
+				rtrn.put(ref, Double.valueOf(rtrn.get(ref).doubleValue() / rpkm));
+			}			
+		}
 		return rtrn;
 	}
-	
 	
 	/**
 	 * Print number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
@@ -298,7 +341,23 @@ public class Query3DBarcode {
 	 * @throws IOException
 	 */
 	public static void printReferenceCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
-		Map<String, Integer> counts = getChrCountsOfAllReadsWithBarcodesMatchingRegion(index, samReader, chr, start, end, excludeSelfMatches);
+		printReferenceCountsOfAllReadsWithBarcodesInRegion(index, samReader, chr, start, end, excludeSelfMatches, false, -1);
+	}
+	
+	/**
+	 * Print number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
+	 * @param index Avro index
+	 * @param samReader SAM reader for bam file of read mappings
+	 * @param chr Region chromosome
+	 * @param start Region start
+	 * @param end Region end
+	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
+	 * @param normalizeByQueryRegionRPKM Normalize all returned counts by RPKM of the query region
+	 * @param totalMappedReads Total number of mapped reads for RPKM calculation, or pass a nonpositive number to calculate on the fly
+	 * @throws IOException
+	 */
+	public static void printReferenceCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, boolean normalizeByQueryRegionRPKM, long totalMappedReads) throws IOException {
+		Map<String, Double> counts = getChrCountsOfAllReadsWithBarcodesMatchingRegion(index, samReader, chr, start, end, excludeSelfMatches, normalizeByQueryRegionRPKM, totalMappedReads);
 		for(String c : counts.keySet()) {
 			System.out.println(c + "\t" + counts.get(c));
 		}
@@ -457,6 +516,8 @@ public class Query3DBarcode {
 		p.addLongArg("-mr", "Max records to get for each barcode. If more than this amount, don't get any", false, AvroStringIndex.MAX_RECORDS_TO_GET);
 		p.addIntArg("-mmq", "Min mapping quality to apply to all sam records", false, AvroSamRecord.MIN_MAPPING_QUALITY);
 		p.addStringArg("-ob", "Output bed file, omit if printing to standard out", false, null);
+		p.addBooleanArg("-ncr", "For -pc option, normalize counts by RPKM of the query region", false, false);
+		p.addLongArg("-trc", "Total read count for RPKM calculation in -ncr option. If omitted, calculate on the fly.", false, -1);
 		p.parse(args);
 		AvroSamRecord.MIN_MAPPING_QUALITY = p.getIntArg("-mmq");
 		if(AvroSamRecord.MIN_MAPPING_QUALITY > 0) {
@@ -481,6 +542,8 @@ public class Query3DBarcode {
 		String excludeBed = p.getStringArg("-be");
 		String chrBarcodeIntersection = p.getStringArg("-cbi");
 		String outputBed = p.getStringArg("-ob");
+		boolean normalizeByQueryRegionRPKM = p.getBooleanArg("-ncr");
+		long totalReadCount = p.getLongArg("-trc");
 		
 		if(chrBarcodeIntersection != null) {
 			StringParser s = new StringParser();
@@ -568,9 +631,14 @@ public class Query3DBarcode {
 				System.out.println();
 			} else if(printRefCounts) {
 				System.out.println();
-				System.out.println("Reference counts of reads with barcodes matching some read in region " + regionChr + ":" + regionStart + "-" + regionEnd + ":");
+				String message = "Reference counts of reads with barcodes matching some read in region " + regionChr + ":" + regionStart + "-" + regionEnd;
+				if(normalizeByQueryRegionRPKM) {
+					message += " (normalized by region RPKM)";
+				}
+				message += ":";
+				System.out.println(message);
 				System.out.println("");
-				printReferenceCountsOfAllReadsWithBarcodesInRegion(index, samReader, regionChr, regionStart, regionEnd, excludeSelf);
+				printReferenceCountsOfAllReadsWithBarcodesInRegion(index, samReader, regionChr, regionStart, regionEnd, excludeSelf, normalizeByQueryRegionRPKM, totalReadCount);
 				System.out.println();
 			}
 		}
