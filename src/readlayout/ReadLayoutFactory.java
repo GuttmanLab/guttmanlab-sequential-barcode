@@ -11,6 +11,7 @@ import readelement.Barcode;
 import readelement.BarcodeSet;
 import readelement.FixedSequence;
 import readelement.ReadSequenceElement;
+import readelement.RepeatableFixedSequenceCollection;
 import readelement.Switch;
 
 /**
@@ -57,10 +58,10 @@ public class ReadLayoutFactory {
 	 * @return The read layout specified by the parameters
 	 * @throws IOException 
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(String evenBarcodeTableFile, String oddBarcodeTableFile, int totalNumBarcodes, String rpm, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchRpm, int maxMismatchDpm, boolean enforceOddEven) throws IOException {
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(String evenBarcodeTableFile, String oddBarcodeTableFile, int totalNumBarcodes, String rpm, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchRpm, int maxMismatchDpm, boolean enforceOddEven) throws IOException {
 		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
 		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
-		return getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodes, oddBarcodes, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
+		return getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodes, oddBarcodes, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
 	}
 	
 	/**
@@ -77,10 +78,10 @@ public class ReadLayoutFactory {
 	 * @return The read layout specified by the parameters
 	 * @throws IOException 
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DSingleDesign(String evenBarcodeTableFile, String oddBarcodeTableFile, int totalNumBarcodes, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchDpm, boolean enforceOddEven) throws IOException {
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesign(String evenBarcodeTableFile, String oddBarcodeTableFile, int totalNumBarcodes, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchDpm, boolean enforceOddEven) throws IOException {
 		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
 		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
-		return getRead2LayoutRnaDna3DSingleDesign(evenBarcodes, oddBarcodes, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
+		return getReadLayoutRnaDna3DSingleDesign(evenBarcodes, oddBarcodes, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
 	}
 	
 
@@ -139,7 +140,7 @@ public class ReadLayoutFactory {
 	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
 	 * @return The read layout specified by the parameters
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String rpm, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchRpm, int maxMismatchDpm, boolean enforceOddEven) {
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String rpm, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchRpm, int maxMismatchDpm, boolean enforceOddEven) {
 		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
 			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
 		}
@@ -186,7 +187,7 @@ public class ReadLayoutFactory {
 	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
 	 * @return The read layout specified by the parameters
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DSingleDesign(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchDpm, boolean enforceOddEven) {
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesign(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String dpm, int readLength, int maxMismatchBarcode, int maxMismatchDpm, boolean enforceOddEven) {
 		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
 			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
 		}
@@ -220,5 +221,70 @@ public class ReadLayoutFactory {
 	}
 	
 	
+	/**
+	 * Create a read layout for sequential 3D barcoding project with single end design and ligations of an odd set and even set of barcodes
+	 * A repeatable set of adapters separate barcodes from rest of read
+	 * @param evenBarcodeTableFile File with list of even barcodes
+	 * @param oddBarcodeTableFile File with list of odd barcodes
+	 * @param totalNumBarcodes Total number of barcode ligations
+	 * @param adapterSeqFasta Fasta file of adapter sequences that come between barcodes and nucleotide sequence
+	 * @param readLength Full length of sequencing reads
+	 * @param maxMismatchBarcode Max number of mismatches in barcode sequence
+	 * @param maxMismatchAdapter Max number of mismatches in adapter sequence
+	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
+	 * @return The read layout specified by the parameters
+	 * @throws IOException 
+	 */
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMultipleAdapters(String evenBarcodeTableFile, String oddBarcodeTableFile, int totalNumBarcodes, String adapterSeqFasta, int readLength, int maxMismatchBarcode, int maxMismatchAdapter, boolean enforceOddEven) throws IOException {
+		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
+		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
+		return getReadLayoutRnaDna3DSingleDesignMultipleAdapters(evenBarcodes, oddBarcodes, totalNumBarcodes, adapterSeqFasta, readLength, maxMismatchBarcode, maxMismatchAdapter, enforceOddEven);
+	}
+	
+	/**
+	 * Create a read layout for sequential 3D barcoding project with single end design and ligations of an odd set and even set of barcodes
+	 * A repeatable set of adapters separate barcodes from rest of read
+	 * @param evenBarcodes Even barcodes
+	 * @param oddBarcodes Odd barcodes
+	 * @param totalNumBarcodes Total number of barcode ligations
+	 * @param adapterSeqFasta Fasta file of adapter sequences that come between barcodes and nucleotide sequence
+	 * @param readLength Full length of sequencing reads
+	 * @param maxMismatchBarcode Max number of mismatches in barcode sequence
+	 * @param maxMismatchAdapter Max number of mismatches in adapter sequence
+	 * @param enforceOddEven Require odd and even barcodes to alternate in read sequences
+	 * @return The read layout specified by the parameters
+	 */
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMultipleAdapters(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String adapterSeqFasta, int readLength, int maxMismatchBarcode, int maxMismatchAdapter, boolean enforceOddEven) {
+		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
+			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
+		}
+		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
+		
+		// Add barcodes
+		Collection<Barcode> allBarcodes = new TreeSet<Barcode>();
+		allBarcodes.addAll(oddBarcodes);
+		allBarcodes.addAll(evenBarcodes);
+		
+		if(enforceOddEven) {
+			BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes, maxMismatchBarcode);
+			BarcodeSet evenBarcodesSet = new BarcodeSet("even_barcodes", evenBarcodes, maxMismatchBarcode);
+			for(int i = 0; i < totalNumBarcodes; i++) {
+				if(i % 2 == 0) {
+					eltsSequence.add(evenBarcodesSet);
+				} else {
+					eltsSequence.add(oddBarcodesSet);
+				}
+			}
+		} else {
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, null);
+			eltsSequence.add(allBarcodesSet);
+		}
+		
+		// Add switches for adapters
+		eltsSequence.add(new RepeatableFixedSequenceCollection(adapterSeqFasta, maxMismatchAdapter));
+		
+		
+		return new BarcodedReadLayout(eltsSequence, readLength);
+	}
 
 }

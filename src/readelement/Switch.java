@@ -13,7 +13,7 @@ import java.util.Iterator;
  */
 public class Switch implements ReadSequenceElement {
 	
-	private Collection<FixedSequence> fixedSequences;
+	protected Collection<FixedSequence> fixedSequences;
 	private int length;
 	
 	/**

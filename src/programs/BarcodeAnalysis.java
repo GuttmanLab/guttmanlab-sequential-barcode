@@ -85,7 +85,7 @@ public class BarcodeAnalysis {
 		String designName = p.getStringArg(designNameOption);
 		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
-		boolean writeSuffixFastq = p.getBooleanArg(writeSuffixFastqOption);
+		String suffixFastq = p.getStringArg(suffixFastqOption);
 		boolean getLastBarcodes = p.getBooleanArg(getLastBarcodesOption);
 		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
 		
@@ -118,10 +118,11 @@ public class BarcodeAnalysis {
 			cmmd += " " + designNameOption + " " + designName;
 			cmmd += " " + totalNumBarcodesOption + " " + totalNumBarcodes;
 			cmmd += " " + splitOutFilesBySwitchesOption + " " + splitOutputBySwitchesInLayout;
-			cmmd += " " + writeSuffixFastqOption + " " + writeSuffixFastq;
+			cmmd += " " + suffixFastqOption + " " + makeSuffixFastqName(fq);
 			cmmd += " " + getLastBarcodesOption + " " + getLastBarcodes;
 			cmmd += " " + lastNumBarcodesOption + " " + lastNumBarcodes;
-			String jobName = "OGS_job_" + fq;
+			String jobNameWithSlashes = "OGS_job_" + fq;
+			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
 			job.submit();
 			jobs.add(job);
@@ -145,8 +146,8 @@ public class BarcodeAnalysis {
 			}
 			tableWriter.close();
 
-			if(writeSuffixFastq) {
-				FileWriter fastqWriter = new FileWriter(makeSuffixFastqName(outPrefix));
+			if(suffixFastq != null) {
+				FileWriter fastqWriter = new FileWriter(suffixFastq);
 				for(String fq : splitSuffixFastqs) {
 					FileReader r = new FileReader(fq);
 					BufferedReader b = new BufferedReader(r);
@@ -164,11 +165,11 @@ public class BarcodeAnalysis {
 	}
 	
 	/**
-	 * @param outFilePrefix
+	 * @param fastq Fastq file
 	 * @return Name of fastq file to write read suffixes to (removing matched element section)
 	 */
-	private static String makeSuffixFastqName(String outFilePrefix) {
-		return outFilePrefix.replaceAll(".fq", "").replaceAll(".fastq", "") + ".suffix.fq";
+	private static String makeSuffixFastqName(String fastq) {
+		return fastq.replaceAll(".fq", "").replaceAll(".fastq", "") + ".suffix.fq";
 	}
 	
 	/**
@@ -184,7 +185,7 @@ public class BarcodeAnalysis {
 	 */
 	@SuppressWarnings("unused")
 	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
-		findBarcodes(fastq, layout, maxMismatchBarcode, outFilePrefix, verbose, splitOutputBySwitchesInLayout, false);
+		findBarcodes(fastq, layout, maxMismatchBarcode, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
 	}
 	
 	/**
@@ -193,26 +194,25 @@ public class BarcodeAnalysis {
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
 	 * @param maxMismatchBarcode Max number of mismatches when matching barcodes to reads
-	 * @param outFilePrefix Output table
+	 * @param outFile Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
-	 * @param writeSuffixFastq Also write new fastq file(s) of the reads with all layout elements 
+	 * @param suffixFastq Also write new fastq file(s) of the reads with all layout elements, or null if not using
 	 * and positions before/between them removed. In other words, keep the part of the read after the last matched element.
 	 * Obeys the switch scenario, so if using switches, this will also write multiple fastq files, one for each switch
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout, boolean writeSuffixFastq) throws IOException {
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, String suffixFastq) throws IOException {
 		logger.info("");
-		logger.info("Identifying read2 barcodes for RNA-DNA-3D and writing to table(s)...");
+		logger.info("Identifying read2 barcodes for RNA-DNA-3D and writing to table(s) "+ outFile +"...");
 		if(splitOutputBySwitchesInLayout) {
 			logger.info("Splitting output by value of switches in reads...");
 		}
-		if(writeSuffixFastq) {
-			logger.info("Also writing fastq file(s) of reads without matched elements...");
+		if(suffixFastq != null) {
+			logger.info("Also writing fastq file(s) of reads without matched elements to " + suffixFastq + "...");
 		}
-		FileWriter tableWriter = new FileWriter(outFilePrefix); // Write to table
-		String outSingleFastq = makeSuffixFastqName(fastq); // Output fastq file if using
-		BufferedWriter singleFastqWriter = writeSuffixFastq ? new BufferedWriter(new FileWriter(outSingleFastq)) : null; // Fastq writer if using and not using switches
+		FileWriter tableWriter = new FileWriter(outFile); // Write to table
+		BufferedWriter singleFastqWriter = suffixFastq != null ? new BufferedWriter(new FileWriter(suffixFastq)) : null; // Fastq writer if using and not using switches
 		Map<String, FileWriter> switchTableWriters = new HashMap<String, FileWriter>(); // Writers for tables if using switches
 		Map<String, BufferedWriter> switchFastqWriters = new HashMap<String, BufferedWriter>(); // Writers for fastq files if using and if using switches
 		FastqParser iter = new FastqParser(); // Reader for input fastq file
@@ -242,15 +242,15 @@ public class BarcodeAnalysis {
 				}
 				if(verbose) line += seq + "\t";
 				// Fastq sequence with layout elements removed if writing fastq
-				FastqSequence trimmedRecord = writeSuffixFastq ? record.trimFirstNBPs(layout.matchedElementsLengthInRead(record.getSequence())) : null;
+				FastqSequence trimmedRecord = suffixFastq != null ? record.trimFirstNBPs(layout.matchedElementsLengthInRead(record.getSequence())) : null;
 				if(splitOutputBySwitchesInLayout) { // Write to switch-specific table file
 					Map<Switch, List<FixedSequence>> switchValues = f.getSwitchValues();
-					String switchTableName = makeOutTableName(outFilePrefix, switchValues); // Create name of switch-specific table file
+					String switchTableName = makeOutTableName(outFile, switchValues); // Create name of switch-specific table file
 					if(!switchTableWriters.containsKey(switchTableName)) {
 						switchTableWriters.put(switchTableName, new FileWriter(switchTableName));
 					}
 					switchTableWriters.get(switchTableName).write(line + "\n");
-					if(writeSuffixFastq) { // Write to switch-specific fastq file
+					if(suffixFastq != null) { // Write to switch-specific fastq file
 						String suffixFastqName = makeOutFastqName(fastq, switchValues); // Make name of switch-specific fastq file
 						if(!switchFastqWriters.containsKey(suffixFastqName)) {
 							switchFastqWriters.put(suffixFastqName, new BufferedWriter(new FileWriter(suffixFastqName)));
@@ -259,7 +259,7 @@ public class BarcodeAnalysis {
 					}
 				} else {
 					tableWriter.write(line + "\n");
-					if(writeSuffixFastq) trimmedRecord.write(singleFastqWriter);
+					if(suffixFastq != null) trimmedRecord.write(singleFastqWriter);
 				}
 				f = null;
 				seq = null;
@@ -277,7 +277,7 @@ public class BarcodeAnalysis {
 		for(FileWriter fw : switchTableWriters.values()) {
 			fw.close();
 		}
-		if(writeSuffixFastq) {
+		if(suffixFastq != null) {
 			singleFastqWriter.close();
 			for(BufferedWriter fw : switchFastqWriters.values()) {
 				fw.close();
@@ -381,6 +381,8 @@ public class BarcodeAnalysis {
 		String designName = commandLineParser.getStringArg(designNameOption);
 		LigationDesign design = LigationDesign.fromString(designName);
 		int totalNumBarcodes = commandLineParser.getIntArg(totalNumBarcodesOption);		
+		int maxMismatchAdapter = commandLineParser.getIntArg(maxMismatchAdapterOption);
+		String adapterSeqFasta = commandLineParser.getStringArg(adapterSeqFastaOption);
 		@SuppressWarnings("unused")
 		boolean splitOutputBySwitchesInLayout = commandLineParser.getBooleanArg(splitOutFilesBySwitchesOption);
 
@@ -420,56 +422,79 @@ public class BarcodeAnalysis {
 				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
 			}
 			break;
-		case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
+		case SINGLE_DESIGN_WITH_SWITCH:
 			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(rpm == null) {
-				throw new IllegalArgumentException("Must provide RPM sequence for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide RPM sequence for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(dpm == null) {
-				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(maxMismatchRpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			if(maxMismatchDpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
 			}
 			break;
-		case SINGLE_DESIGN_BARCODE_IN_READ2:
+		case SINGLE_DESIGN:
 			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			if(dpm == null) {
-				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			if(maxMismatchDpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN_BARCODE_IN_READ2.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
+			}
+			break;
+		case SINGLE_DESIGN_WITH_ADAPTERS:
+			if(adapterSeqFasta == null) {
+				throw new IllegalArgumentException("Must provide fasta file of adapter sequences for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+			}
+			if(oddBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+			}
+			if(evenBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+			}
+			if(totalNumBarcodes < 1) {
+				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+			}
+			if(readLength < 1) {
+				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+			}
+			if(maxMismatchBarcode < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+			}
+			if(maxMismatchAdapter < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in adapters for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
 			}
 			break;
 		default:
@@ -489,6 +514,7 @@ public class BarcodeAnalysis {
 	private static String maxMismatchBarcodeOption = "-mmb";
 	private static String maxMismatchRpmOption = "-mmr";
 	private static String maxMismatchDpmOption = "-mmd";
+	private static String maxMismatchAdapterOption = "-mma";
 	private static String enforceOddEvenOption = "-oe";
 	private static String countBarcodesOption = "-cb";
 	private static String verboseOption = "-v";
@@ -498,9 +524,10 @@ public class BarcodeAnalysis {
 	private static String designNameOption = "-l";
 	private static String totalNumBarcodesOption = "-nb";
 	private static String splitOutFilesBySwitchesOption = "-ss";
-	private static String writeSuffixFastqOption = "-wsf";
+	private static String suffixFastqOption = "-wsf";
 	private static String getLastBarcodesOption = "-lb";
 	private static String lastNumBarcodesOption = "-nlb";
+	private static String adapterSeqFastaOption = "-afa";
 
 	
 	/**
@@ -534,6 +561,7 @@ public class BarcodeAnalysis {
 		p.addIntArg(maxMismatchBarcodeOption, "Max mismatches in barcode", false, -1);
 		p.addIntArg(maxMismatchRpmOption, "Max mismatches in RPM", false, -1);
 		p.addIntArg(maxMismatchDpmOption, "Max mismatches in DPM", false, -1);
+		p.addIntArg(maxMismatchAdapterOption, "Max mismatches in adapter for single design with multiple adapters between barcodes and read", false, -1);
 		p.addBooleanArg(enforceOddEvenOption, "Enforce odd/even alternation for barcodes", false, false);
 		p.addBooleanArg(countBarcodesOption, "Count barcodes", false, false);
 		p.addBooleanArg(verboseOption, "Verbose output table for barcode identification", false, false);
@@ -544,9 +572,10 @@ public class BarcodeAnalysis {
 		p.addStringArg(designNameOption, "Ligation design. Options: " + LigationDesign.getNamesAsCommaSeparatedList(), true);
 		p.addIntArg(totalNumBarcodesOption, "Total number of barcode ligations", false, -1);
 		p.addBooleanArg(splitOutFilesBySwitchesOption, "Split output files by switch values in reads", false, false);
-		p.addBooleanArg(writeSuffixFastqOption, "Also write fastq file(s) of the part of each read after the last matched layout element", false, false);
+		p.addStringArg(suffixFastqOption, "Also write fastq file of the part of each read after the last matched layout element", false, null);
 		p.addBooleanArg(getLastBarcodesOption, "Also get the last N barcodes from each fragment and write as a column in table", false, false);
 		p.addIntArg(lastNumBarcodesOption, "Number of last barcodes to get for " + getLastBarcodesOption + " option", false, -1);
+		p.addStringArg(adapterSeqFastaOption, "Fasta file of adapter sequences for single design with multiple adapters between barcodes and read", false, null);
 		p.parse(args);
 		if(p.getBooleanArg(debugOption)) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
@@ -580,9 +609,11 @@ public class BarcodeAnalysis {
 		LigationDesign design = LigationDesign.fromString(designName);
 		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
-		boolean writeSuffixFastq = p.getBooleanArg(writeSuffixFastqOption);
+		String suffixFastq = p.getStringArg(suffixFastqOption);
 		GET_LAST_BARCODES = p.getBooleanArg(getLastBarcodesOption);
 		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
+		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
+		int maxMismatchAdapter = p.getIntArg(maxMismatchAdapterOption);
 		if(lastNumBarcodes > 0) {
 			NUM_LAST_BARCODES = lastNumBarcodes;
 		}
@@ -597,15 +628,19 @@ public class BarcodeAnalysis {
 				switch(design) {
 				case PAIRED_DESIGN_BARCODE_IN_READ2:
 					BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
-					findBarcodes(fastq, layout1, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
+					findBarcodes(fastq, layout1, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
-				case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
-					BarcodedReadLayout layout2 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
-					findBarcodes(fastq, layout2, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
+				case SINGLE_DESIGN_WITH_SWITCH:
+					BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
+					findBarcodes(fastq, layout2, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
-				case SINGLE_DESIGN_BARCODE_IN_READ2:
-					BarcodedReadLayout layout3 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
-					findBarcodes(fastq, layout3, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, writeSuffixFastq);
+				case SINGLE_DESIGN:
+					BarcodedReadLayout layout3 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
+					findBarcodes(fastq, layout3, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
+					break;
+				case SINGLE_DESIGN_WITH_ADAPTERS:
+					BarcodedReadLayout layout4 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMultipleAdapters(evenBarcodeList, oddBarcodeList, totalNumBarcodes, adapterSeqFasta, readLength, maxMismatchBarcode, maxMismatchAdapter, enforceOddEven);
+					findBarcodes(fastq, layout4, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
@@ -620,8 +655,8 @@ public class BarcodeAnalysis {
 				BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
 				countBarcodes(fastq, layout1, maxMismatchBarcode);
 				break;
-			case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
-				BarcodedReadLayout layout2 = ReadLayoutFactory.getRead2LayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
+			case SINGLE_DESIGN_WITH_SWITCH:
+				BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
 				countBarcodes(fastq, layout2, maxMismatchBarcode);
 				break;
 			default:

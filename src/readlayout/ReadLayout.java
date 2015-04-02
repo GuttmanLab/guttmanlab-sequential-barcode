@@ -122,6 +122,11 @@ public class ReadLayout {
 		Map<ReadSequenceElement, Integer> stopSignalPos = new HashMap<ReadSequenceElement, Integer>();
 		for(ReadSequenceElement elt : elements) {
 			if(elt.isRepeatable()) {
+				// First check if element has a stop signal
+				if(elt.getStopSignalForRepeatable() == null) {
+					stopSignalPos.put(elt, Integer.MAX_VALUE);
+					continue;
+				}
 				int posNext = SmithWatermanAlignment.ungappedMatchStartOnFirstSequence(readSequence, elt.getStopSignalForRepeatable(), SmithWatermanAlignment.DEFAULT_MATCH_SCORE, SmithWatermanAlignment.DEFAULT_MISMATCH_SCORE, (float)0.9);
 				if(posNext != -1) {
 					stopSignalPos.put(elt, Integer.valueOf(posNext));

@@ -19,22 +19,31 @@ public enum LigationDesign {
 	 * The design from late 2014
 	 * All barcodes, RPM+RNA, DPM+DNA are in read2
 	 */
-	SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH,
+	SINGLE_DESIGN_WITH_SWITCH,
 		
 	/**
 	 * The design from late 2014
 	 * All barcodes, DPM+DNA are in read2
 	 */
-	SINGLE_DESIGN_BARCODE_IN_READ2;
+	SINGLE_DESIGN,
+	
+	/**
+	 * The design from March 2015
+	 * All barcodes are followed by zero or more adapters, which are followed by the read sequence
+	 * No DPM
+	 */
+	SINGLE_DESIGN_WITH_ADAPTERS;
 		
 	public String toString() {
 		switch(this) {
 		case PAIRED_DESIGN_BARCODE_IN_READ2:
 			return "paired_design_barcode_in_read2";
-		case SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH:
-			return "single_design_barcode_in_read2_with_switch";
-		case SINGLE_DESIGN_BARCODE_IN_READ2:
-			return "single_design_barcode_in_read2";
+		case SINGLE_DESIGN_WITH_SWITCH:
+			return "single_design_with_switch";
+		case SINGLE_DESIGN:
+			return "single_design";
+		case SINGLE_DESIGN_WITH_ADAPTERS:
+			return "single_design_with_adapters";
 		default:
 			throw new UnsupportedOperationException("Not implemented");
 		}
@@ -47,8 +56,9 @@ public enum LigationDesign {
 	 */
 	public static LigationDesign fromString(String name) {
 		if(name.equals(PAIRED_DESIGN_BARCODE_IN_READ2.toString())) return PAIRED_DESIGN_BARCODE_IN_READ2;
-		if(name.equals(SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH.toString())) return SINGLE_DESIGN_BARCODE_IN_READ2_WITH_SWITCH;
-		if(name.equals(SINGLE_DESIGN_BARCODE_IN_READ2.toString())) return SINGLE_DESIGN_BARCODE_IN_READ2;
+		if(name.equals(SINGLE_DESIGN_WITH_SWITCH.toString())) return SINGLE_DESIGN_WITH_SWITCH;
+		if(name.equals(SINGLE_DESIGN.toString())) return SINGLE_DESIGN;
+		if(name.equals(SINGLE_DESIGN_WITH_ADAPTERS.toString())) return SINGLE_DESIGN_WITH_ADAPTERS;
 		throw new IllegalArgumentException("Name " + name + " not recognized. Options: " + getNamesAsCommaSeparatedList());
 	}
 	
