@@ -11,7 +11,7 @@ import readelement.Barcode;
 import readelement.BarcodeSet;
 import readelement.FixedSequence;
 import readelement.ReadSequenceElement;
-import readelement.RepeatableFixedSequenceCollection;
+import readelement.FixedSequenceCollection;
 import readelement.Switch;
 
 /**
@@ -117,7 +117,7 @@ public class ReadLayoutFactory {
 				}
 			}
 		} else {
-			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, rpm);
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, rpm, maxMismatchRpm);
 			eltsSequence.add(allBarcodesSet);
 		}
 		eltsSequence.add(new FixedSequence("rpm", rpm, maxMismatchRpm));
@@ -162,7 +162,7 @@ public class ReadLayoutFactory {
 				}
 			}
 		} else {
-			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, rpm);
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, rpm, maxMismatchRpm);
 			eltsSequence.add(allBarcodesSet);
 		}
 		
@@ -209,7 +209,7 @@ public class ReadLayoutFactory {
 				}
 			}
 		} else {
-			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, dpm);
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, dpm, maxMismatchDpm);
 			eltsSequence.add(allBarcodesSet);
 		}
 		
@@ -255,6 +255,9 @@ public class ReadLayoutFactory {
 	 * @return The read layout specified by the parameters
 	 */
 	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMultipleAdapters(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, String adapterSeqFasta, int readLength, int maxMismatchBarcode, int maxMismatchAdapter, boolean enforceOddEven) {
+
+		FixedSequenceCollection adapters = new FixedSequenceCollection(adapterSeqFasta, maxMismatchAdapter, true);
+		
 		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
 			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
 		}
@@ -276,12 +279,12 @@ public class ReadLayoutFactory {
 				}
 			}
 		} else {
-			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, null);
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, maxMismatchBarcode, true, adapters);
 			eltsSequence.add(allBarcodesSet);
 		}
 		
 		// Add switches for adapters
-		eltsSequence.add(new RepeatableFixedSequenceCollection(adapterSeqFasta, maxMismatchAdapter));
+		eltsSequence.add(adapters);
 		
 		
 		return new BarcodedReadLayout(eltsSequence, readLength);

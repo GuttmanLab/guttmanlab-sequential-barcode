@@ -9,7 +9,7 @@ import nextgen.core.utils.AlignmentUtils;
  * @author prussell
  *
  */
-public class FixedSequence implements ReadSequenceElement {
+public class FixedSequence extends AbstractReadSequenceElement {
 	
 	private String seq;
 	private int maxNumMismatches;
@@ -85,8 +85,18 @@ public class FixedSequence implements ReadSequenceElement {
 	}
 
 	@Override
-	public String getStopSignalForRepeatable() {
+	public ReadSequenceElement getStopSignalForRepeatable() {
 		return null;
+	}
+
+	@Override
+	public int getMinLength() {
+		return getLength();
+	}
+
+	@Override
+	public int getMaxLength() {
+		return getLength();
 	}
 	
 }

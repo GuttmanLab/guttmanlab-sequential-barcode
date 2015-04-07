@@ -14,6 +14,18 @@ public interface ReadSequenceElement {
 	public int getLength();
 	
 	/**
+	 * Get minimum possible length for element
+	 * @return Minimum length
+	 */
+	public int getMinLength();
+	
+	/**
+	 * Get maximum possible length for element
+	 * @return Maximum length
+	 */
+	public int getMaxLength();
+	
+	/**
 	 * Check whether this element matches a string
 	 * @param s The string
 	 * @return True if this element matches the string
@@ -29,6 +41,13 @@ public interface ReadSequenceElement {
 	public boolean matchesSubstringOf(String s, int startOnString);
 	
 	/**
+	 * Get the position of the first match of this element within the string
+	 * @param s The string
+	 * @return Zero based position of first match, or -1 if no match
+	 */
+	public int firstMatch(String s);
+	
+	/**
 	 * Whether instances of the element can appear an arbitrary number of times in tandem within a read
 	 * @return True iff element is repeatable
 	 */
@@ -38,7 +57,7 @@ public interface ReadSequenceElement {
 	 * For repeatable read elements, a string whose presence signals the repeat is over
 	 * @return A sequence that comes after the repeatable element, or null if not repeatable
 	 */
-	public String getStopSignalForRepeatable();
+	public ReadSequenceElement getStopSignalForRepeatable();
 	
 	/**
 	 * Get the "intended" sequence of the match, i.e., the real barcode, not a version with mismatches found in the read

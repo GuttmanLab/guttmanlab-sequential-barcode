@@ -21,7 +21,7 @@ import nextgen.core.utils.FileUtil;
  *
  */
 @Persistent
-public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
+public class Barcode extends AbstractReadSequenceElement implements Comparable<Barcode> {
 	
 	private String sequence;
 	private String id;
@@ -29,7 +29,8 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	public static Logger logger = Logger.getLogger(Barcode.class.getName());
 	private Collection<String> matchedStrings;
 	private boolean repeatable;
-	private String nextStringForRepeatable;
+	private String stopSignal;
+	private int stopSignalMaxMismatches;
 	
 	/**
 	 * For Berkeley DB only
@@ -41,7 +42,7 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	 * @param seq The barcode sequence
 	 */
 	public Barcode(String seq) {
-		this(seq, -1, false, null);
+		this(seq, -1, false, null, -1);
 	}
 	
 	/**
@@ -49,7 +50,7 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
 	 */
 	public Barcode(String seq, int maxMismatches) {
-		this(seq, maxMismatches, false, null);
+		this(seq, maxMismatches, false, null, -1);
 	}
 	
 	/**
@@ -57,9 +58,10 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
 	 * @param isRepeatable Whether this barcode can appear multiple times in tandem
 	 * @param stopSignalForRepeatable String whose presence in read signals the end of the region where this barcode is expected to be found
+	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public Barcode(String seq, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable) {
-		this(seq, null, maxMismatches, isRepeatable, stopSignalForRepeatable);
+	public Barcode(String seq, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable, int stopSignalMaxMismatch) {
+		this(seq, null, maxMismatches, isRepeatable, stopSignalForRepeatable, stopSignalMaxMismatch);
 	}
 
 	/**
@@ -68,7 +70,7 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
 	 */
 	public Barcode(String seq, String barcodeId, int maxMismatches) {
-		this(seq, barcodeId, maxMismatches, false, null);
+		this(seq, barcodeId, maxMismatches, false, null, -1);
 	}
 	
 	/**
@@ -76,7 +78,7 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	 * @param barcodeId Unique ID for this barcode
 	 */
 	public Barcode(String seq, String barcodeId) {
-		this(seq, barcodeId, -1, false, null);
+		this(seq, barcodeId, -1, false, null, -1);
 	}
 	
 	/**
@@ -85,14 +87,16 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
 	 * @param isRepeatable Whether this barcode can appear multiple times in tandem
 	 * @param stopSignalForRepeatable String whose presence in read signals the end of the region where this barcode is expected to be found
+	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public Barcode(String seq, String barcodeId, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable) {;
+	public Barcode(String seq, String barcodeId, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable, int stopSignalMaxMismatch) {;
 		sequence = seq;
 		id = barcodeId;
 		maxNumMismatches = maxMismatches;
 		matchedStrings = new TreeSet<String>();
 		repeatable = isRepeatable;
-		nextStringForRepeatable = stopSignalForRepeatable;
+		stopSignal = stopSignalForRepeatable;
+		stopSignalMaxMismatches = stopSignalMaxMismatch;
 	}
 	
 	/**
@@ -233,8 +237,18 @@ public class Barcode implements ReadSequenceElement, Comparable<Barcode> {
 	}
 
 	@Override
-	public String getStopSignalForRepeatable() {
-		return nextStringForRepeatable;
+	public ReadSequenceElement getStopSignalForRepeatable() {
+		return new FixedSequence("stop_signal", stopSignal, stopSignalMaxMismatches);
+	}
+
+	@Override
+	public int getMinLength() {
+		return getLength();
+	}
+
+	@Override
+	public int getMaxLength() {
+		return getLength();
 	}
 
 

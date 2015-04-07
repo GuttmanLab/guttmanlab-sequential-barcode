@@ -10,6 +10,8 @@ import nextgen.core.alignment.SmithWatermanAlignment;
 
 import org.apache.log4j.Logger;
 
+import readelement.FixedSequence;
+import readelement.FixedSequenceCollection;
 import readelement.ReadSequenceElement;
 
 import com.sleepycat.persist.model.Persistent;
@@ -50,7 +52,7 @@ public class ReadLayout {
 		totalLengthMatchedEltSection = -1;
 		int totalLen = 0;
 		for(ReadSequenceElement elt : elementSequence) {
-			totalLen += elt.getLength();
+			totalLen += elt.getMaxLength();
 		}
 		if(totalLen > readLength) {
 			throw new IllegalArgumentException("Total length of read sequence elements (" + totalLen + ") must be at most declared read length (" + readLength + ").");
@@ -123,11 +125,12 @@ public class ReadLayout {
 		for(ReadSequenceElement elt : elements) {
 			if(elt.isRepeatable()) {
 				// First check if element has a stop signal
-				if(elt.getStopSignalForRepeatable() == null) {
+				ReadSequenceElement stopSignal = elt.getStopSignalForRepeatable();
+				if(stopSignal == null) {
 					stopSignalPos.put(elt, Integer.MAX_VALUE);
 					continue;
 				}
-				int posNext = SmithWatermanAlignment.ungappedMatchStartOnFirstSequence(readSequence, elt.getStopSignalForRepeatable(), SmithWatermanAlignment.DEFAULT_MATCH_SCORE, SmithWatermanAlignment.DEFAULT_MISMATCH_SCORE, (float)0.9);
+				int posNext = stopSignal.firstMatch(readSequence);
 				if(posNext != -1) {
 					stopSignalPos.put(elt, Integer.valueOf(posNext));
 					logger.debug("STOP_SIGNAL\t for element " + elt.getId() + " is at position " + posNext);
@@ -153,7 +156,7 @@ public class ReadLayout {
 			logger.debug("CURRENT_ELEMENT\t" + currElt.elementName());
 			logger.debug("NEXT_ELEMENT\t" + (nextElt == null ? null : nextElt.elementName()));
 			// If too far along in the read and have not found everything required, return null
-			if(currStart + currElt.getLength() > readLen) {
+			if(currStart + currElt.getMinLength() > readLen) {
 				logger.debug("NO_MATCH_FOR_LAYOUT\tNo match for element " + currElt.elementName() + " in read " + readSequence);
 				// Change the length of matched elements section
 				totalLengthMatchedEltSection = -1;
@@ -161,7 +164,7 @@ public class ReadLayout {
 			}
 			// If current element is repeatable, look for next element at this position
 			if(currElt.isRepeatable() && nextElt != null) {
-				if(!(currStart + nextElt.getLength() > readLen)) {
+				if(!(currStart + nextElt.getMinLength() > readLen)) {
 					boolean lookNext = false;
 					if(!stopSignalPos.containsKey(currElt)) {
 						lookNext = true;

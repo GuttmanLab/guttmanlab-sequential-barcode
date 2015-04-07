@@ -11,7 +11,7 @@ import java.util.Iterator;
  * @author prussell
  *
  */
-public class Switch implements ReadSequenceElement {
+public class Switch extends AbstractReadSequenceElement {
 	
 	protected Collection<FixedSequence> fixedSequences;
 	private int length;
@@ -110,7 +110,7 @@ public class Switch implements ReadSequenceElement {
 	}
 
 	@Override
-	public String getStopSignalForRepeatable() {
+	public ReadSequenceElement getStopSignalForRepeatable() {
 		return null;
 	}
 
@@ -146,6 +146,16 @@ public class Switch implements ReadSequenceElement {
 			rtrn += "_" + fixedSeq.getId();
 		}
 		return rtrn;
+	}
+
+	@Override
+	public int getMinLength() {
+		return getLength();
+	}
+
+	@Override
+	public int getMaxLength() {
+		return getLength();
 	}
 
 }

@@ -8,7 +8,7 @@ import org.apache.log4j.Logger;
  * @author prussell
  *
  */
-public class AnySequence implements ReadSequenceElement {
+public class AnySequence extends AbstractReadSequenceElement {
 	
 	private int length;
 	public static Logger logger = Logger.getLogger(AnySequence.class.getName());
@@ -67,8 +67,18 @@ public class AnySequence implements ReadSequenceElement {
 	}
 
 	@Override
-	public String getStopSignalForRepeatable() {
+	public ReadSequenceElement getStopSignalForRepeatable() {
 		return null;
+	}
+
+	@Override
+	public int getMinLength() {
+		return getLength();
+	}
+
+	@Override
+	public int getMaxLength() {
+		return getLength();
 	}
 
 }

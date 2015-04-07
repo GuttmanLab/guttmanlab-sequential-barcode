@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
  * @author prussell
  *
  */
-public class BarcodeSet implements ReadSequenceElement {
+public class BarcodeSet extends AbstractReadSequenceElement {
 	
 	private Collection<Barcode> barcodes;
 	public static Logger logger = Logger.getLogger(BarcodeSet.class.getName());
@@ -21,8 +21,9 @@ public class BarcodeSet implements ReadSequenceElement {
 	private int length;
 	private String id;
 	private boolean repeatable;
-	private String nextStringForRepeatable;
-	private static String DUMMY_STOP_SIGNAL = "X";
+	private String stopSignalSeq;
+	private FixedSequenceCollection stopSignalSeqCollection;
+	private int stopSignalMaxMismatches;
 	
 	/**
 	 * @param setId Barcode set ID
@@ -30,19 +31,9 @@ public class BarcodeSet implements ReadSequenceElement {
 	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
 	 */
 	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches) {
-		this(setId, barcodeSet, maxMismatches, false, null);
+		this(setId, barcodeSet, maxMismatches, false);
 	}
-	
-	/**
-	 * @param setId Barcode set ID
-	 * @param barcodeSet The barcodes
-	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
-	 * @param isRepeatable Whether to look for multiple matches in sequence
-	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable) {
-		this(setId, barcodeSet, maxMismatches, isRepeatable, DUMMY_STOP_SIGNAL);
-	}
-		
+			
 	/**
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
@@ -50,10 +41,9 @@ public class BarcodeSet implements ReadSequenceElement {
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignalForRepeatable String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable) {
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable) {
 		id = setId;
 		repeatable = isRepeatable;
-		nextStringForRepeatable = stopSignalForRepeatable;
 		seqToMatchedElement = new TreeMap<String, Barcode>();
 		noMatch = new TreeSet<String>();
 		int len = barcodeSet.iterator().next().getLength();
@@ -65,6 +55,41 @@ public class BarcodeSet implements ReadSequenceElement {
 			barcodes.add(b);
 		}
 		length = len;
+	}
+	
+	/**
+	 * @param setId Barcode set ID
+	 * @param barcodeSet The barcodes
+	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
+	 * @param isRepeatable Whether to look for multiple matches in sequence
+	 * @param stopSignal String whose presence in a read signals the end of the region that is expected to contain these barcodes
+	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
+	 */
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
+		this(setId, barcodeSet, maxMismatches, isRepeatable);
+		setStopSignalAsString(stopSignal);
+		stopSignalMaxMismatches = stopSignalMaxMismatch;
+	}
+	
+	/**
+	 * @param setId Barcode set ID
+	 * @param barcodeSet The barcodes
+	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
+	 * @param isRepeatable Whether to look for multiple matches in sequence
+	 * @param stopSignal Collection of strings whose presence in a read signals the end of the region that is expected to contain these barcodes
+	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
+	 */
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable, FixedSequenceCollection stopSignal) {
+		this(setId, barcodeSet, maxMismatches, isRepeatable);
+		setStopSignalAsFixedSequenceCollection(stopSignal);
+	}
+	
+	private void setStopSignalAsString(String stopSignal) {
+		stopSignalSeq = stopSignal;
+	}
+	
+	private void setStopSignalAsFixedSequenceCollection(FixedSequenceCollection seqs) {
+		stopSignalSeqCollection = seqs;
 	}
 	
 	/**
@@ -138,8 +163,24 @@ public class BarcodeSet implements ReadSequenceElement {
 	}
 
 	@Override
-	public String getStopSignalForRepeatable() {
-		return nextStringForRepeatable;
+	public ReadSequenceElement getStopSignalForRepeatable() {
+		if(stopSignalSeq != null) {
+			return new FixedSequence("stop_signal", stopSignalSeq, stopSignalMaxMismatches);
+		}
+		if(stopSignalSeqCollection != null) {
+			return stopSignalSeqCollection;
+		}
+		throw new IllegalStateException("No stop signal specified");
+	}
+
+	@Override
+	public int getMinLength() {
+		return getLength();
+	}
+
+	@Override
+	public int getMaxLength() {
+		return getLength();
 	}
 
 
