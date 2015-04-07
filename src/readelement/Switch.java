@@ -148,14 +148,4 @@ public class Switch extends AbstractReadSequenceElement {
 		return rtrn;
 	}
 
-	@Override
-	public int getMinLength() {
-		return getLength();
-	}
-
-	@Override
-	public int getMaxLength() {
-		return getLength();
-	}
-
 }

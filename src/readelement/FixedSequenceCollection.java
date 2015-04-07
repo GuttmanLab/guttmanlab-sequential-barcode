@@ -105,20 +105,10 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 
 	@Override
 	public int getLength() {
-		if(getMinLength() == getMaxLength()) {
-			return getMinLength();
+		if(minLength == maxLength) {
+			return minLength;
 		}
 		throw new IllegalStateException("NA");
-	}
-
-	@Override
-	public int getMinLength() {
-		return minLength;
-	}
-
-	@Override
-	public int getMaxLength() {
-		return maxLength;
 	}
 
 	@Override

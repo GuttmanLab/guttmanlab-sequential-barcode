@@ -78,6 +78,7 @@ public class BarcodeAnalysis {
 		int maxMismatchBarcode = p.getIntArg(maxMismatchBarcodeOption);
 		int maxMismatchRpm = p.getIntArg(maxMismatchRpmOption);
 		int maxMismatchDpm = p.getIntArg(maxMismatchDpmOption);
+		int maxMismatchAdapter = p.getIntArg(maxMismatchAdapterOption);
 		boolean enforceOddEven = p.getBooleanArg(enforceOddEvenOption);
 		boolean verbose = p.getBooleanArg(verboseOption);
 		String jar = p.getStringArg(jarOption);
@@ -88,6 +89,7 @@ public class BarcodeAnalysis {
 		String suffixFastq = p.getStringArg(suffixFastqOption);
 		boolean getLastBarcodes = p.getBooleanArg(getLastBarcodesOption);
 		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
+		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
 		Map<String, String> splitTables = new TreeMap<String, String>();
@@ -113,6 +115,7 @@ public class BarcodeAnalysis {
 			cmmd += " " + maxMismatchBarcodeOption + " " + maxMismatchBarcode;
 			cmmd += " " + maxMismatchRpmOption + " " + maxMismatchRpm;
 			cmmd += " " + maxMismatchDpmOption + " " + maxMismatchDpm;
+			cmmd += " " + maxMismatchAdapterOption + " " + maxMismatchAdapter;
 			cmmd += " " + enforceOddEvenOption + " " + enforceOddEven;
 			cmmd += " " + verboseOption + " " + verbose;
 			cmmd += " " + designNameOption + " " + designName;
@@ -121,6 +124,7 @@ public class BarcodeAnalysis {
 			cmmd += " " + suffixFastqOption + " " + makeSuffixFastqName(fq);
 			cmmd += " " + getLastBarcodesOption + " " + getLastBarcodes;
 			cmmd += " " + lastNumBarcodesOption + " " + lastNumBarcodes;
+			cmmd += " " + adapterSeqFastaOption + " " + adapterSeqFasta;
 			String jobNameWithSlashes = "OGS_job_" + fq;
 			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
@@ -663,8 +667,7 @@ public class BarcodeAnalysis {
 				throw new IllegalArgumentException("Not implemented");			
 			}
 		}
-		
-		
+			
 		logger.info("");
 		logger.info("All done.");
 				

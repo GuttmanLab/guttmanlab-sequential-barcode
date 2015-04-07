@@ -89,14 +89,5 @@ public class FixedSequence extends AbstractReadSequenceElement {
 		return null;
 	}
 
-	@Override
-	public int getMinLength() {
-		return getLength();
-	}
-
-	@Override
-	public int getMaxLength() {
-		return getLength();
-	}
 	
 }

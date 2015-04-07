@@ -1,17 +1,15 @@
 package readlayout;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import nextgen.core.alignment.SmithWatermanAlignment;
 
 import org.apache.log4j.Logger;
 
-import readelement.FixedSequence;
-import readelement.FixedSequenceCollection;
 import readelement.ReadSequenceElement;
 
 import com.sleepycat.persist.model.Persistent;
@@ -52,7 +50,7 @@ public class ReadLayout {
 		totalLengthMatchedEltSection = -1;
 		int totalLen = 0;
 		for(ReadSequenceElement elt : elementSequence) {
-			totalLen += elt.getMaxLength();
+			totalLen += elt.getLength();
 		}
 		if(totalLen > readLength) {
 			throw new IllegalArgumentException("Total length of read sequence elements (" + totalLen + ") must be at most declared read length (" + readLength + ").");
@@ -86,8 +84,9 @@ public class ReadLayout {
 	 * i.e., the length of the read minus anything that comes after the last matched element
 	 * @param readSequence Read sequence
 	 * @return Total length of all matched elements and positions before and between them
+	 * @throws IOException 
 	 */
-	public int matchedElementsLengthInRead(String readSequence) {
+	public int matchedElementsLengthInRead(String readSequence) throws IOException {
 		getMatchedElements(readSequence);
 		if(totalLengthMatchedEltSection == -1) {
 			throw new IllegalArgumentException("Read does not match layout");
@@ -103,6 +102,7 @@ public class ReadLayout {
 	 * If whole layout does not match read sequence, returns null
 	 * @param readSequence Read sequence to search for matches to this layout
 	 * @return List of lists of matched elements from this layout that appear in the read
+	 * @throws IOException 
 	 */
 	public List<List<ReadSequenceElement>> getMatchedElements(String readSequence) {
 		
@@ -156,7 +156,7 @@ public class ReadLayout {
 			logger.debug("CURRENT_ELEMENT\t" + currElt.elementName());
 			logger.debug("NEXT_ELEMENT\t" + (nextElt == null ? null : nextElt.elementName()));
 			// If too far along in the read and have not found everything required, return null
-			if(currStart + currElt.getMinLength() > readLen) {
+			if(currStart + currElt.getLength() > readLen) {
 				logger.debug("NO_MATCH_FOR_LAYOUT\tNo match for element " + currElt.elementName() + " in read " + readSequence);
 				// Change the length of matched elements section
 				totalLengthMatchedEltSection = -1;
@@ -164,7 +164,7 @@ public class ReadLayout {
 			}
 			// If current element is repeatable, look for next element at this position
 			if(currElt.isRepeatable() && nextElt != null) {
-				if(!(currStart + nextElt.getMinLength() > readLen)) {
+				if(!(currStart + nextElt.getLength() > readLen)) {
 					boolean lookNext = false;
 					if(!stopSignalPos.containsKey(currElt)) {
 						lookNext = true;

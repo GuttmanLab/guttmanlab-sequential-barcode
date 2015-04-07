@@ -14,18 +14,6 @@ public interface ReadSequenceElement {
 	public int getLength();
 	
 	/**
-	 * Get minimum possible length for element
-	 * @return Minimum length
-	 */
-	public int getMinLength();
-	
-	/**
-	 * Get maximum possible length for element
-	 * @return Maximum length
-	 */
-	public int getMaxLength();
-	
-	/**
 	 * Check whether this element matches a string
 	 * @param s The string
 	 * @return True if this element matches the string

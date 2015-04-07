@@ -241,15 +241,5 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 		return new FixedSequence("stop_signal", stopSignal, stopSignalMaxMismatches);
 	}
 
-	@Override
-	public int getMinLength() {
-		return getLength();
-	}
-
-	@Override
-	public int getMaxLength() {
-		return getLength();
-	}
-
 
 }

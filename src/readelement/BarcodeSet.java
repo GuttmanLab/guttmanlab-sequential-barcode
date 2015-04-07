@@ -173,15 +173,5 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		throw new IllegalStateException("No stop signal specified");
 	}
 
-	@Override
-	public int getMinLength() {
-		return getLength();
-	}
-
-	@Override
-	public int getMaxLength() {
-		return getLength();
-	}
-
 
 }

@@ -7,6 +7,7 @@ import fragmentgroup.NamedBarcodedFragmentGroup;
 import guttmanlab.core.util.StringParser;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -209,36 +210,36 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	
 	public void findBarcodes() {
 		barcodes = new BarcodeSequence();
-		if(read1layout != null && read1sequence != null) {
-			List<List<ReadSequenceElement>> read1elements = read1layout.getMatchedElements(read1sequence);
-			if(read1elements != null) {
-				for(int i = 0; i < read1elements.size(); i++) {
-					ReadSequenceElement parentElement = read1layout.getElements().get(i);
-					if(parentElement.getClass().equals(Barcode.class) || parentElement.getClass().equals(BarcodeSet.class)) {
-						for(ReadSequenceElement elt : read1elements.get(i)) {
-							barcodes.appendBarcode((Barcode)elt);
+			if(read1layout != null && read1sequence != null) {
+				List<List<ReadSequenceElement>> read1elements = read1layout.getMatchedElements(read1sequence);
+				if(read1elements != null) {
+					for(int i = 0; i < read1elements.size(); i++) {
+						ReadSequenceElement parentElement = read1layout.getElements().get(i);
+						if(parentElement.getClass().equals(Barcode.class) || parentElement.getClass().equals(BarcodeSet.class)) {
+							for(ReadSequenceElement elt : read1elements.get(i)) {
+								barcodes.appendBarcode((Barcode)elt);
+							}
+							continue;
 						}
-						continue;
 					}
 				}
+				read1elements = null;
 			}
-			read1elements = null;
-		}
-		if(read2layout != null && read2sequence != null) {
-			List<List<ReadSequenceElement>> read2elements = read2layout.getMatchedElements(read2sequence);
-			if(read2elements != null) {
-				for(int i = 0; i < read2elements.size(); i++) {
-					ReadSequenceElement parentElement = read2layout.getElements().get(i);
-					if(parentElement.getClass().equals(Barcode.class) || parentElement.getClass().equals(BarcodeSet.class)) {
-						for(ReadSequenceElement elt : read2elements.get(i)) {
-							barcodes.appendBarcode((Barcode)elt);
+			if(read2layout != null && read2sequence != null) {
+				List<List<ReadSequenceElement>> read2elements = read2layout.getMatchedElements(read2sequence);
+				if(read2elements != null) {
+					for(int i = 0; i < read2elements.size(); i++) {
+						ReadSequenceElement parentElement = read2layout.getElements().get(i);
+						if(parentElement.getClass().equals(Barcode.class) || parentElement.getClass().equals(BarcodeSet.class)) {
+							for(ReadSequenceElement elt : read2elements.get(i)) {
+								barcodes.appendBarcode((Barcode)elt);
+							}
+							continue;
 						}
-						continue;
 					}
 				}
+				read2elements = null;
 			}
-			read2elements = null;
-		}
 		setBarcodes(barcodes);
 	}
 	
