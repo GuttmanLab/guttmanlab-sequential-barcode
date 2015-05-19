@@ -90,6 +90,12 @@ public class BarcodeAnalysis {
 		boolean getLastBarcodes = p.getBooleanArg(getLastBarcodesOption);
 		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
 		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
+		String may2015firstBarcodeFile = p.getStringArg(may2015firstBarcodeFileOption);
+		String may2015EquivClassFile = p.getStringArg(may2015equivClassFileOption);
+		String may2015lastBarcodeFile = p.getStringArg(may2015lastBarcodeFileOption);
+		int may2015maxMismatchFirstBarcode = p.getIntArg(may2015maxMismatchFirstBarcodeOption);
+		int may2015maxMismatchLastBarcode = p.getIntArg(may2015maxMismatchLastBarcodeOption);
+		int may2015maxMismatchEquivClass = p.getIntArg(may2015maxMismatchBarcodeEquivClass);
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
 		Map<String, String> splitTables = new TreeMap<String, String>();
@@ -125,6 +131,12 @@ public class BarcodeAnalysis {
 			cmmd += " " + getLastBarcodesOption + " " + getLastBarcodes;
 			cmmd += " " + lastNumBarcodesOption + " " + lastNumBarcodes;
 			cmmd += " " + adapterSeqFastaOption + " " + adapterSeqFasta;
+			cmmd += " " + may2015firstBarcodeFileOption + " " + may2015firstBarcodeFile;
+			cmmd += " " + may2015equivClassFileOption + " " + may2015EquivClassFile;
+			cmmd += " " + may2015lastBarcodeFileOption + " " + may2015lastBarcodeFile;
+			cmmd += " " + may2015maxMismatchFirstBarcodeOption + " " + may2015maxMismatchFirstBarcode;
+			cmmd += " " + may2015maxMismatchLastBarcodeOption + " " + may2015maxMismatchLastBarcode;
+			cmmd += " " + may2015maxMismatchBarcodeEquivClass + " " + may2015maxMismatchEquivClass;
 			String jobNameWithSlashes = "OGS_job_" + fq;
 			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
@@ -389,6 +401,13 @@ public class BarcodeAnalysis {
 		String adapterSeqFasta = commandLineParser.getStringArg(adapterSeqFastaOption);
 		@SuppressWarnings("unused")
 		boolean splitOutputBySwitchesInLayout = commandLineParser.getBooleanArg(splitOutFilesBySwitchesOption);
+		String may2015firstBarcodeFile = commandLineParser.getStringArg(may2015firstBarcodeFileOption);
+		String may2015EquivClassFile = commandLineParser.getStringArg(may2015equivClassFileOption);
+		String may2015lastBarcodeFile = commandLineParser.getStringArg(may2015lastBarcodeFileOption);
+		int may2015maxMismatchFirstBarcode = commandLineParser.getIntArg(may2015maxMismatchFirstBarcodeOption);
+		int may2015maxMismatchLastBarcode = commandLineParser.getIntArg(may2015maxMismatchLastBarcodeOption);
+		int may2015maxMismatchEquivClass = commandLineParser.getIntArg(may2015maxMismatchBarcodeEquivClass);
+
 
 		if((outPrefix != null || countBarcodes) && fastq == null) {
 			throw new IllegalArgumentException("Must provide fastq file to write table of reads and barcodes");
@@ -478,29 +497,51 @@ public class BarcodeAnalysis {
 				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
 			}
 			break;
-		case SINGLE_DESIGN_WITH_ADAPTERS:
+		case SINGLE_DESIGN_MARCH_2015:
 			if(adapterSeqFasta == null) {
-				throw new IllegalArgumentException("Must provide fasta file of adapter sequences for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide fasta file of adapter sequences for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			if(maxMismatchAdapter < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in adapters for " + LigationDesign.SINGLE_DESIGN_WITH_ADAPTERS.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in adapters for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
 			}
 			break;
+		case SINGLE_DESIGN_MAY_2015:
+			 if(may2015firstBarcodeFile == null) {
+				 throw new IllegalArgumentException("Must provide file of initial barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");
+			 }
+			 if(may2015EquivClassFile == null) {
+				 throw new IllegalArgumentException("Must provide file of barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 }
+			 if(may2015lastBarcodeFile == null) {
+				 throw new IllegalArgumentException("Must provide file of final barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 }
+			 if(readLength < 1) {
+				 throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 }
+			 if(may2015maxMismatchFirstBarcode < 0) {
+				 throw new IllegalArgumentException("Must provide max mismatches in initial barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 }
+			 if(may2015maxMismatchLastBarcode < 0) {
+				 throw new IllegalArgumentException("Must provide max mismatches in final barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 }
+			 if(may2015maxMismatchEquivClass < 0) {
+				 throw new IllegalArgumentException("Must provide max mismatches in barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 }
 		default:
 			throw new UnsupportedOperationException("Not implemented for " + design.toString());		
 		}
@@ -532,6 +573,12 @@ public class BarcodeAnalysis {
 	private static String getLastBarcodesOption = "-lb";
 	private static String lastNumBarcodesOption = "-nlb";
 	private static String adapterSeqFastaOption = "-afa";
+	private static String may2015firstBarcodeFileOption = "-fbf";
+	private static String may2015equivClassFileOption = "-ecf";
+	private static String may2015lastBarcodeFileOption = "-lbf";
+	private static String may2015maxMismatchFirstBarcodeOption = "-mmfb";
+	private static String may2015maxMismatchLastBarcodeOption = "-mmlb";
+	private static String may2015maxMismatchBarcodeEquivClass = "-mmbec";
 
 	
 	/**
@@ -565,7 +612,7 @@ public class BarcodeAnalysis {
 		p.addIntArg(maxMismatchBarcodeOption, "Max mismatches in barcode", false, -1);
 		p.addIntArg(maxMismatchRpmOption, "Max mismatches in RPM", false, -1);
 		p.addIntArg(maxMismatchDpmOption, "Max mismatches in DPM", false, -1);
-		p.addIntArg(maxMismatchAdapterOption, "Max mismatches in adapter for single design with multiple adapters between barcodes and read", false, -1);
+		p.addIntArg(maxMismatchAdapterOption, "Max mismatches in adapter for single design from March 2015 with multiple adapters between barcodes and read", false, -1);
 		p.addBooleanArg(enforceOddEvenOption, "Enforce odd/even alternation for barcodes", false, false);
 		p.addBooleanArg(countBarcodesOption, "Count barcodes", false, false);
 		p.addBooleanArg(verboseOption, "Verbose output table for barcode identification", false, false);
@@ -579,7 +626,13 @@ public class BarcodeAnalysis {
 		p.addStringArg(suffixFastqOption, "Also write fastq file of the part of each read after the last matched layout element", false, null);
 		p.addBooleanArg(getLastBarcodesOption, "Also get the last N barcodes from each fragment and write as a column in table", false, false);
 		p.addIntArg(lastNumBarcodesOption, "Number of last barcodes to get for " + getLastBarcodesOption + " option", false, -1);
-		p.addStringArg(adapterSeqFastaOption, "Fasta file of adapter sequences for single design with multiple adapters between barcodes and read", false, null);
+		p.addStringArg(adapterSeqFastaOption, "Fasta file of adapter sequences for single design from March 2015 with multiple adapters between barcodes and read", false, null);
+		p.addStringArg(may2015firstBarcodeFileOption, "Table of initial barcode for single design from May 2015 (format: barcode_id	barcode_seq)", false, null);
+		p.addStringArg(may2015lastBarcodeFileOption, "Table of final barcode for single design from May 2015 (format: barcode_id	barcode_seq)", false, null);
+		p.addStringArg(may2015equivClassFileOption, "Table of barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
+		p.addIntArg(may2015maxMismatchFirstBarcodeOption, "Max mismatches in initial barcode for single design from May 2015", false, -1);
+		p.addIntArg(may2015maxMismatchLastBarcodeOption, "Max mismatches in final barcode for single design from May 2015", false, -1);
+		p.addIntArg(may2015maxMismatchBarcodeEquivClass, "Max mismatches in barcode equivalence classes for single design from May 2015", false, -1);
 		p.parse(args);
 		if(p.getBooleanArg(debugOption)) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
@@ -621,6 +674,12 @@ public class BarcodeAnalysis {
 		if(lastNumBarcodes > 0) {
 			NUM_LAST_BARCODES = lastNumBarcodes;
 		}
+		String may2015firstBarcodeFile = p.getStringArg(may2015firstBarcodeFileOption);
+		String may2015EquivClassFile = p.getStringArg(may2015equivClassFileOption);
+		String may2015lastBarcodeFile = p.getStringArg(may2015lastBarcodeFileOption);
+		int may2015maxMismatchFirstBarcode = p.getIntArg(may2015maxMismatchFirstBarcodeOption);
+		int may2015maxMismatchLastBarcode = p.getIntArg(may2015maxMismatchLastBarcodeOption);
+		int may2015maxMismatchEquivClass = p.getIntArg(may2015maxMismatchBarcodeEquivClass);
 		
 		validateCommandLine(p);
 		
@@ -642,10 +701,13 @@ public class BarcodeAnalysis {
 					BarcodedReadLayout layout3 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
 					findBarcodes(fastq, layout3, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
-				case SINGLE_DESIGN_WITH_ADAPTERS:
-					BarcodedReadLayout layout4 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMultipleAdapters(evenBarcodeList, oddBarcodeList, totalNumBarcodes, adapterSeqFasta, readLength, maxMismatchBarcode, maxMismatchAdapter, enforceOddEven);
+				case SINGLE_DESIGN_MARCH_2015:
+					BarcodedReadLayout layout4 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMarch2015(evenBarcodeList, oddBarcodeList, totalNumBarcodes, adapterSeqFasta, readLength, maxMismatchBarcode, maxMismatchAdapter, enforceOddEven);
 					findBarcodes(fastq, layout4, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
+				case SINGLE_DESIGN_MAY_2015:
+					BarcodedReadLayout layout5 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMay2015(may2015firstBarcodeFile, may2015EquivClassFile, may2015lastBarcodeFile, readLength, may2015maxMismatchFirstBarcode, may2015maxMismatchEquivClass, may2015maxMismatchLastBarcode);
+					findBarcodes(fastq, layout5, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 				default:
 					throw new IllegalArgumentException("Not implemented");
 				}

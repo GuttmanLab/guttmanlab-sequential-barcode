@@ -28,20 +28,18 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	/**
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
-	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches) {
-		this(setId, barcodeSet, maxMismatches, false);
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet) {
+		this(setId, barcodeSet, false);
 	}
 			
 	/**
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
-	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignalForRepeatable String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable) {
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable) {
 		id = setId;
 		repeatable = isRepeatable;
 		seqToMatchedElement = new TreeMap<String, Barcode>();
@@ -60,13 +58,12 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	/**
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
-	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignal String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
-		this(setId, barcodeSet, maxMismatches, isRepeatable);
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
+		this(setId, barcodeSet, isRepeatable);
 		setStopSignalAsString(stopSignal);
 		stopSignalMaxMismatches = stopSignalMaxMismatch;
 	}
@@ -74,13 +71,11 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	/**
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
-	 * @param maxMismatches Max number of mismatches when identifying each barcode in reads
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignal Collection of strings whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, int maxMismatches, boolean isRepeatable, FixedSequenceCollection stopSignal) {
-		this(setId, barcodeSet, maxMismatches, isRepeatable);
+	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, FixedSequenceCollection stopSignal) {
 		setStopSignalAsFixedSequenceCollection(stopSignal);
 	}
 	

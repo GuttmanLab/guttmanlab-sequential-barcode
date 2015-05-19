@@ -32,7 +32,18 @@ public enum LigationDesign {
 	 * All barcodes are followed by zero or more adapters, which are followed by the read sequence
 	 * No DPM
 	 */
-	SINGLE_DESIGN_WITH_ADAPTERS;
+	SINGLE_DESIGN_MARCH_2015,
+		
+	/**
+	 * The design from May 2015
+	 * Read layout:
+	 * An extra barcode appears at beginning of read
+	 * Next, a series of barcodes that fall into equivalence classes
+	 * 		Classes of 4 barcodes each are considered a single barcode
+	 * Finally, another barcode
+	 * No fixed sequence separates barcodes from DNA
+	 */
+	SINGLE_DESIGN_MAY_2015;
 		
 	public String toString() {
 		switch(this) {
@@ -42,8 +53,10 @@ public enum LigationDesign {
 			return "single_design_with_switch";
 		case SINGLE_DESIGN:
 			return "single_design";
-		case SINGLE_DESIGN_WITH_ADAPTERS:
-			return "single_design_with_adapters";
+		case SINGLE_DESIGN_MARCH_2015:
+			return "single_design_march_2015";
+		case SINGLE_DESIGN_MAY_2015:
+			return "single_design_may_2015";
 		default:
 			throw new UnsupportedOperationException("Not implemented");
 		}
@@ -58,7 +71,7 @@ public enum LigationDesign {
 		if(name.equals(PAIRED_DESIGN_BARCODE_IN_READ2.toString())) return PAIRED_DESIGN_BARCODE_IN_READ2;
 		if(name.equals(SINGLE_DESIGN_WITH_SWITCH.toString())) return SINGLE_DESIGN_WITH_SWITCH;
 		if(name.equals(SINGLE_DESIGN.toString())) return SINGLE_DESIGN;
-		if(name.equals(SINGLE_DESIGN_WITH_ADAPTERS.toString())) return SINGLE_DESIGN_WITH_ADAPTERS;
+		if(name.equals(SINGLE_DESIGN_MARCH_2015.toString())) return SINGLE_DESIGN_MARCH_2015;
 		throw new IllegalArgumentException("Name " + name + " not recognized. Options: " + getNamesAsCommaSeparatedList());
 	}
 	
