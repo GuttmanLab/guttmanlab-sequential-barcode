@@ -42,10 +42,9 @@ public class BarcodedRNAFragment extends BarcodedFragmentImpl {
 	 * @param read2seq Read2 sequence
 	 * @param layoutRead1 Read1 layout or null if not specified
 	 * @param layoutRead2 Read2 layout or null if not specified
-	 * @param maxMismatchesBarcode Max mismatches in each barcode when matching to reads
 	 */
-	public BarcodedRNAFragment(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2, int maxMismatchesBarcode) {
-		super(fragmentId, read1seq, read2seq, layoutRead1, layoutRead2, maxMismatchesBarcode);
+	public BarcodedRNAFragment(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2) {
+		super(fragmentId, read1seq, read2seq, layoutRead1, layoutRead2);
 	}
 
 }

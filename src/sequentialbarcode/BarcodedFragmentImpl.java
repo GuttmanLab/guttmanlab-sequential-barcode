@@ -17,6 +17,8 @@ import org.apache.log4j.Logger;
 
 import programs.BarcodedBamWriter;
 import readelement.Barcode;
+import readelement.BarcodeEquivalenceClass;
+import readelement.BarcodeEquivalenceClassSet;
 import readelement.BarcodeSet;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
@@ -62,7 +64,6 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	@SecondaryKey(relate=MANY_TO_ONE)
 	private String barcodeString;
 	public static Logger logger = Logger.getLogger(BarcodedFragmentImpl.class.getName());
-	protected int barcodeMaxMismatches;
 	protected FragmentGroup fragmentGroup;
 	
 	/**
@@ -187,15 +188,13 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param read2seq Read2 sequence
 	 * @param layoutRead1 Read1 layout or null if not specified
 	 * @param layoutRead2 Read2 layout or null if not specified
-	 * @param maxMismatchesBarcode Max number of mismatches in each barcode when matching to reads
 	 */
-	public BarcodedFragmentImpl(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2, int maxMismatchesBarcode) {
+	public BarcodedFragmentImpl(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2) {
 		id = StringParser.firstField(fragmentId);
 		read1sequence = read1seq;
 		read2sequence = read2seq;
 		read1layout = layoutRead1;
 		read2layout = layoutRead2;
-		barcodeMaxMismatches = maxMismatchesBarcode;
 		fragmentGroup = new NamedBarcodedFragmentGroup(barcodes);
 	}
 	
@@ -221,6 +220,13 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 							}
 							continue;
 						}
+						if(parentElement.getClass().equals(BarcodeEquivalenceClass.class) || parentElement.getClass().equals(BarcodeEquivalenceClassSet.class)) {
+							for(ReadSequenceElement elt : read1elements.get(i)) {
+								BarcodeEquivalenceClass bec = (BarcodeEquivalenceClass) elt;
+								barcodes.appendBarcode(bec.toBarcode());
+							}
+							continue;
+						}
 					}
 				}
 				read1elements = null;
@@ -233,6 +239,13 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 						if(parentElement.getClass().equals(Barcode.class) || parentElement.getClass().equals(BarcodeSet.class)) {
 							for(ReadSequenceElement elt : read2elements.get(i)) {
 								barcodes.appendBarcode((Barcode)elt);
+							}
+							continue;
+						}
+						if(parentElement.getClass().equals(BarcodeEquivalenceClass.class) || parentElement.getClass().equals(BarcodeEquivalenceClassSet.class)) {
+							for(ReadSequenceElement elt : read2elements.get(i)) {
+								BarcodeEquivalenceClass bec = (BarcodeEquivalenceClass) elt;
+								barcodes.appendBarcode(bec.toBarcode());
 							}
 							continue;
 						}

@@ -57,6 +57,14 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 		super(setId, barcodeSet, isRepeatable, stopSignal);
 	}
 
+	/**
+	 * Get a Barcode object for printing info only
+	 * @return Dummy barcode object with this ID
+	 */
+	public Barcode toBarcode() {
+		return new Barcode("NA", getId());
+	}
+	
 	@Override
 	public String matchedElementSequence(String s) {
 		throw new UnsupportedOperationException("Not supported");

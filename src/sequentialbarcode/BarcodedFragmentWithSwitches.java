@@ -26,10 +26,9 @@ public class BarcodedFragmentWithSwitches extends BarcodedFragmentImpl {
 	 * @param read2seq Read2 sequence
 	 * @param layoutRead1 Read1 layout or null if not specified
 	 * @param layoutRead2 Read2 layout or null if not specified
-	 * @param maxMismatchesBarcode Max number of mismatches in each barcode when matching to reads
 	 */
-	public BarcodedFragmentWithSwitches(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2, int maxMismatchesBarcode) {
-		super(fragmentId, read1seq, read2seq, layoutRead1, layoutRead2, maxMismatchesBarcode);
+	public BarcodedFragmentWithSwitches(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2) {
+		super(fragmentId, read1seq, read2seq, layoutRead1, layoutRead2);
 	}
 	
 	/**

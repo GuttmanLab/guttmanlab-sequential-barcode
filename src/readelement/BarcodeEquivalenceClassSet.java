@@ -1,6 +1,7 @@
 package readelement;
 
 import java.util.Collection;
+import java.util.TreeSet;
 
 /**
  * A collection of barcode equivalence classes
@@ -30,6 +31,13 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 		equivClasses = equivalenceClasses;
 		repeatable = isRepeatable;
 		stopSignalSeqCollection = stopSignal;
+		int len = equivClasses.iterator().next().getLength();
+		for(BarcodeEquivalenceClass b : equivClasses) {
+			if(b.getLength() != len) {
+				throw new IllegalArgumentException("All barcode equivalence classes must have the same length");
+			}
+		}
+		length = len;
 	}
 	
 	@Override

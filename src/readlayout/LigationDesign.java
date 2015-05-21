@@ -72,6 +72,7 @@ public enum LigationDesign {
 		if(name.equals(SINGLE_DESIGN_WITH_SWITCH.toString())) return SINGLE_DESIGN_WITH_SWITCH;
 		if(name.equals(SINGLE_DESIGN.toString())) return SINGLE_DESIGN;
 		if(name.equals(SINGLE_DESIGN_MARCH_2015.toString())) return SINGLE_DESIGN_MARCH_2015;
+		if(name.equals(SINGLE_DESIGN_MAY_2015.toString())) return SINGLE_DESIGN_MAY_2015;
 		throw new IllegalArgumentException("Name " + name + " not recognized. Options: " + getNamesAsCommaSeparatedList());
 	}
 	

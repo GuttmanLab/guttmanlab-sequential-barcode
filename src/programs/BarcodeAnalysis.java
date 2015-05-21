@@ -91,11 +91,12 @@ public class BarcodeAnalysis {
 		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
 		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
 		String may2015firstBarcodeFile = p.getStringArg(may2015firstBarcodeFileOption);
-		String may2015EquivClassFile = p.getStringArg(may2015equivClassFileOption);
+		String may2015oddBarcodeFile = p.getStringArg(may2015oddBarcodeFileOption);
+		String may2015evenBarcodeFile = p.getStringArg(may2015evenBarcodeFileOption);
 		String may2015lastBarcodeFile = p.getStringArg(may2015lastBarcodeFileOption);
 		int may2015maxMismatchFirstBarcode = p.getIntArg(may2015maxMismatchFirstBarcodeOption);
 		int may2015maxMismatchLastBarcode = p.getIntArg(may2015maxMismatchLastBarcodeOption);
-		int may2015maxMismatchEquivClass = p.getIntArg(may2015maxMismatchBarcodeEquivClass);
+		int may2015maxMismatchOddEvenBarcode = p.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
 		Map<String, String> splitTables = new TreeMap<String, String>();
@@ -132,11 +133,12 @@ public class BarcodeAnalysis {
 			cmmd += " " + lastNumBarcodesOption + " " + lastNumBarcodes;
 			cmmd += " " + adapterSeqFastaOption + " " + adapterSeqFasta;
 			cmmd += " " + may2015firstBarcodeFileOption + " " + may2015firstBarcodeFile;
-			cmmd += " " + may2015equivClassFileOption + " " + may2015EquivClassFile;
+			cmmd += " " + may2015oddBarcodeFileOption + " " + may2015oddBarcodeFile;
+			cmmd += " " + may2015evenBarcodeFileOption + " " + may2015evenBarcodeFile;
 			cmmd += " " + may2015lastBarcodeFileOption + " " + may2015lastBarcodeFile;
 			cmmd += " " + may2015maxMismatchFirstBarcodeOption + " " + may2015maxMismatchFirstBarcode;
 			cmmd += " " + may2015maxMismatchLastBarcodeOption + " " + may2015maxMismatchLastBarcode;
-			cmmd += " " + may2015maxMismatchBarcodeEquivClass + " " + may2015maxMismatchEquivClass;
+			cmmd += " " + may2015maxMismatchOddEvenBarcodeOption + " " + may2015maxMismatchOddEvenBarcode;
 			String jobNameWithSlashes = "OGS_job_" + fq;
 			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
@@ -193,15 +195,14 @@ public class BarcodeAnalysis {
 	 * Identify barcodes in reads and write to a table
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
-	 * @param maxMismatchBarcode Max number of mismatches when matching barcodes to reads
 	 * @param outFilePrefix Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
 	 * @throws IOException
 	 */
 	@SuppressWarnings("unused")
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
-		findBarcodes(fastq, layout, maxMismatchBarcode, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
+		findBarcodes(fastq, layout, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
 	}
 	
 	/**
@@ -209,7 +210,6 @@ public class BarcodeAnalysis {
 	 * Identify barcodes in reads and write to a table
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
-	 * @param maxMismatchBarcode Max number of mismatches when matching barcodes to reads
 	 * @param outFile Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
@@ -218,9 +218,9 @@ public class BarcodeAnalysis {
 	 * Obeys the switch scenario, so if using switches, this will also write multiple fastq files, one for each switch
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, String suffixFastq) throws IOException {
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, String suffixFastq) throws IOException {
 		logger.info("");
-		logger.info("Identifying read2 barcodes for RNA-DNA-3D and writing to table(s) "+ outFile +"...");
+		logger.info("Identifying barcodes and writing to table(s) "+ outFile +"...");
 		if(splitOutputBySwitchesInLayout) {
 			logger.info("Splitting output by value of switches in reads...");
 		}
@@ -248,7 +248,7 @@ public class BarcodeAnalysis {
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
 			if(layout.getMatchedElements(seq) != null) {
-				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, null, seq, null, layout, maxMismatchBarcode);
+				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, seq, null, layout, null);
 				BarcodeSequence barcodes = f.getBarcodes();
 				if(verbose) line += barcodes.getNumBarcodes() + "\t";
 				line += barcodes.toString() + "\t";
@@ -339,10 +339,9 @@ public class BarcodeAnalysis {
 	 * Count instances of each barcode and print totals
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
-	 * @param maxMismatchBarcode Max number of mismatches when matching barcodes to reads
 	 * @throws IOException
 	 */
-	private static void countBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode) throws IOException {
+	private static void countBarcodes(String fastq, BarcodedReadLayout layout) throws IOException {
 		logger.info("");
 		logger.info("Counting read2 barcodes for RNA-DNA-3D...");
 		Map<Barcode, Integer> barcodeCounts = new TreeMap<Barcode, Integer>();
@@ -357,7 +356,7 @@ public class BarcodeAnalysis {
 			String seq = record.getSequence();
 			String name = record.getName();
 			if(layout.getMatchedElements(seq) != null) {
-				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout, maxMismatchBarcode);
+				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout);
 				BarcodeSequence barcodes = f.getBarcodes();
 				for(Barcode b : barcodes.getBarcodes()) {
 					barcodeCounts.put(b, Integer.valueOf(barcodeCounts.get(b).intValue() + 1));
@@ -402,11 +401,12 @@ public class BarcodeAnalysis {
 		@SuppressWarnings("unused")
 		boolean splitOutputBySwitchesInLayout = commandLineParser.getBooleanArg(splitOutFilesBySwitchesOption);
 		String may2015firstBarcodeFile = commandLineParser.getStringArg(may2015firstBarcodeFileOption);
-		String may2015EquivClassFile = commandLineParser.getStringArg(may2015equivClassFileOption);
+		String may2015OddBarcodeFile = commandLineParser.getStringArg(may2015oddBarcodeFileOption);
+		String may2015evenBarcodeFile = commandLineParser.getStringArg(may2015evenBarcodeFileOption);
 		String may2015lastBarcodeFile = commandLineParser.getStringArg(may2015lastBarcodeFileOption);
 		int may2015maxMismatchFirstBarcode = commandLineParser.getIntArg(may2015maxMismatchFirstBarcodeOption);
 		int may2015maxMismatchLastBarcode = commandLineParser.getIntArg(may2015maxMismatchLastBarcodeOption);
-		int may2015maxMismatchEquivClass = commandLineParser.getIntArg(may2015maxMismatchBarcodeEquivClass);
+		int may2015maxMismatchOddEvenBarcode = commandLineParser.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
 
 
 		if((outPrefix != null || countBarcodes) && fastq == null) {
@@ -522,13 +522,13 @@ public class BarcodeAnalysis {
 			break;
 		case SINGLE_DESIGN_MAY_2015:
 			 if(may2015firstBarcodeFile == null) {
-				 throw new IllegalArgumentException("Must provide file of initial barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");
+				 throw new IllegalArgumentException("Must provide file of initial barcode equivalence classesfor " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");
 			 }
-			 if(may2015EquivClassFile == null) {
-				 throw new IllegalArgumentException("Must provide file of barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 if(may2015OddBarcodeFile == null || may2015evenBarcodeFile == null) {
+				 throw new IllegalArgumentException("Must provide file of odd and even barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
 			 }
 			 if(may2015lastBarcodeFile == null) {
-				 throw new IllegalArgumentException("Must provide file of final barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+				 throw new IllegalArgumentException("Must provide file of final barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
 			 }
 			 if(readLength < 1) {
 				 throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
@@ -539,9 +539,10 @@ public class BarcodeAnalysis {
 			 if(may2015maxMismatchLastBarcode < 0) {
 				 throw new IllegalArgumentException("Must provide max mismatches in final barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
 			 }
-			 if(may2015maxMismatchEquivClass < 0) {
-				 throw new IllegalArgumentException("Must provide max mismatches in barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
+			 if(may2015maxMismatchOddEvenBarcode < 0) {
+				 throw new IllegalArgumentException("Must provide max mismatches in odd/even barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
 			 }
+			 break;
 		default:
 			throw new UnsupportedOperationException("Not implemented for " + design.toString());		
 		}
@@ -573,12 +574,13 @@ public class BarcodeAnalysis {
 	private static String getLastBarcodesOption = "-lb";
 	private static String lastNumBarcodesOption = "-nlb";
 	private static String adapterSeqFastaOption = "-afa";
-	private static String may2015firstBarcodeFileOption = "-fbf";
-	private static String may2015equivClassFileOption = "-ecf";
-	private static String may2015lastBarcodeFileOption = "-lbf";
+	private static String may2015firstBarcodeFileOption = "-fbecf";
+	private static String may2015oddBarcodeFileOption = "-oecf";
+	private static String may2015evenBarcodeFileOption = "-eecf";
+	private static String may2015lastBarcodeFileOption = "-lbecf";
 	private static String may2015maxMismatchFirstBarcodeOption = "-mmfb";
 	private static String may2015maxMismatchLastBarcodeOption = "-mmlb";
-	private static String may2015maxMismatchBarcodeEquivClass = "-mmbec";
+	private static String may2015maxMismatchOddEvenBarcodeOption = "-mmboe";
 
 	
 	/**
@@ -627,12 +629,13 @@ public class BarcodeAnalysis {
 		p.addBooleanArg(getLastBarcodesOption, "Also get the last N barcodes from each fragment and write as a column in table", false, false);
 		p.addIntArg(lastNumBarcodesOption, "Number of last barcodes to get for " + getLastBarcodesOption + " option", false, -1);
 		p.addStringArg(adapterSeqFastaOption, "Fasta file of adapter sequences for single design from March 2015 with multiple adapters between barcodes and read", false, null);
-		p.addStringArg(may2015firstBarcodeFileOption, "Table of initial barcode for single design from May 2015 (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(may2015lastBarcodeFileOption, "Table of final barcode for single design from May 2015 (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(may2015equivClassFileOption, "Table of barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
+		p.addStringArg(may2015firstBarcodeFileOption, "Table of initial barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
+		p.addStringArg(may2015lastBarcodeFileOption, "Table of final barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
+		p.addStringArg(may2015oddBarcodeFileOption, "Table of odd barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
+		p.addStringArg(may2015evenBarcodeFileOption, "Table of even barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
 		p.addIntArg(may2015maxMismatchFirstBarcodeOption, "Max mismatches in initial barcode for single design from May 2015", false, -1);
 		p.addIntArg(may2015maxMismatchLastBarcodeOption, "Max mismatches in final barcode for single design from May 2015", false, -1);
-		p.addIntArg(may2015maxMismatchBarcodeEquivClass, "Max mismatches in barcode equivalence classes for single design from May 2015", false, -1);
+		p.addIntArg(may2015maxMismatchOddEvenBarcodeOption, "Max mismatches in odd/even barcode for single design from May 2015", false, -1);
 		p.parse(args);
 		if(p.getBooleanArg(debugOption)) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
@@ -675,11 +678,12 @@ public class BarcodeAnalysis {
 			NUM_LAST_BARCODES = lastNumBarcodes;
 		}
 		String may2015firstBarcodeFile = p.getStringArg(may2015firstBarcodeFileOption);
-		String may2015EquivClassFile = p.getStringArg(may2015equivClassFileOption);
+		String may2015OddBarcodeFile = p.getStringArg(may2015oddBarcodeFileOption);
+		String may2015EvenBarcodeFile = p.getStringArg(may2015evenBarcodeFileOption);
 		String may2015lastBarcodeFile = p.getStringArg(may2015lastBarcodeFileOption);
 		int may2015maxMismatchFirstBarcode = p.getIntArg(may2015maxMismatchFirstBarcodeOption);
 		int may2015maxMismatchLastBarcode = p.getIntArg(may2015maxMismatchLastBarcodeOption);
-		int may2015maxMismatchEquivClass = p.getIntArg(may2015maxMismatchBarcodeEquivClass);
+		int may2015maxMismatchOddEvenBarcode = p.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
 		
 		validateCommandLine(p);
 		
@@ -691,23 +695,23 @@ public class BarcodeAnalysis {
 				switch(design) {
 				case PAIRED_DESIGN_BARCODE_IN_READ2:
 					BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
-					findBarcodes(fastq, layout1, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
+					findBarcodes(fastq, layout1, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN_WITH_SWITCH:
 					BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
-					findBarcodes(fastq, layout2, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
+					findBarcodes(fastq, layout2, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN:
 					BarcodedReadLayout layout3 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
-					findBarcodes(fastq, layout3, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
+					findBarcodes(fastq, layout3, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN_MARCH_2015:
 					BarcodedReadLayout layout4 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMarch2015(evenBarcodeList, oddBarcodeList, totalNumBarcodes, adapterSeqFasta, readLength, maxMismatchBarcode, maxMismatchAdapter, enforceOddEven);
-					findBarcodes(fastq, layout4, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
+					findBarcodes(fastq, layout4, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN_MAY_2015:
-					BarcodedReadLayout layout5 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMay2015(may2015firstBarcodeFile, may2015EquivClassFile, may2015lastBarcodeFile, readLength, may2015maxMismatchFirstBarcode, may2015maxMismatchEquivClass, may2015maxMismatchLastBarcode);
-					findBarcodes(fastq, layout5, maxMismatchBarcode, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
+					BarcodedReadLayout layout5 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMay2015(may2015firstBarcodeFile, may2015OddBarcodeFile, may2015EvenBarcodeFile, may2015lastBarcodeFile, readLength, may2015maxMismatchFirstBarcode, may2015maxMismatchOddEvenBarcode, may2015maxMismatchLastBarcode);
+					findBarcodes(fastq, layout5, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 				default:
 					throw new IllegalArgumentException("Not implemented");
 				}
@@ -719,11 +723,11 @@ public class BarcodeAnalysis {
 			switch(design) {
 			case PAIRED_DESIGN_BARCODE_IN_READ2:
 				BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
-				countBarcodes(fastq, layout1, maxMismatchBarcode);
+				countBarcodes(fastq, layout1);
 				break;
 			case SINGLE_DESIGN_WITH_SWITCH:
 				BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
-				countBarcodes(fastq, layout2, maxMismatchBarcode);
+				countBarcodes(fastq, layout2);
 				break;
 			default:
 				throw new IllegalArgumentException("Not implemented");			

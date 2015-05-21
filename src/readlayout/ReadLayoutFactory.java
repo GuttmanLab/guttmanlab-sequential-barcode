@@ -291,59 +291,58 @@ public class ReadLayoutFactory {
 
 	/**
 	 * Read layout:
-	 * An extra barcode appears at beginning of read
+	 * An extra barcode appears at beginning of read, in equivalence classes of 4 barcodes
 	 * Next, a series of barcodes that fall into equivalence classes
-	 * 		Classes of 4 barcodes each are considered a single barcode
-	 * Finally, another barcode
+	 * Finally, another barcode, in equivalence classes of 4 barcodes
 	 * No fixed sequence separates barcodes from DNA
-	 * @param firstBarcodeTableFile File with list of first barcode
-	 * @param barcodeEquivClassFile Barcode equivalence class file as defined in static method that reads it
-	 * @param lastBarcodeTableFile File with list of last barcode
+	 * @param firstBarcodeTableFile File with first barcode equivalence classes
+	 * @param oddBarcodeTableFile File with odd barcode equivalence classes
+	 * @param evenBarcodeTableFile File with even barcode equivalence classes
+	 * @param lastBarcodeTableFile File with even barcode equivalence classes
 	 * @param readLength Read length
 	 * @param maxMismatchFirstBarcode
-	 * @param maxMismatchBarcodeEquivClass Max mismatches for barcode equivalence classes
-	 * @param maxMismatchLastBarcode Max mismatches for last barcode
+	 * @param maxMismatchOddEvenBarcode Max mismatches for odd/even barcode
 	 * @return
 	 * @throws IOException
 	 */
-	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMay2015(String firstBarcodeTableFile, String barcodeEquivClassFile, String lastBarcodeTableFile, int readLength, int maxMismatchFirstBarcode, int maxMismatchBarcodeEquivClass, int maxMismatchLastBarcode) throws IOException {
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMay2015(String firstBarcodeTableFile, String oddBarcodeTableFile, String evenBarcodeTableFile, String lastBarcodeTableFile, int readLength, int maxMismatchFirstBarcode, int maxMismatchOddEvenBarcode, int maxMismatchLastBarcode) throws IOException {
 		
-		Collection<Barcode> firstBarcode = Barcode.createBarcodesFromTable(firstBarcodeTableFile, maxMismatchFirstBarcode);
-		Collection<BarcodeEquivalenceClass> barcodeEquivClasses = BarcodeEquivalenceClass.createEquivClassesFromTable(barcodeEquivClassFile, maxMismatchBarcodeEquivClass);
-		Collection<Barcode> lastBarcode = Barcode.createBarcodesFromTable(lastBarcodeTableFile, maxMismatchLastBarcode);
+		Collection<BarcodeEquivalenceClass> firstBarcode = BarcodeEquivalenceClass.createEquivClassesFromTable(firstBarcodeTableFile, maxMismatchFirstBarcode);
+		Collection<BarcodeEquivalenceClass> oddBarcode = BarcodeEquivalenceClass.createEquivClassesFromTable(oddBarcodeTableFile, maxMismatchOddEvenBarcode);
+		Collection<BarcodeEquivalenceClass> evenBarcode = BarcodeEquivalenceClass.createEquivClassesFromTable(evenBarcodeTableFile, maxMismatchOddEvenBarcode);
+		Collection<BarcodeEquivalenceClass> lastBarcode = BarcodeEquivalenceClass.createEquivClassesFromTable(lastBarcodeTableFile, maxMismatchLastBarcode);
 		
-		return getReadLayoutRnaDna3DSingleDesignMay2015(firstBarcode, barcodeEquivClasses, lastBarcode, readLength, maxMismatchBarcodeEquivClass, maxMismatchLastBarcode); 
+		return getReadLayoutRnaDna3DSingleDesignMay2015(firstBarcode, oddBarcode, evenBarcode, lastBarcode, readLength); 
 		
 	}
 
 
 	/**
 	 * Read layout:
-	 * An extra barcode appears at beginning of read
-	 * Next, a series of barcodes that fall into equivalence classes
-	 * 		Classes of 4 barcodes each are considered a single barcode
-	 * Finally, another barcode
+	 * An extra barcode appears at beginning of read, in equivalence classes of 4 barcodes
+	 * Next, a series of odd/even barcodes that fall into equivalence classes
+	 * Finally, another barcode, in equivalence classes of 4 barcodes
 	 * No fixed sequence separates barcodes from DNA
-	 * @param firstBarcode Options for the first 8 or 9mer
-	 * @param barcodeEquivClasses The barcode equivalence classes
-	 * @param lastBarcode Options for the last barcode
+	 * @param firstBarcode First barcode equivalence classes
+	 * @param oddBarcode The odd barcode equivalence classes
+	 * @param evenBarcode The even barcode equivalence classes
+	 * @param lastBarcode Last barcode equivalence classes
 	 * @param readLength Read length
-	 * @param maxMismatchBarcodeEquivClass Max mismatches for barcode equivalence classes
-	 * @param maxMismatchLastBarcode Max mismatches for last barcode
 	 * @return
 	 */
-	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMay2015(Collection<Barcode> firstBarcode, Collection<BarcodeEquivalenceClass> barcodeEquivClasses, Collection<Barcode> lastBarcode, int readLength, int maxMismatchBarcodeEquivClass, int maxMismatchLastBarcode) {
-		
-		FixedSequenceCollection stopSignalFirstBarcode = equivClassesAsFixedSeqs(barcodeEquivClasses, maxMismatchBarcodeEquivClass, true);
-		FixedSequenceCollection stopSignalBarcodeEquivClasses = barcodesAsFixedSeqs(lastBarcode, maxMismatchLastBarcode, false);
-		
-		BarcodeSet firstBarcodeSet = new BarcodeSet("first_barcode", firstBarcode, false, stopSignalFirstBarcode);
-		BarcodeEquivalenceClassSet barcodeEquivClassesSet = new BarcodeEquivalenceClassSet("barcode_equiv_classes", barcodeEquivClasses, true, stopSignalBarcodeEquivClasses);
-		BarcodeSet lastBarcodeSet = new BarcodeSet("last_barcode", lastBarcode, false);
+	public static BarcodedReadLayout getReadLayoutRnaDna3DSingleDesignMay2015(Collection<BarcodeEquivalenceClass> firstBarcode, Collection<BarcodeEquivalenceClass> oddBarcode, Collection<BarcodeEquivalenceClass> evenBarcode, Collection<BarcodeEquivalenceClass> lastBarcode, int readLength) {
+				
+		BarcodeEquivalenceClassSet firstBarcodeSet = new BarcodeEquivalenceClassSet("first_barcode", firstBarcode, false, null);
+		BarcodeEquivalenceClassSet oddBarcodeSet = new BarcodeEquivalenceClassSet("odd_barcode", oddBarcode, false, null);
+		BarcodeEquivalenceClassSet evenBarcodeSet = new BarcodeEquivalenceClassSet("even_barcode", evenBarcode, false, null);
+		BarcodeEquivalenceClassSet lastBarcodeSet = new BarcodeEquivalenceClassSet("last_barcode", lastBarcode, false, null);
 		
 		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
 		eltsSequence.add(firstBarcodeSet);
-		eltsSequence.add(barcodeEquivClassesSet);
+		eltsSequence.add(oddBarcodeSet);
+		eltsSequence.add(evenBarcodeSet);
+		eltsSequence.add(oddBarcodeSet);
+		eltsSequence.add(evenBarcodeSet);
 		eltsSequence.add(lastBarcodeSet);
 		
 		return new BarcodedReadLayout(eltsSequence, readLength);
@@ -357,6 +356,7 @@ public class ReadLayoutFactory {
 	 * @param isRepeatable Whether the final collection is repeatable
 	 * @return FixedSequenceCollection object containing the barcode sequences
 	 */
+	@SuppressWarnings("unused")
 	private static FixedSequenceCollection barcodesAsFixedSeqs(Collection<Barcode> barcodes, int maxMismatch, boolean isRepeatable) {
 		Collection<FixedSequence> seqs = new ArrayList<FixedSequence>();
 		for(Barcode barcode : barcodes) {

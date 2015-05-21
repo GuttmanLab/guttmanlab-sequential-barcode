@@ -149,15 +149,14 @@ public class ReadLayout {
 		
 		// Make sure all elements have been found at least once in the specified order
 		boolean[] found = new boolean[elements.size()];
-		
 		while(currStart < readLen) {
 			logger.debug("");
 			logger.debug("CURRENT_START\t" + currStart);
-			logger.debug("CURRENT_ELEMENT\t" + currElt.elementName());
-			logger.debug("NEXT_ELEMENT\t" + (nextElt == null ? null : nextElt.elementName()));
+			logger.debug("CURRENT_ELEMENT\t" + currElt.getId());
+			logger.debug("NEXT_ELEMENT\t" + (nextElt == null ? null : nextElt.getId()));
 			// If too far along in the read and have not found everything required, return null
 			if(currStart + currElt.getLength() > readLen) {
-				logger.debug("NO_MATCH_FOR_LAYOUT\tNo match for element " + currElt.elementName() + " in read " + readSequence);
+				logger.debug("NO_MATCH_FOR_LAYOUT\tNo match for element " + currElt.getId() + " in read " + readSequence);
 				// Change the length of matched elements section
 				totalLengthMatchedEltSection = -1;
 				return null;
@@ -172,16 +171,16 @@ public class ReadLayout {
 						lookNext = true;
 					}
 					if(lookNext) {
-						logger.debug("LOOKING_FOR_NEXT_ELT\tLooking for " + nextElt.elementName() + " at position " + currStart);
+						logger.debug("LOOKING_FOR_NEXT_ELT\tLooking for " + nextElt.getId() + " at position " + currStart);
 						if(nextElt != null && nextElt.matchesSubstringOf(readSequence, currStart)) {
 							if(!found[elements.indexOf(currElt)]) {
 								// Next element was found before any instance of current element
-								logger.debug("FOUND_NEXT_BEFORE_CURRENT\tFound match for next element " + nextElt.elementName() + " before any instance of " + currElt.elementName());
+								logger.debug("FOUND_NEXT_BEFORE_CURRENT\tFound match for next element " + nextElt.getId() + " before any instance of " + currElt.getId());
 								// Change the length of matched elements section
 								totalLengthMatchedEltSection = -1;
 								return null;
 							}
-							logger.debug("FOUND_NEXT_OK\tFound match for next element " + nextElt.elementName() + " at start position " + currStart + " of read " + readSequence);
+							logger.debug("FOUND_NEXT_OK\tFound match for next element " + nextElt.getId() + " at start position " + currStart + " of read " + readSequence);
 							found[elements.indexOf(nextElt)] = true;
 							rtrn.get(elements.indexOf(nextElt)).add(nextElt.matchedElement(readSequence.substring(currStart, currStart + nextElt.getLength())));
 							logger.debug("NUM_MATCHES\tThere are " + rtrn.get(elements.indexOf(nextElt)).size() + " matches for this element");
@@ -195,10 +194,10 @@ public class ReadLayout {
 							} 
 							// Now look for the element after "nextElt"
 							currElt = elementIter.next();
-							logger.debug("NEW_CURR_ELT\t" + currElt.elementName());
+							logger.debug("NEW_CURR_ELT\t" + currElt.getId());
 							if(elementIter.hasNext()) {
 								nextElt = elementIter.next();
-								logger.debug("NEW_NEXT_ELT\t" + nextElt.elementName());
+								logger.debug("NEW_NEXT_ELT\t" + nextElt.getId());
 							} else {
 								logger.debug("NEW_NEXT_ELT\tnull");
 								nextElt = null;
@@ -206,29 +205,35 @@ public class ReadLayout {
 							continue;
 						}
 					}
-					logger.debug("NOT_LOOKING_FOR_NEXT_ELT\tNot looking for " + nextElt.elementName() + " at position " + currStart);
+					logger.debug("NOT_LOOKING_FOR_NEXT_ELT\tNot looking for " + nextElt.getId() + " at position " + currStart);
 				}
 			}
 			// Look for current element
 			if(currElt.matchesSubstringOf(readSequence, currStart)) {
 				// Found an instance of current element
-				logger.debug("MATCHED_CURRENT_ELEMENT\tFound match for element " + currElt.elementName() + " at start position " + currStart + " of read " + readSequence);
+				logger.debug("MATCHED_CURRENT_ELEMENT\tFound match for element " + currElt.getId() + " at start position " + currStart + " of read " + readSequence);
 				found[elements.indexOf(currElt)] = true;
 				// Add to return data structure
 				rtrn.get(elements.indexOf(currElt)).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength())));
-				logger.debug("NUM_MATCHES\tThere are " + rtrn.get(elements.indexOf(currElt)).size() + " matches for this element");
+				logger.debug("NUM_MATCHES\tThere are " + rtrn.get(elements.indexOf(currElt)).size() + " matches for this element of length " + currElt.getLength() + ".");
 				// Change current position to end of element
 				currStart += currElt.getLength();
 				// Now will look for the next element unless the current element is repeatable
 				if(!currElt.isRepeatable()) {
 					currElt = nextElt;
 					nextElt = elementIter.hasNext() ? elementIter.next() : null;
-					logger.debug("NEW_CURR_ELT\t" + currElt.elementName());
-					logger.debug("NEW_NEXT_ELT\t" + nextElt.elementName());
+					if(currElt != null) logger.debug("NEW_CURR_ELT\t" + currElt.getId());
+					else logger.debug("NO_NEW_CURR_ELT");
+					if(nextElt != null) logger.debug("NEW_NEXT_ELT\t" + nextElt.getId());
+					else {
+						logger.debug("NO_NEW_NEXT_ELT");
+						totalLengthMatchedEltSection = currStart;
+						return rtrn;
+					}
 				}
 				continue;
 			}
-			logger.debug("No match for element " + currElt.elementName() + " at start position " + currStart + " of read " + readSequence);
+			logger.debug("No match for element " + currElt.getId() + " at start position " + currStart + " of read " + readSequence);
 			currStart++;
 		}
 		// Change the length of matched elements section
