@@ -372,6 +372,7 @@ public class ReadLayoutFactory {
 	 * @param isRepeatable Whether the final collection is repeatable
 	 * @return FixedSequenceCollection object containing the barcode sequences
 	 */
+	@SuppressWarnings("unused")
 	private static FixedSequenceCollection equivClassesAsFixedSeqs(Collection<BarcodeEquivalenceClass> barcodes, int maxMismatch, boolean isRepeatable) {
 		Collection<FixedSequence> seqs = new ArrayList<FixedSequence>();
 		for(BarcodeEquivalenceClass ec : barcodes) {
