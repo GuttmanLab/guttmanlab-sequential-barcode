@@ -141,6 +141,7 @@ public class ReadLayout {
 		// Get the current element and look ahead to the next element
 		// If current element is repeatable, will use next element to know when to stop looking for current element
 		ReadSequenceElement currElt = elementIter.next();
+		int currEltIndex = 0;
 		ReadSequenceElement nextElt = null;
 		if(elementIter.hasNext()) {
 			nextElt = elementIter.next();
@@ -150,6 +151,10 @@ public class ReadLayout {
 		// Make sure all elements have been found at least once in the specified order
 		boolean[] found = new boolean[elements.size()];
 		while(currStart < readLen) {
+			if(currElt == null) {
+				totalLengthMatchedEltSection = currStart;
+				return rtrn;
+			}
 			logger.debug("");
 			logger.debug("CURRENT_START\t" + currStart);
 			logger.debug("CURRENT_ELEMENT\t" + currElt.getId());
@@ -225,11 +230,7 @@ public class ReadLayout {
 					if(currElt != null) logger.debug("NEW_CURR_ELT\t" + currElt.getId());
 					else logger.debug("NO_NEW_CURR_ELT");
 					if(nextElt != null) logger.debug("NEW_NEXT_ELT\t" + nextElt.getId());
-					else {
-						logger.debug("NO_NEW_NEXT_ELT");
-						totalLengthMatchedEltSection = currStart;
-						return rtrn;
-					}
+					else logger.debug("NO_NEW_NEXT_ELT");
 				}
 				continue;
 			}
