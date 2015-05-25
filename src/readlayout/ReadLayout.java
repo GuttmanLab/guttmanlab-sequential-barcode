@@ -178,7 +178,7 @@ public class ReadLayout {
 					if(lookNext) {
 						logger.debug("LOOKING_FOR_NEXT_ELT\tLooking for " + nextElt.getId() + " at position " + currStart);
 						if(nextElt != null && nextElt.matchesSubstringOf(readSequence, currStart)) {
-							if(!found[elements.indexOf(currElt)]) {
+							if(!found[currEltIndex]) {
 								// Next element was found before any instance of current element
 								logger.debug("FOUND_NEXT_BEFORE_CURRENT\tFound match for next element " + nextElt.getId() + " before any instance of " + currElt.getId());
 								// Change the length of matched elements section
@@ -199,6 +199,7 @@ public class ReadLayout {
 							} 
 							// Now look for the element after "nextElt"
 							currElt = elementIter.next();
+							currEltIndex++;
 							logger.debug("NEW_CURR_ELT\t" + currElt.getId());
 							if(elementIter.hasNext()) {
 								nextElt = elementIter.next();
@@ -217,15 +218,16 @@ public class ReadLayout {
 			if(currElt.matchesSubstringOf(readSequence, currStart)) {
 				// Found an instance of current element
 				logger.debug("MATCHED_CURRENT_ELEMENT\tFound match for element " + currElt.getId() + " at start position " + currStart + " of read " + readSequence);
-				found[elements.indexOf(currElt)] = true;
+				found[currEltIndex] = true;
 				// Add to return data structure
-				rtrn.get(elements.indexOf(currElt)).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength())));
-				logger.debug("NUM_MATCHES\tThere are " + rtrn.get(elements.indexOf(currElt)).size() + " matches for this element of length " + currElt.getLength() + ".");
+				rtrn.get(currEltIndex).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength())));
+				logger.debug("NUM_MATCHES\tThere are " + rtrn.get(currEltIndex).size() + " matches for this element of length " + currElt.getLength() + ".");
 				// Change current position to end of element
 				currStart += currElt.getLength();
 				// Now will look for the next element unless the current element is repeatable
 				if(!currElt.isRepeatable()) {
 					currElt = nextElt;
+					currEltIndex++;
 					nextElt = elementIter.hasNext() ? elementIter.next() : null;
 					if(currElt != null) logger.debug("NEW_CURR_ELT\t" + currElt.getId());
 					else logger.debug("NO_NEW_CURR_ELT");
