@@ -25,6 +25,7 @@ import readelement.AnySequence;
 import readelement.Barcode;
 import readelement.BarcodeSet;
 import readelement.FixedSequence;
+import readelement.ReadSequenceElement;
 import readelement.Switch;
 import readlayout.BarcodedReadLayout;
 import readlayout.LigationDesign;
@@ -247,9 +248,10 @@ public class BarcodeAnalysis {
 			String seq = record.getSequence();
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
-			if(layout.getMatchedElements(seq) != null) {
+			List<List<ReadSequenceElement>> matchedElements = layout.getMatchedElements(seq);
+			if(matchedElements != null) {
 				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, seq, null, layout, null);
-				BarcodeSequence barcodes = f.getBarcodes();
+				BarcodeSequence barcodes = f.getBarcodes(matchedElements, null);
 				if(verbose) line += barcodes.getNumBarcodes() + "\t";
 				line += barcodes.toString() + "\t";
 				if(GET_LAST_BARCODES) {
@@ -590,6 +592,8 @@ public class BarcodeAnalysis {
 	 * @throws DrmaaException 
 	 */
 	public static void main(String[] args) throws IOException, DrmaaException, InterruptedException {
+		
+		logger.info("Barcode analysis starting...");
 		
 		try {
 			drmaaSession = OGSUtils.getDrmaaSession();

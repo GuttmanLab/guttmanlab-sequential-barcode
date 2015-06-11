@@ -46,8 +46,6 @@ public class ReadLayout {
 	 * @param readLength Read length
 	 */
 	public ReadLayout(ArrayList<ReadSequenceElement> elementSequence, int readLength) {
-		// Check that all lengths add up to at most read length
-		totalLengthMatchedEltSection = -1;
 		int totalLen = 0;
 		for(ReadSequenceElement elt : elementSequence) {
 			totalLen += elt.getLength();
@@ -87,11 +85,14 @@ public class ReadLayout {
 	 * @throws IOException 
 	 */
 	public int matchedElementsLengthInRead(String readSequence) throws IOException {
-		getMatchedElements(readSequence);
-		if(totalLengthMatchedEltSection == -1) {
-			throw new IllegalArgumentException("Read does not match layout");
+		try {
+			if(totalLengthMatchedEltSection == -1) {
+				throw new IllegalArgumentException("Read does not match layout");
+			}
+			return totalLengthMatchedEltSection;
+		} catch(NullPointerException e) {
+			throw new IllegalStateException("Must call getMatchedElements first");
 		}
-		return totalLengthMatchedEltSection;
 	}
 	
 	/**
@@ -130,7 +131,7 @@ public class ReadLayout {
 					stopSignalPos.put(elt, Integer.MAX_VALUE);
 					continue;
 				}
-				int posNext = stopSignal.firstMatch(readSequence);
+				int posNext = stopSignal.firstMatch(readSequence); // EFFICIENCY make firstMatch more efficient
 				if(posNext != -1) {
 					stopSignalPos.put(elt, Integer.valueOf(posNext));
 					logger.debug("STOP_SIGNAL\t for element " + elt.getId() + " is at position " + posNext);

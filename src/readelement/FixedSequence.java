@@ -1,5 +1,8 @@
 package readelement;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.log4j.Logger;
 
 import nextgen.core.utils.AlignmentUtils;
@@ -15,6 +18,8 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	private int maxNumMismatches;
 	private String name;
 	public static Logger logger = Logger.getLogger(FixedSequence.class.getName());
+	private Collection<String> matchedStrings;
+	private int length;
 
 	/**
 	 * @param fixedSeqName Name of fixed sequence
@@ -23,13 +28,15 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	 */
 	public FixedSequence(String fixedSeqName, String sequence, int maxMismatches) {
 		seq = sequence;
+		length = seq.length();
 		name = fixedSeqName;
 		maxNumMismatches = maxMismatches;
+		matchedStrings = new HashSet<String>();
 	}
 	
 	@Override
 	public int getLength() {
-		return seq.length();
+		return length;
 	}
 
 	/**
@@ -42,10 +49,21 @@ public class FixedSequence extends AbstractReadSequenceElement {
 
 	@Override
 	public boolean matchesFullString(String s) {
+		if(matchedStrings.contains(s)) {
+			return true;
+		}
 		if(getLength() != s.length()) {
 			return false;
 		}
-		return AlignmentUtils.hammingDistanceAtMost(s, seq, maxNumMismatches, true);
+		if(s.equalsIgnoreCase(seq)) {
+			matchedStrings.add(s);
+			return true;
+		}
+		boolean rtrn = AlignmentUtils.hammingDistanceAtMost(s, seq, maxNumMismatches, true);
+		if(rtrn) {
+			matchedStrings.add(s);
+		}
+		return rtrn;
 	}
 
 	@Override

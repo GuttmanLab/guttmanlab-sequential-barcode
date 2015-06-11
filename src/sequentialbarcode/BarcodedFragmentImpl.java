@@ -201,16 +201,34 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	private BarcodedFragmentImpl() {}
 
 	public BarcodeSequence getBarcodes() {
+		return getBarcodes(null, null);
+	}
+	
+	/**
+	 * Get barcodes where we have already matched elements to the read(s)
+	 * @param matchedEltsRead1 Matched elements for read 1 or null if identifying here for the first time or there is no read 1
+	 * @param matchedEltsRead2 Matched elements for read 2 or null if identifying here for the first time or there is no read 2
+	 */
+	public BarcodeSequence getBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
 		if(barcodes == null) {
-			findBarcodes();
+			findBarcodes(matchedEltsRead1, matchedEltsRead2);
 		}
 		return barcodes;
 	}
 	
 	public void findBarcodes() {
+		findBarcodes(null, null);
+	}
+	
+	/**
+	 * Find barcodes where we have already matched elements to the read(s)
+	 * @param matchedEltsRead1 Matched elements for read 1 or null if identifying here for the first time or there is no read 1
+	 * @param matchedEltsRead2 Matched elements for read 2 or null if identifying here for the first time or there is no read 2
+	 */
+	public void findBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
 		barcodes = new BarcodeSequence();
 			if(read1layout != null && read1sequence != null) {
-				List<List<ReadSequenceElement>> read1elements = read1layout.getMatchedElements(read1sequence);
+				List<List<ReadSequenceElement>> read1elements = matchedEltsRead1 == null ? read1layout.getMatchedElements(read1sequence) : matchedEltsRead1;
 				if(read1elements != null) {
 					for(int i = 0; i < read1elements.size(); i++) {
 						ReadSequenceElement parentElement = read1layout.getElements().get(i);
@@ -232,7 +250,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 				read1elements = null;
 			}
 			if(read2layout != null && read2sequence != null) {
-				List<List<ReadSequenceElement>> read2elements = read2layout.getMatchedElements(read2sequence);
+				List<List<ReadSequenceElement>> read2elements = matchedEltsRead2 == null ? read2layout.getMatchedElements(read2sequence) : matchedEltsRead2;
 				if(read2elements != null) {
 					for(int i = 0; i < read2elements.size(); i++) {
 						ReadSequenceElement parentElement = read2layout.getElements().get(i);

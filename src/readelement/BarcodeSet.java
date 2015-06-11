@@ -1,6 +1,8 @@
 package readelement;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -14,7 +16,7 @@ import org.apache.log4j.Logger;
  */
 public class BarcodeSet extends AbstractReadSequenceElement {
 	
-	private Collection<Barcode> barcodes;
+	private Map<String, Collection<Barcode>> barcodes; // Map of barcode prefix to barcode
 	public static Logger logger = Logger.getLogger(BarcodeSet.class.getName());
 	private Map<String, Barcode> seqToMatchedElement;
 	private Collection<String> noMatch;
@@ -24,6 +26,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	private String stopSignalSeq;
 	private FixedSequenceCollection stopSignalSeqCollection;
 	private int stopSignalMaxMismatches;
+	private static int barcodePrefixLen = 2; // Length of barcode prefix to store for indexing
 	
 	/**
 	 * @param setId Barcode set ID
@@ -45,12 +48,16 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		seqToMatchedElement = new TreeMap<String, Barcode>();
 		noMatch = new TreeSet<String>();
 		int len = barcodeSet.iterator().next().getLength();
-		barcodes = new TreeSet<Barcode>();
+		barcodes = new HashMap<String, Collection<Barcode>>();
 		for(Barcode b : barcodeSet) {
 			if(b.getLength() != len) {
 				throw new IllegalArgumentException("All barcode sequences must have the same length");
 			}
-			barcodes.add(b);
+			String prefix = b.getSequence().substring(0, barcodePrefixLen);
+			if(!barcodes.containsKey(prefix)) {
+				barcodes.put(prefix, new HashSet<Barcode>());
+			}
+			barcodes.get(prefix).add(b);
 		}
 		length = len;
 	}
@@ -91,7 +98,11 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	 * @return The barcodes
 	 */
 	public Collection<Barcode> getBarcodes() {
-		return barcodes;
+		Collection<Barcode> rtrn = new HashSet<Barcode>();
+		for(Collection<Barcode> bs : barcodes.values()) {
+			rtrn.addAll(bs);
+		}
+		return rtrn;
 	}
 	
 	@Override
@@ -110,7 +121,16 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		if(noMatch.contains(s)) {
 			return false;
 		}
-		for(Barcode barcode : barcodes) {
+		// Try barcodes that match prefix first
+		try {
+			for(Barcode barcode : barcodes.get(s.substring(0, barcodePrefixLen))) {
+				if(barcode.matchesFullString(s)) {
+					seqToMatchedElement.put(s, barcode);
+					return true;
+				}
+			}
+		} catch (NullPointerException e) {}
+		for(Barcode barcode : getBarcodes()) {
 			if(barcode.matchesFullString(s)) {
 				seqToMatchedElement.put(s, barcode);
 				return true;

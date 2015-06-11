@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
@@ -31,6 +32,7 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	private boolean repeatable;
 	private String stopSignal;
 	private int stopSignalMaxMismatches;
+	private int length;
 	
 	/**
 	 * For Berkeley DB only
@@ -93,10 +95,11 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 		sequence = seq;
 		id = barcodeId;
 		maxNumMismatches = maxMismatches;
-		matchedStrings = new TreeSet<String>();
+		//matchedStrings = new HashSet<String>();
 		repeatable = isRepeatable;
 		stopSignal = stopSignalForRepeatable;
 		stopSignalMaxMismatches = stopSignalMaxMismatch;
+		length = sequence.length();
 	}
 	
 	/**
@@ -165,7 +168,7 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 
 	@Override
 	public int getLength() {
-		return sequence.length();
+		return length;
 	}
 
 	@Override
@@ -189,19 +192,34 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 		return maxNumMismatches;
 	}
 	
+//	@Override
+//	public boolean matchesFullString(String s) {
+//		if(matchedStrings.contains(s)) {
+//			return true;
+//		}
+//		if(getLength() != s.length()) {
+//			return false;
+//		}
+//		if(s.equalsIgnoreCase(sequence)) {
+//			matchedStrings.add(s);
+//			return true;
+//		}
+//		boolean rtrn = AlignmentUtils.hammingDistanceAtMost(s, sequence, maxNumMismatches, true);
+//		if(rtrn) {
+//			matchedStrings.add(s);
+//		}
+//		return rtrn;
+//	}
+
 	@Override
 	public boolean matchesFullString(String s) {
-		if(matchedStrings.contains(s)) {
-			return true;
-		}
 		if(getLength() != s.length()) {
 			return false;
 		}
-		boolean rtrn = AlignmentUtils.hammingDistanceAtMost(s, sequence, maxNumMismatches, true);
-		if(rtrn) {
-			matchedStrings.add(s);
+		if(s.equalsIgnoreCase(sequence)) {
+			return true;
 		}
-		return rtrn;
+		return AlignmentUtils.hammingDistanceAtMost(s, sequence, maxNumMismatches, true);
 	}
 
 	@Override
