@@ -69,13 +69,36 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 	public String matchedElementSequence(String s) {
 		throw new UnsupportedOperationException("Not supported");
 	}
+	
+	@Override
+	public boolean matchesFullString(String s) {
+		if(matchedElement(s) == null) return false;
+		return true;
+	}
+
 
 	@Override
 	public ReadSequenceElement matchedElement(String s) {
-		if(!matchesFullString(s)) return null;
-		return this;
+		if(s.length() != length) {
+			return null;
+		}
+		// Try barcodes that match prefix first
+		try {
+			for(Barcode barcode : barcodes.get(s.substring(0, barcodePrefixLen))) {
+				if(barcode.matchesFullString(s)) {
+					return this;
+				}
+			}
+		} catch (NullPointerException e) {}
+		for(Barcode barcode : getBarcodes()) {
+			if(barcode.matchesFullString(s)) {
+				return this;
+			}
+		}
+		return null;
 	}
 
+	
 	@Override
 	public String elementName() {
 		return "barcode_equivalence_class";

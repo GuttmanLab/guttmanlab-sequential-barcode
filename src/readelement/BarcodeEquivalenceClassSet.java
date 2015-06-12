@@ -1,7 +1,6 @@
 package readelement;
 
 import java.util.Collection;
-import java.util.TreeSet;
 
 /**
  * A collection of barcode equivalence classes

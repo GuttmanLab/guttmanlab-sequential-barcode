@@ -6,7 +6,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
@@ -28,7 +27,7 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	private String id;
 	private int maxNumMismatches;
 	public static Logger logger = Logger.getLogger(Barcode.class.getName());
-	private Collection<String> matchedStrings;
+	//private Collection<String> matchedStrings;
 	private boolean repeatable;
 	private String stopSignal;
 	private int stopSignalMaxMismatches;
