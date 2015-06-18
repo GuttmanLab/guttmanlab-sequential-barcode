@@ -248,7 +248,7 @@ public class BarcodeAnalysis {
 			String seq = record.getSequence();
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
-			List<List<ReadSequenceElement>> matchedElements = layout.getMatchedElements(seq);
+			List<List<ReadSequenceElement>> matchedElements = layout.new ElementMatcher(seq).getMatchedElements();
 			if(matchedElements != null) {
 				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, seq, null, layout, null);
 				BarcodeSequence barcodes = f.getBarcodes(matchedElements, null);
@@ -357,7 +357,7 @@ public class BarcodeAnalysis {
 			FastqSequence record = iter.next();
 			String seq = record.getSequence();
 			String name = record.getName();
-			if(layout.getMatchedElements(seq) != null) {
+			if(layout.new ElementMatcher(seq).getMatchedElements() != null) {
 				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout);
 				BarcodeSequence barcodes = f.getBarcodes();
 				for(Barcode b : barcodes.getBarcodes()) {

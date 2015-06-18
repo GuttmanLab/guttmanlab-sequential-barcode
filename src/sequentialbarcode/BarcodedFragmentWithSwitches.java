@@ -10,6 +10,7 @@ import readelement.FixedSequence;
 import readelement.ReadSequenceElement;
 import readelement.Switch;
 import readlayout.ReadLayout;
+import readlayout.ReadLayout.ElementMatcher;
 
 /**
  * A barcoded fragment containing switches, i.e. blocks of sequence that have several options and indicate something about the fragment
@@ -44,7 +45,7 @@ public class BarcodedFragmentWithSwitches extends BarcodedFragmentImpl {
 	private void findSwitches() {
 		switchValues = new HashMap<Switch, List<FixedSequence>>();
 			if(read1layout != null && read1sequence != null) {
-				List<List<ReadSequenceElement>> read1elements = read1layout.getMatchedElements(read1sequence);
+				List<List<ReadSequenceElement>> read1elements = read1layout.new ElementMatcher(read1sequence).getMatchedElements();
 				if(read1elements != null) {
 					for(int i = 0; i < read1elements.size(); i++) {
 						ReadSequenceElement parentElement = read1layout.getElements().get(i);
@@ -62,7 +63,7 @@ public class BarcodedFragmentWithSwitches extends BarcodedFragmentImpl {
 				read1elements = null;
 			}
 			if(read2layout != null && read2sequence != null) {
-				List<List<ReadSequenceElement>> read2elements = read2layout.getMatchedElements(read2sequence);
+				List<List<ReadSequenceElement>> read2elements = read2layout.new ElementMatcher(read2sequence).getMatchedElements();
 				if(read2elements != null) {
 					for(int i = 0; i < read2elements.size(); i++) {
 						ReadSequenceElement parentElement = read2layout.getElements().get(i);

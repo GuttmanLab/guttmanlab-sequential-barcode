@@ -22,6 +22,7 @@ import readelement.BarcodeEquivalenceClassSet;
 import readelement.BarcodeSet;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
+import readlayout.ReadLayout.ElementMatcher;
 
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.EnvironmentMutableConfig;
@@ -228,7 +229,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	public void findBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
 		barcodes = new BarcodeSequence();
 			if(read1layout != null && read1sequence != null) {
-				List<List<ReadSequenceElement>> read1elements = matchedEltsRead1 == null ? read1layout.getMatchedElements(read1sequence) : matchedEltsRead1;
+				List<List<ReadSequenceElement>> read1elements = matchedEltsRead1 == null ? read1layout.new ElementMatcher(read1sequence).getMatchedElements() : matchedEltsRead1;
 				if(read1elements != null) {
 					for(int i = 0; i < read1elements.size(); i++) {
 						ReadSequenceElement parentElement = read1layout.getElements().get(i);
@@ -250,7 +251,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 				read1elements = null;
 			}
 			if(read2layout != null && read2sequence != null) {
-				List<List<ReadSequenceElement>> read2elements = matchedEltsRead2 == null ? read2layout.getMatchedElements(read2sequence) : matchedEltsRead2;
+				List<List<ReadSequenceElement>> read2elements = matchedEltsRead2 == null ? read2layout.new ElementMatcher(read2sequence).getMatchedElements() : matchedEltsRead2;
 				if(read2elements != null) {
 					for(int i = 0; i < read2elements.size(); i++) {
 						ReadSequenceElement parentElement = read2layout.getElements().get(i);
