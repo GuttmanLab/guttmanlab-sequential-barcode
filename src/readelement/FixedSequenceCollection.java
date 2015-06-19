@@ -132,22 +132,17 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String matchedElementSequence(String s) {
+	public MatchedElement matchedElement(String s) {
 		for(FixedSequence fixedSeq : fixedSequences) {
 			if(fixedSeq.matchesFullString(s)) {
-				return fixedSeq.getSequence();
+				return new MatchedElement(fixedSeq, 0, fixedSeq.getLength());
 			}
 		}
 		return null;
 	}
 
 	@Override
-	public ReadSequenceElement matchedElement(String s) {
-		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesFullString(s)) {
-				return fixedSeq;
-			}
-		}
+	public String getSequence() {
 		return null;
 	}
 

@@ -77,15 +77,10 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String matchedElementSequence(String s) {
-		return matchedElement(s).matchedElementSequence(s);
-	}
-
-	@Override
-	public ReadSequenceElement matchedElement(String s) {
+	public MatchedElement matchedElement(String s) {
 		for(BarcodeEquivalenceClass ec : equivClasses) {
 			if(ec.matchesFullString(s)) {
-				return ec;
+				return new MatchedElement(ec, 0, ec.getLength());
 			}
 		}
 		return null;
@@ -99,6 +94,11 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	@Override
 	public String getId() {
 		return id;
+	}
+
+	@Override
+	public String getSequence() {
+		return null;
 	}
 
 }

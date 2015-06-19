@@ -320,7 +320,7 @@ public class ReadLayout {
 								//TODO set matched element within element
 								//TODO set matched size within element
 								//TODO reimpliment matched element with smith waterman
-								matchedElements.get(elements.indexOf(nextElt)).add(nextElt.matchedElement(readSequence.substring(currStart, currStart + nextElt.getLength())));
+								matchedElements.get(elements.indexOf(nextElt)).add(nextElt.matchedElement(readSequence.substring(currStart, currStart + nextElt.getLength())).getMatchedElement());
 								debugNumMatches(matchedElements.get(elements.indexOf(nextElt)).size());
 								currStart += nextElt.getLength(); //TODO replace with length of match
 								if(!elementIter.hasNext()) { // We have found a match for the last element; return
@@ -345,7 +345,7 @@ public class ReadLayout {
 					debugMatchedCurrElt();
 					found[currEltIndex] = true;
 					//TODO replace with actual matched element from above
-					matchedElements.get(currEltIndex).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength()))); // Add to return data structure
+					matchedElements.get(currEltIndex).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength())).getMatchedElement()); // Add to return data structure
 					debugNumMatches(matchedElements.get(currEltIndex).size());
 					//TODO replace with length of match
 					currStart += currElt.getLength(); // Change current position to end of element

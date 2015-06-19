@@ -66,11 +66,6 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 	}
 	
 	@Override
-	public String matchedElementSequence(String s) {
-		throw new UnsupportedOperationException("Not supported");
-	}
-	
-	@Override
 	public boolean matchesFullString(String s) {
 		if(matchedElement(s) == null) return false;
 		return true;
@@ -78,7 +73,7 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 
 
 	@Override
-	public ReadSequenceElement matchedElement(String s) {
+	public MatchedElement matchedElement(String s) {
 		if(s.length() != length) {
 			return null;
 		}
@@ -86,13 +81,13 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 		try {
 			for(Barcode barcode : barcodes.get(s.substring(0, barcodePrefixLen))) {
 				if(barcode.matchesFullString(s)) {
-					return this;
+					return new MatchedElement(this, 0, getLength());
 				}
 			}
 		} catch (NullPointerException e) {}
 		for(Barcode barcode : getBarcodes()) {
 			if(barcode.matchesFullString(s)) {
-				return this;
+				return new MatchedElement(this, 0, getLength());
 			}
 		}
 		return null;

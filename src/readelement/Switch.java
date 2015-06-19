@@ -115,20 +115,10 @@ public class Switch extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String matchedElementSequence(String s) {
+	public MatchedElement matchedElement(String s) {
 		for(FixedSequence fixedSeq : fixedSequences) {
 			if(fixedSeq.matchesFullString(s)) {
-				return fixedSeq.getSequence();
-			}
-		}
-		return null;
-	}
-
-	@Override
-	public ReadSequenceElement matchedElement(String s) {
-		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesFullString(s)) {
-				return fixedSeq;
+				return new MatchedElement(fixedSeq, 0, fixedSeq.getLength());
 			}
 		}
 		return null;
@@ -146,6 +136,11 @@ public class Switch extends AbstractReadSequenceElement {
 			rtrn += "_" + fixedSeq.getId();
 		}
 		return rtrn;
+	}
+
+	@Override
+	public String getSequence() {
+		return null;
 	}
 
 }

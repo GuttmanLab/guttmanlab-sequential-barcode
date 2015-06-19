@@ -117,11 +117,6 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String matchedElementSequence(String s) {
-		return matchedElement(s).matchedElementSequence(s);
-	}
-	
-	@Override
 	public boolean matchesSubstringOf(String s, int startOnString) {
 		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
@@ -132,7 +127,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public ReadSequenceElement matchedElement(String s) {
+	public MatchedElement matchedElement(String s) {
 		if(s.length() != length) {
 			return null;
 		}
@@ -140,13 +135,13 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		try {
 			for(Barcode barcode : barcodes.get(s.substring(0, barcodePrefixLen))) {
 				if(barcode.matchesFullString(s)) {
-					return barcode;
+					return new MatchedElement(barcode, 0, barcode.getLength());
 				}
 			}
 		} catch (NullPointerException e) {}
 		for(Barcode barcode : getBarcodes()) {
 			if(barcode.matchesFullString(s)) {
-				return barcode;
+				return new MatchedElement(barcode, 0, barcode.getLength());
 			}
 		}
 		return null;
@@ -166,6 +161,11 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 			return stopSignalSeqCollection;
 		}
 		throw new IllegalStateException("No stop signal specified");
+	}
+
+	@Override
+	public String getSequence() {
+		return null;
 	}
 
 

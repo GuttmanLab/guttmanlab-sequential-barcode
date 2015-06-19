@@ -39,11 +39,6 @@ public class AnySequence extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String matchedElementSequence(String s) {
-		return s;
-	}
-
-	@Override
 	public boolean matchesSubstringOf(String s, int startOnString) {
 		return startOnString + length <= s.length();
 	}
@@ -54,11 +49,11 @@ public class AnySequence extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public ReadSequenceElement matchedElement(String s) {
+	public MatchedElement matchedElement(String s) {
 		if(!matchesFullString(s)) {
 			return null;
 		}
-		return this;
+		return new MatchedElement(this, 0, length);
 	}
 
 	@Override
@@ -68,6 +63,11 @@ public class AnySequence extends AbstractReadSequenceElement {
 
 	@Override
 	public ReadSequenceElement getStopSignalForRepeatable() {
+		return null;
+	}
+
+	@Override
+	public String getSequence() {
 		return null;
 	}
 

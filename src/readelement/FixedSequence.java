@@ -72,14 +72,6 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String matchedElementSequence(String s) {
-		if(!matchesFullString(s)) {
-			return null;
-		}
-		return seq;
-	}
-
-	@Override
 	public boolean matchesSubstringOf(String s, int startOnString) {
 		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
@@ -90,11 +82,11 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public ReadSequenceElement matchedElement(String s) {
+	public MatchedElement matchedElement(String s) {
 		if(!matchesFullString(s)) {
 			return null;
 		}
-		return this;
+		return new MatchedElement(this, 0, length);
 	}
 
 	@Override

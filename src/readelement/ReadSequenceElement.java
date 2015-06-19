@@ -48,18 +48,11 @@ public interface ReadSequenceElement {
 	public ReadSequenceElement getStopSignalForRepeatable();
 	
 	/**
-	 * Get the "intended" sequence of the match, i.e., the real barcode, not a version with mismatches found in the read
-	 * @param s Read subsequence to search
-	 * @return The real intended sequence or null if doesn't match
-	 */
-	public String matchedElementSequence(String s);
-	
-	/**
 	 * Get the read element matching the sequence
 	 * @param s Read subsequence to search
 	 * @return The element that matches the sequence or null if it doesn't match
 	 */
-	public ReadSequenceElement matchedElement(String s);
+	public MatchedElement matchedElement(String s);
 	
 	/**
 	 * Get the general name of the element
@@ -72,5 +65,11 @@ public interface ReadSequenceElement {
 	 * @return Element ID
 	 */
 	public String getId();
+	
+	/**
+	 * Get the sequence of this element
+	 * @return The sequence of this element, or null if not applicable (e.g. if a set of possible sequences)
+	 */
+	public String getSequence();
 	
 }
