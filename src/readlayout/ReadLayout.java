@@ -141,6 +141,7 @@ public class ReadLayout {
 		private Iterator<ReadSequenceElement> elementIter;
 		private ReadSequenceElement nextElt;
 		private boolean[] found;
+		private List<List<ReadSequenceElement>> matchedElements;
 		
 		/**
 		 * @param readSeq Read sequence
@@ -162,6 +163,8 @@ public class ReadLayout {
 			currStart = 0;
 			// Make sure all elements have been found at least once in the specified order
 			found = new boolean[elements.size()];
+			// Match elements
+			matchElements();
 		}
 		
 		/**
@@ -212,26 +215,6 @@ public class ReadLayout {
 			}
 			return false;
 		}
-		
-//		/**
-//		 * Check criteria that indicate there is no match for the layout:
-//		 * 
-//		 * A value of true indicates that the finder should stop and return null
-//		 * @return True iff the criterion indicates there is no match
-//		 */
-//		private boolean stopNoMatch() {
-//
-//		}
-//		
-//		/**
-//		 * Check criteria that indicate there is no match for the layout:
-//		 * 
-//		 * A value of true indicates that the finder should stop and return null
-//		 * @return True iff the criterion indicates there is no match
-//		 */
-//		private boolean stopNoMatch() {
-//
-//		}
 		
 		private void debugCurrPos() {
 			logger.debug("");
@@ -285,61 +268,70 @@ public class ReadLayout {
 		}
 		
 		/**
-		 * Get a list of matched elements in the read sequence
-		 * Only returns an object if the whole layout matches the read sequence
+		 * Whether to look for the next element now
+		 * @return True iff should look for next element
+		 */
+		private boolean lookNext() {
+			if(!stopSignalPos.containsKey(currElt)) return true;
+			else if(stopSignalPos.get(currElt).intValue() == currStart) return true;
+			return false;
+		}
+		
+		/**
+		 * Get the list of matched elements in the read sequence
 		 * Each item on list corresponds to one read sequence element in the layout
 		 * List item is an ordered list of matched elements for that read element
 		 * If whole layout does not match read sequence, returns null
-		 * @param readSequence Read sequence to search for matches to this layout
-		 * @return List of lists of matched elements from this layout that appear in the read
+		 * @return List of matched elements or null if whole layout doesn't match
 		 * @throws IOException 
 		 */
 		public List<List<ReadSequenceElement>> getMatchedElements() {
+			return matchedElements;
+		}
+		
+		/**
+		 * Get the list of matched elements in the read sequence
+		 * Each item on list corresponds to one read sequence element in the layout
+		 * List item is an ordered list of matched elements for that read element
+		 * If whole layout does not match read sequence, sets list to null
+		 * @throws IOException 
+		 */
+		private void matchElements() {
 			
-			List<List<ReadSequenceElement>> rtrn = new ArrayList<List<ReadSequenceElement>>();
-			for(int i = 0; i < elements.size(); i++) {
-				rtrn.add(new ArrayList<ReadSequenceElement>());
-			}
-			
-			if(stopNoMatchReadSeqLength()) return null; // Check that the read sequence has the read length required by this layout
+			matchedElements = new ArrayList<List<ReadSequenceElement>>();
+			for(int i = 0; i < elements.size(); i++) {matchedElements.add(new ArrayList<ReadSequenceElement>());}
+			if(stopNoMatchReadSeqLength()) {matchedElements = null; return;} // Check that the read sequence has the read length required by this layout
 			
 			while(currStart < readLen) {
-				if(currElt == null) { // We've reached the end of the set of elements
-					totalLengthMatchedEltSection = currStart;
-					return rtrn;
-				}
+				if(currElt == null) {totalLengthMatchedEltSection = currStart; return;} // We've reached the end of the set of elements
 				debugCurrPos();
-				if(stopNoMatchEltsLeftOver()) return null; // Too far along in the read and have not found everything required
+				if(stopNoMatchEltsLeftOver()) {matchedElements = null; return;} // Too far along in the read and have not found everything required
 				if(currElt.isRepeatable() && nextElt != null) { // If current element is repeatable, look for next element at this position
 					if(!(currStart + nextElt.getLength() > readLen)) {
-						boolean lookNext = false;
-						if(!stopSignalPos.containsKey(currElt)) lookNext = true;
-						else if(stopSignalPos.get(currElt).intValue() == currStart) lookNext = true;
-						if(lookNext) {
+						if(lookNext()) {
 							debugLookingForNextElt();
+							//TODO get rid of matchesSubstringOf
+							//TODO call matchedElement instead of matchesSubstringOf
 							boolean nextMatches = nextElt.matchesSubstringOf(readSequence, currStart);
-							if(stopNoMatchFoundNextBeforeCurrent(nextMatches)) return null; // Found next element before current element
-							if(nextElt != null && nextMatches) {
+							if(stopNoMatchFoundNextBeforeCurrent(nextMatches)) {matchedElements = null; return;} // Found next element before current element
+							if(nextMatches) {
 								debugFoundNext();
 								found[elements.indexOf(nextElt)] = true;
-								rtrn.get(elements.indexOf(nextElt)).add(nextElt.matchedElement(readSequence.substring(currStart, currStart + nextElt.getLength())));
-								debugNumMatches(rtrn.get(elements.indexOf(nextElt)).size());
-								currStart += nextElt.getLength();
+								//TODO set matched element within element
+								//TODO set matched size within element
+								//TODO reimpliment matched element with smith waterman
+								matchedElements.get(elements.indexOf(nextElt)).add(nextElt.matchedElement(readSequence.substring(currStart, currStart + nextElt.getLength())));
+								debugNumMatches(matchedElements.get(elements.indexOf(nextElt)).size());
+								currStart += nextElt.getLength(); //TODO replace with length of match
 								if(!elementIter.hasNext()) { // We have found a match for the last element; return
 									debugMatchedLayout();
-									totalLengthMatchedEltSection = currStart; // Change the length of matched elements section
-									return rtrn;
+									totalLengthMatchedEltSection = currStart; return; // Change the length of matched elements section
 								} 
 								currElt = elementIter.next(); // Now look for the element after "nextElt"
 								currEltIndex++;
 								debugNewCurrElt();
-								if(elementIter.hasNext()) {
-									nextElt = elementIter.next();
-									debugNewNextElt(nextElt.getId());
-								} else {
-									debugNewNextElt("null");
-									nextElt = null;
-								}
+								if(elementIter.hasNext()) {nextElt = elementIter.next(); debugNewNextElt(nextElt.getId());}
+								else {debugNewNextElt("null"); nextElt = null;}
 								continue;
 							}
 						}
@@ -347,16 +339,19 @@ public class ReadLayout {
 					}
 				}
 				// Look for current element
+				//TODO get rid of matchesSubstringOf
+				//TODO call matchedElement instead
 				if(currElt.matchesSubstringOf(readSequence, currStart)) { // Found an instance of current element
 					debugMatchedCurrElt();
 					found[currEltIndex] = true;
-					rtrn.get(currEltIndex).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength()))); // Add to return data structure
-					debugNumMatches(rtrn.get(currEltIndex).size());
+					//TODO replace with actual matched element from above
+					matchedElements.get(currEltIndex).add(currElt.matchedElement(readSequence.substring(currStart, currStart + currElt.getLength()))); // Add to return data structure
+					debugNumMatches(matchedElements.get(currEltIndex).size());
+					//TODO replace with length of match
 					currStart += currElt.getLength(); // Change current position to end of element
 					// Now will look for the next element unless the current element is repeatable
 					if(!currElt.isRepeatable()) {
-						currElt = nextElt;
-						currEltIndex++;
+						currElt = nextElt; currEltIndex++;
 						nextElt = elementIter.hasNext() ? elementIter.next() : null;
 						if(currElt != null) debugNewCurrElt(); else debugNoNewCurrElt();
 						if(nextElt != null) debugNewNextElt(nextElt.getId()); else debugNoNewNextElt();
@@ -367,7 +362,7 @@ public class ReadLayout {
 				currStart++;
 			}
 			totalLengthMatchedEltSection = -1; // Change the length of matched elements section
-			return null;
+			matchedElements = null; return;
 		}
 
 		
