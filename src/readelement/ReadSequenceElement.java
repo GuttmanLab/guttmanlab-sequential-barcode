@@ -21,12 +21,12 @@ public interface ReadSequenceElement {
 	public boolean matchesFullString(String s);
 	
 	/**
-	 * Check whether this element matches a substring of a string
+	 * Check whether this element matches a substring of a string, where both element and substring have same length (no gaps)
 	 * @param s The string
 	 * @param startOnString Start position of substring within string
-	 * @return True if this element matches the substring starting at the specified position
+	 * @return True if this element matches the substring starting at the specified position with no gaps
 	 */
-	public boolean matchesSubstringOf(String s, int startOnString);
+	public boolean matchesSubstringNoGaps(String s, int startOnString);
 	
 	/**
 	 * Get the position of the first match of this element within the string
@@ -53,6 +53,14 @@ public interface ReadSequenceElement {
 	 * @return The element that matches the sequence or null if it doesn't match
 	 */
 	public MatchedElement matchedElement(String s);
+	
+	/**
+	 * Get the read element matching the sequence
+	 * @param s Read subsequence to search
+	 * @param startPosOnString Start position on string
+	 * @return The element that matches the substring starting at given position, or null if it doesn't match
+	 */
+	public MatchedElement matchedElement(String s, int startPosOnString);
 	
 	/**
 	 * Get the general name of the element

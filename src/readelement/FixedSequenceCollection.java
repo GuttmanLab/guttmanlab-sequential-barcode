@@ -122,9 +122,9 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesSubstringOf(String s, int startOnString) {
+	public boolean matchesSubstringNoGaps(String s, int startOnString) {
 		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesSubstringOf(s, startOnString)) {
+			if(fixedSeq.matchesSubstringNoGaps(s, startOnString)) {
 				return true;
 			}
 		}
@@ -134,8 +134,14 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	@Override
 	public MatchedElement matchedElement(String s) {
 		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesFullString(s)) {
-				return new MatchedElement(fixedSeq, 0, fixedSeq.getLength());
+			if(fixedSeq.matchesSubstringNoGaps(s, 0)) {
+				return new MatchedElement(fixedSeq, fixedSeq.getLength());
+			}
+		}		
+		for(FixedSequence fixedSeq : fixedSequences) {
+			MatchedElement matchedElt = fixedSeq.matchedElement(s);
+			if(matchedElt != null) {
+				return matchedElt;
 			}
 		}
 		return null;

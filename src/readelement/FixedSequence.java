@@ -1,7 +1,6 @@
 package readelement;
 
-import java.util.Collection;
-import java.util.HashSet;
+import guttmanlab.core.alignment.SmithWatermanAlignment;
 
 import org.apache.log4j.Logger;
 
@@ -18,8 +17,12 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	private int maxNumMismatches;
 	private String name;
 	public static Logger logger = Logger.getLogger(FixedSequence.class.getName());
-	private Collection<String> matchedStrings;
 	private int length;
+	// Smith waterman parameters
+	private static float SW_MATCH_SCORE = 5;
+	private static float SW_MISMATCH_SCORE = -4;
+	private static float SW_GAP_OPEN_PENALTY = 8;
+	private static float SW_GAP_EXTEND_PENALTY = 2;
 
 	/**
 	 * @param fixedSeqName Name of fixed sequence
@@ -31,7 +34,6 @@ public class FixedSequence extends AbstractReadSequenceElement {
 		length = seq.length();
 		name = fixedSeqName;
 		maxNumMismatches = maxMismatches;
-		matchedStrings = new HashSet<String>();
 	}
 	
 	@Override
@@ -49,21 +51,13 @@ public class FixedSequence extends AbstractReadSequenceElement {
 
 	@Override
 	public boolean matchesFullString(String s) {
-		if(matchedStrings.contains(s)) {
-			return true;
-		}
 		if(getLength() != s.length()) {
 			return false;
 		}
 		if(s.equalsIgnoreCase(seq)) {
-			matchedStrings.add(s);
 			return true;
 		}
-		boolean rtrn = AlignmentUtils.hammingDistanceAtMost(s, seq, maxNumMismatches, true);
-		if(rtrn) {
-			matchedStrings.add(s);
-		}
-		return rtrn;
+		return AlignmentUtils.hammingDistanceAtMost(s, seq, maxNumMismatches, true);
 	}
 
 	@Override
@@ -72,7 +66,7 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesSubstringOf(String s, int startOnString) {
+	public boolean matchesSubstringNoGaps(String s, int startOnString) {
 		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
 
@@ -83,10 +77,16 @@ public class FixedSequence extends AbstractReadSequenceElement {
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		if(!matchesFullString(s)) {
-			return null;
+		if(matchesSubstringNoGaps(s, 0)) {
+			return new MatchedElement(this, length);
 		}
-		return new MatchedElement(this, 0, length);
+		jaligner.Alignment align = SmithWatermanAlignment.align(s, seq, SW_MATCH_SCORE, SW_MISMATCH_SCORE, SW_GAP_OPEN_PENALTY, SW_GAP_EXTEND_PENALTY);
+		if(align.getStart1() != 0) return null; // Must match beginning of string
+		int matches = align.getNumberOfMatches();
+		int nonMatch = length - matches;
+		if(nonMatch > maxNumMismatches) return null; //TODO is this how we want to count indels?
+		int lengthOnSeq1 = align.getNumberOfMatches() + align.getGaps2(); //TODO is this right?
+		return new MatchedElement(this, lengthOnSeq1);
 	}
 
 	@Override

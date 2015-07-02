@@ -39,7 +39,7 @@ public class AnySequence extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesSubstringOf(String s, int startOnString) {
+	public boolean matchesSubstringNoGaps(String s, int startOnString) {
 		return startOnString + length <= s.length();
 	}
 
@@ -53,7 +53,7 @@ public class AnySequence extends AbstractReadSequenceElement {
 		if(!matchesFullString(s)) {
 			return null;
 		}
-		return new MatchedElement(this, 0, length);
+		return new MatchedElement(this, length);
 	}
 
 	@Override

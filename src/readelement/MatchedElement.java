@@ -2,23 +2,21 @@ package readelement;
 
 /**
  * Class to store a ReadSequenceElement and where it matches on a read
+ * Match must start at position 0
  * @author prussell
  *
  */
 public class MatchedElement {
 	
 	private ReadSequenceElement element;
-	private int startPosOnRead;
 	private int lengthOnRead;
 	
 	/**
-	 * @param matchedElement The read sequence element that matches a read
-	 * @param matchStartPosOnRead Start position of the match on the read
+	 * @param matchedElement The read sequence element that matches a read/sequence starting at position 0
 	 * @param matchLengthOnRead Length of the match on the read
 	 */
-	public MatchedElement(ReadSequenceElement matchedElement, int matchStartPosOnRead, int matchLengthOnRead) {
+	public MatchedElement(ReadSequenceElement matchedElement, int matchLengthOnRead) {
 		element = matchedElement;
-		startPosOnRead = matchStartPosOnRead;
 		lengthOnRead = matchLengthOnRead;
 	}
 	
@@ -27,13 +25,6 @@ public class MatchedElement {
 	 */
 	public ReadSequenceElement getMatchedElement() {
 		return element;
-	}
-	
-	/**
-	 * @return Start position of the match on the read
-	 */
-	public int getMatchStartPosOnRead() {
-		return startPosOnRead;
 	}
 	
 	/**

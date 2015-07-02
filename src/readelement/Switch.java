@@ -95,9 +95,9 @@ public class Switch extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesSubstringOf(String s, int startOnString) {
+	public boolean matchesSubstringNoGaps(String s, int startOnString) {
 		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesSubstringOf(s, startOnString)) {
+			if(fixedSeq.matchesSubstringNoGaps(s, startOnString)) {
 				return true;
 			}
 		}
@@ -117,8 +117,9 @@ public class Switch extends AbstractReadSequenceElement {
 	@Override
 	public MatchedElement matchedElement(String s) {
 		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesFullString(s)) {
-				return new MatchedElement(fixedSeq, 0, fixedSeq.getLength());
+			MatchedElement matchedElt = fixedSeq.matchedElement(s);
+			if(matchedElt != null) {
+				return matchedElt;
 			}
 		}
 		return null;

@@ -41,6 +41,7 @@ import guttmanlab.core.pipeline.Job;
 import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.util.FastqUtils;
+import matcher.GenericElementMatcher;
 import nextgen.core.pipeline.util.OGSUtils;
 import broad.pda.seq.fastq.FastqParser;
 import broad.pda.seq.fastq.FastqSequence;
@@ -248,7 +249,8 @@ public class BarcodeAnalysis {
 			String seq = record.getSequence();
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
-			List<List<ReadSequenceElement>> matchedElements = layout.new ElementMatcher(seq).getMatchedElements();
+			GenericElementMatcher matcher = new GenericElementMatcher(layout, seq);
+			List<List<ReadSequenceElement>> matchedElements = matcher.getMatchedElements();
 			if(matchedElements != null) {
 				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, seq, null, layout, null);
 				BarcodeSequence barcodes = f.getBarcodes(matchedElements, null);
@@ -260,7 +262,7 @@ public class BarcodeAnalysis {
 				}
 				if(verbose) line += seq + "\t";
 				// Fastq sequence with layout elements removed if writing fastq
-				FastqSequence trimmedRecord = suffixFastq != null ? record.trimFirstNBPs(layout.matchedElementsLengthInRead(record.getSequence())) : null;
+				FastqSequence trimmedRecord = suffixFastq != null ? record.trimFirstNBPs(matcher.matchedElementsLengthInRead()) : null;
 				if(splitOutputBySwitchesInLayout) { // Write to switch-specific table file
 					Map<Switch, List<FixedSequence>> switchValues = f.getSwitchValues();
 					String switchTableName = makeOutTableName(outFile, switchValues); // Create name of switch-specific table file
@@ -357,7 +359,7 @@ public class BarcodeAnalysis {
 			FastqSequence record = iter.next();
 			String seq = record.getSequence();
 			String name = record.getName();
-			if(layout.new ElementMatcher(seq).getMatchedElements() != null) {
+			if(new GenericElementMatcher(layout, seq).getMatchedElements() != null) {
 				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout);
 				BarcodeSequence barcodes = f.getBarcodes();
 				for(Barcode b : barcodes.getBarcodes()) {
@@ -653,6 +655,7 @@ public class BarcodeAnalysis {
 			BarcodedRNAFragment.logger.setLevel(Level.DEBUG);
 			AnySequence.logger.setLevel(Level.DEBUG);
 			BarcodeAnalysis.logger.setLevel(Level.DEBUG);
+			GenericElementMatcher.logger.setLevel(Level.DEBUG);
 		}
 		
 		String outPrefix = p.getStringArg(outPrefixOption);

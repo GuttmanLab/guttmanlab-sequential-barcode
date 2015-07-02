@@ -70,29 +70,6 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 		if(matchedElement(s) == null) return false;
 		return true;
 	}
-
-
-	@Override
-	public MatchedElement matchedElement(String s) {
-		if(s.length() != length) {
-			return null;
-		}
-		// Try barcodes that match prefix first
-		try {
-			for(Barcode barcode : barcodes.get(s.substring(0, barcodePrefixLen))) {
-				if(barcode.matchesFullString(s)) {
-					return new MatchedElement(this, 0, getLength());
-				}
-			}
-		} catch (NullPointerException e) {}
-		for(Barcode barcode : getBarcodes()) {
-			if(barcode.matchesFullString(s)) {
-				return new MatchedElement(this, 0, getLength());
-			}
-		}
-		return null;
-	}
-
 	
 	@Override
 	public String elementName() {

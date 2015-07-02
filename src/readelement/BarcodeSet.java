@@ -14,7 +14,7 @@ import org.apache.log4j.Logger;
  */
 public class BarcodeSet extends AbstractReadSequenceElement {
 	
-	protected Map<String, Collection<Barcode>> barcodes; // Map of barcode prefix to barcode
+	protected Map<String, Collection<Barcode>> barcodesByPrefix; // Map of barcode prefix to barcode
 	public static Logger logger = Logger.getLogger(BarcodeSet.class.getName());
 	protected int length;
 	private String id;
@@ -23,6 +23,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	private FixedSequenceCollection stopSignalSeqCollection;
 	private int stopSignalMaxMismatches;
 	protected static int barcodePrefixLen = 2; // Length of barcode prefix to store for indexing
+	private Collection<Barcode> barcodes;
 	
 	/**
 	 * @param setId Barcode set ID
@@ -42,18 +43,22 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		id = setId;
 		repeatable = isRepeatable;
 		int len = barcodeSet.iterator().next().getLength();
-		barcodes = new HashMap<String, Collection<Barcode>>();
+		barcodesByPrefix = new HashMap<String, Collection<Barcode>>();
 		for(Barcode b : barcodeSet) {
 			if(b.getLength() != len) {
 				throw new IllegalArgumentException("All barcode sequences must have the same length");
 			}
 			String prefix = b.getSequence().substring(0, barcodePrefixLen);
-			if(!barcodes.containsKey(prefix)) {
-				barcodes.put(prefix, new HashSet<Barcode>());
+			if(!barcodesByPrefix.containsKey(prefix)) {
+				barcodesByPrefix.put(prefix, new HashSet<Barcode>());
 			}
-			barcodes.get(prefix).add(b);
+			barcodesByPrefix.get(prefix).add(b);
 		}
 		length = len;
+		barcodes = new HashSet<Barcode>();
+		for(Collection<Barcode> bs : barcodesByPrefix.values()) {
+			barcodes.addAll(bs);
+		}
 	}
 	
 	/**
@@ -77,6 +82,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
 	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, FixedSequenceCollection stopSignal) {
+		this(setId, barcodeSet, isRepeatable);
 		setStopSignalAsFixedSequenceCollection(stopSignal);
 	}
 	
@@ -92,11 +98,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	 * @return The barcodes
 	 */
 	public Collection<Barcode> getBarcodes() {
-		Collection<Barcode> rtrn = new HashSet<Barcode>();
-		for(Collection<Barcode> bs : barcodes.values()) {
-			rtrn.addAll(bs);
-		}
-		return rtrn;
+		return barcodes;
 	}
 	
 	@Override
@@ -117,7 +119,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesSubstringOf(String s, int startOnString) {
+	public boolean matchesSubstringNoGaps(String s, int startOnString) {
 		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
 
@@ -128,20 +130,41 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		if(s.length() != length) {
-			return null;
-		}
-		// Try barcodes that match prefix first
+		String prefix = s.substring(0, barcodePrefixLen);
+		// Ungapped match for barcodes starting with prefix
 		try {
-			for(Barcode barcode : barcodes.get(s.substring(0, barcodePrefixLen))) {
-				if(barcode.matchesFullString(s)) {
-					return new MatchedElement(barcode, 0, barcode.getLength());
+			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
+				if(barcode.matchesSubstringNoGaps(s, 0)) {
+					return new MatchedElement(this, length);
 				}
 			}
 		} catch (NullPointerException e) {}
+		// Ungapped match for barcodes not starting with prefix
 		for(Barcode barcode : getBarcodes()) {
-			if(barcode.matchesFullString(s)) {
-				return new MatchedElement(barcode, 0, barcode.getLength());
+			try {
+				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
+			} catch(NullPointerException e) {}
+			if(barcode.matchesSubstringNoGaps(s, 0)) {
+				return new MatchedElement(this, length);
+			}
+		}
+		// Gapped match for barcodes starting with prefix
+		try {
+			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
+				MatchedElement matchedElt = barcode.matchedElement(s);
+				if(matchedElt != null) {
+					return new MatchedElement(this, length);
+				}
+			}
+		} catch (NullPointerException e) {}
+		// Gapped match for barcodes not starting with prefix
+		for(Barcode barcode : getBarcodes()) {
+			try {
+				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
+			} catch(NullPointerException e) {}
+			MatchedElement matchedElt = barcode.matchedElement(s);
+			if(matchedElt != null) {
+				return new MatchedElement(this, length);
 			}
 		}
 		return null;

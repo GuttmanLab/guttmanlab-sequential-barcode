@@ -53,9 +53,9 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesSubstringOf(String s, int startOnString) {
+	public boolean matchesSubstringNoGaps(String s, int startOnString) {
 		for(BarcodeEquivalenceClass ec : equivClasses) {
-			if(ec.matchesSubstringOf(s, startOnString)) return true;
+			if(ec.matchesSubstringNoGaps(s, startOnString)) return true;
 		}
 		return false;
 	}
@@ -79,8 +79,9 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	@Override
 	public MatchedElement matchedElement(String s) {
 		for(BarcodeEquivalenceClass ec : equivClasses) {
-			if(ec.matchesFullString(s)) {
-				return new MatchedElement(ec, 0, ec.getLength());
+			MatchedElement matchedElt = ec.matchedElement(s);
+			if(matchedElt != null) {
+				return matchedElt;
 			}
 		}
 		return null;
@@ -99,6 +100,10 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	@Override
 	public String getSequence() {
 		return null;
+	}
+
+	public Barcode toBarcode() {
+		return new Barcode("NA", getId());
 	}
 
 }
