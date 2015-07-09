@@ -3,11 +3,12 @@ package matcher;
 import java.io.IOException;
 import java.util.List;
 
+import readelement.MatchedElement;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 
 /**
- * 
+ * Match a read layout to an actual read sequence and get the matched elements in order
  * @author prussell
  *
  */
@@ -34,6 +35,18 @@ public interface ElementMatcher {
 	 * @return Full original sequence
 	 */
 	public String getOriginalSequence();
+	
+	/**
+	 * Get the read sequence element that matches a read at a particular start position
+	 * For example, if we are looking for a barcode set, and one barcode in the set matches
+	 * the read at the position, this method should return the one barcode that matches.
+	 * Return null if no match
+	 * @param toMatch The read sequence element to match to the read
+	 * @param readSequence Read sequence
+	 * @param startPosOnRead Start position of potential match
+	 * @return The matching element from the element to be matched, or null if no match starting at this position
+	 */
+	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, String readSequence, int startPosOnRead);
 	
 	/**
 	 * Get the length in the read of all the matched elements including positions before and between them

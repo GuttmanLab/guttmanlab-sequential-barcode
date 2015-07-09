@@ -39,13 +39,14 @@ public class GenericElementMatcher implements ElementMatcher {
 	private int readLen;
 
 	/**
+	 * @param layout Read layout
 	 * @param readSeq Read sequence
 	 */
 	public GenericElementMatcher(ReadLayout layout, String readSeq) {
 		readLayout = layout;
 		readSequence = readSeq;
 		// For repeatable elements, save the first occurrences of their "next" element so can keep looking up until next element
-		stopSignalPos = findStopSignalPositions(readSequence);
+		stopSignalPos = findStopSignalPositions();
 		// Look for all the elements in order; can have other stuff between them
 		elementIter = readLayout.getElements().iterator();
 		readLen = layout.getReadLength();
@@ -66,10 +67,9 @@ public class GenericElementMatcher implements ElementMatcher {
 	
 	/**
 	 * For repeatable elements, save the first occurrences of their "next" element so can keep looking up until next element
-	 * @param readSequence Read sequence to search for positions of "next" elements
 	 * @return Map of element to position of its "next" element, or Integer.MAX_VALUE if no stop signal
 	 */
-	private Map<ReadSequenceElement, Integer> findStopSignalPositions(String readSequence) {
+	private Map<ReadSequenceElement, Integer> findStopSignalPositions() {
 		Map<ReadSequenceElement, Integer> stopSignalPos = new HashMap<ReadSequenceElement, Integer>();
 		for(ReadSequenceElement elt : readLayout.getElements()) {
 			if(elt.isRepeatable()) {
@@ -79,7 +79,7 @@ public class GenericElementMatcher implements ElementMatcher {
 					stopSignalPos.put(elt, Integer.MAX_VALUE);
 					continue;
 				}
-				int posNext = stopSignal.firstMatch(readSequence); // EFFICIENCY make firstMatch more efficient
+				int posNext = stopSignal.firstMatch(readSequence);
 				if(posNext != -1) {
 					stopSignalPos.put(elt, Integer.valueOf(posNext));
 					logger.debug("STOP_SIGNAL\t for element " + elt.getId() + " is at position " + posNext);
@@ -90,14 +90,10 @@ public class GenericElementMatcher implements ElementMatcher {
 	}
 	
 	public int matchedElementsLengthInRead() {
-		try {
-			if(totalLengthMatchedEltSection == -1) {
-				throw new IllegalArgumentException("Read does not match layout");
-			}
-			return totalLengthMatchedEltSection;
-		} catch(NullPointerException e) {
-			throw new IllegalStateException("Must call getMatchedElements first");
+		if(totalLengthMatchedEltSection == -1) {
+			throw new IllegalArgumentException("Read does not match layout");
 		}
+		return totalLengthMatchedEltSection;
 	}
 	
 	/**
@@ -222,6 +218,7 @@ public class GenericElementMatcher implements ElementMatcher {
 		return matchedElements;
 	}
 	
+	
 	/**
 	 * Get the list of matched elements in the read sequence
 	 * Each item on list corresponds to one read sequence element in the layout
@@ -243,7 +240,7 @@ public class GenericElementMatcher implements ElementMatcher {
 				if(!(currStart + nextElt.getLength() > readLen)) {
 					if(lookNext()) {
 						debugLookingForNextElt();
-						MatchedElement nextMatch = nextElt.matchedElement(readSequence, currStart);
+						MatchedElement nextMatch = getMatchedElement(nextElt, readSequence, currStart);
 						boolean nextMatches = nextMatch != null;
 						if(stopNoMatchFoundNextBeforeCurrent(nextMatches)) {matchedElements = null; return;} // Found next element before current element
 						if(nextMatches) {
@@ -268,7 +265,7 @@ public class GenericElementMatcher implements ElementMatcher {
 				}
 			}
 			// Look for current element
-			MatchedElement currMatch = currElt.matchedElement(readSequence, currStart);
+			MatchedElement currMatch = getMatchedElement(currElt, readSequence, currStart);
 			if(currMatch != null) { // Found an instance of current element
 				debugMatchedCurrElt();
 				found[currEltIndex] = true;
@@ -299,6 +296,11 @@ public class GenericElementMatcher implements ElementMatcher {
 	@Override
 	public String getOriginalSequence() {
 		return readSequence;
+	}
+
+	@Override
+	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, String readSequence, int startPosOnRead) {
+		return toMatch.matchedElement(readSequence, startPosOnRead);
 	}
 
 	
