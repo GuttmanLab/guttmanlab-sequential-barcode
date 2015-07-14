@@ -1,5 +1,8 @@
 package readelement;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import guttmanlab.core.alignment.SmithWatermanAlignment;
 
 import org.apache.log4j.Logger;
@@ -97,6 +100,18 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	@Override
 	public ReadSequenceElement getStopSignalForRepeatable() {
 		return null;
+	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		rtrn.put(seq, this);
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		return length - maxNumMismatches;
 	}
 
 	

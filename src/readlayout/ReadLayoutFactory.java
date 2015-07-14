@@ -125,6 +125,93 @@ public class ReadLayoutFactory {
 		return new BarcodedReadLayout(eltsSequence, readLength);
 	}
 
+	/**
+	 * Paired design from discussion on 7/13/15
+	 * Sequential odd/even barcodes are in read 2
+	 * One single barcode is at beginning of read 1
+	 * @param evenBarcodes Even barcodes
+	 * @param oddBarcodes Odd barcodes
+	 * @param totalNumBarcodes Total barcode ligations
+	 * @param read2Length Read length
+	 * @param enforceOddEven Enforce odd/even order of barcodes
+	 * @return Read 2 layout
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJuly2015(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, int read2Length, boolean enforceOddEven) {
+		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
+			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
+		}
+		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
+		Collection<Barcode> allBarcodes = new TreeSet<Barcode>();
+		allBarcodes.addAll(oddBarcodes);
+		allBarcodes.addAll(evenBarcodes);
+		
+		if(enforceOddEven) {
+			BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes);
+			BarcodeSet evenBarcodesSet = new BarcodeSet("even_barcodes", evenBarcodes);
+			for(int i = 0; i < totalNumBarcodes; i++) {
+				if(i % 2 == 0) {
+					eltsSequence.add(evenBarcodesSet);
+				} else {
+					eltsSequence.add(oddBarcodesSet);
+				}
+			}
+		} else {
+			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, false, null);
+			for(int i = 0; i < totalNumBarcodes; i++) {
+				eltsSequence.add(allBarcodesSet);
+			}
+		}
+		return new BarcodedReadLayout(eltsSequence, read2Length);
+	}
+
+	/**
+	 * Paired design from discussion on 7/13/15
+	 * Sequential odd/even barcodes are in read 2
+	 * One single barcode is at beginning of read 1
+	 * @param oddBarcodeTableFile Table of odd barcodes (line format: barcode_ID   barcode_sequence)
+	 * @param evenBarcodeTableFile Table of even barcodes (line format: barcode_ID   barcode_sequence)
+	 * @param totalNumBarcodes Total number of barcode ligations
+	 * @param maxMismatchBarcode Max mismatches in each barcode
+	 * @param read2Length Read length
+	 * @param enforceOddEven Enforce odd/even order of barcodes
+	 * @return Read 2 layout
+	 * @throws IOException
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJuly2015(String oddBarcodeTableFile, String evenBarcodeTableFile, int totalNumBarcodes, int maxMismatchBarcode, int read2Length, boolean enforceOddEven) throws IOException {
+		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
+		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
+		return getRead2LayoutRnaDna3DPairedDesignJuly2015(evenBarcodes, oddBarcodes, totalNumBarcodes, read2Length, enforceOddEven);
+	}
+	
+	/**
+	 * Paired design from discussion on 7/13/15
+	 * Sequential odd/even barcodes are in read 2
+	 * One single barcode is at beginning of read 1
+	 * @param barcodes Barcodes
+	 * @param read1Length Read length
+	 * @return Read 1 layout
+	 */
+	public static BarcodedReadLayout getRead1LayoutRnaDna3DPairedDesignJuly2015(Collection<Barcode> barcodes, int read1Length) {
+		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
+		BarcodeSet allBarcodesSet = new BarcodeSet("barcodes", barcodes, false, null);
+		eltsSequence.add(allBarcodesSet);
+		return new BarcodedReadLayout(eltsSequence, read1Length);
+	}
+
+	/**
+	 * Paired design from discussion on 7/13/15
+	 * Sequential odd/even barcodes are in read 2
+	 * One single barcode is at beginning of read 1
+	 * @param barcodeTableFile Table of barcodes (line format: barcode_ID   barcode_sequence)
+	 * @param maxMismatchBarcode Max mismatches in each barcode
+	 * @param read1Length Read length
+	 * @return Read 1 layout
+	 * @throws IOException
+	 */
+	public static BarcodedReadLayout getRead1LayoutRnaDna3DPairedDesignJuly2015(String barcodeTableFile, int maxMismatchBarcode, int read1Length) throws IOException {
+		Collection<Barcode> barcodes = Barcode.createBarcodesFromTable(barcodeTableFile, maxMismatchBarcode);
+		return getRead1LayoutRnaDna3DPairedDesignJuly2015(barcodes, read1Length);
+	}
 	
 	/**
 	 * Create a read layout for sequential 3D barcoding project with single end design and ligations of an odd set and even set of barcodes

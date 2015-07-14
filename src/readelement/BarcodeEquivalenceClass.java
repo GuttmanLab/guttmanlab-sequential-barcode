@@ -116,5 +116,20 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 		return rtrn;
 		
 	}
+	
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		for(Barcode barcode : barcodes) {
+			rtrn.put(barcode.getSequence(), this);
+		}
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		throw new UnsupportedOperationException("NA");
+	}
+
 
 }

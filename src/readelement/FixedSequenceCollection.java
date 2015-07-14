@@ -5,8 +5,10 @@ import guttmanlab.core.sequence.Sequence;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A collection of possibilities of fixed sequences
@@ -150,6 +152,20 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	@Override
 	public String getSequence() {
 		return null;
+	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		for(FixedSequence seq : fixedSequences) {
+			rtrn.putAll(seq.sequenceToElement());
+		}
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		throw new UnsupportedOperationException("NA");
 	}
 
 }

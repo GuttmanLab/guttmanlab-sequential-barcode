@@ -7,6 +7,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
@@ -24,8 +26,8 @@ import nextgen.core.utils.FileUtil;
 @Persistent
 public class Barcode extends AbstractReadSequenceElement implements Comparable<Barcode> {
 	
-	private String sequence;
-	private String id;
+	protected String sequence;
+	protected String id;
 	private int maxNumMismatches;
 	public static Logger logger = Logger.getLogger(Barcode.class.getName());
 	private boolean repeatable;
@@ -244,6 +246,18 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	@Override
 	public ReadSequenceElement getStopSignalForRepeatable() {
 		return new FixedSequence("stop_signal", stopSignal, stopSignalMaxMismatches);
+	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		rtrn.put(sequence, this);
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		return length - maxNumMismatches;
 	}
 
 

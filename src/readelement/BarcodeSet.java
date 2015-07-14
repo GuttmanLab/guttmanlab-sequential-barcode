@@ -23,7 +23,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	private FixedSequenceCollection stopSignalSeqCollection;
 	private int stopSignalMaxMismatches;
 	protected static int barcodePrefixLen = 2; // Length of barcode prefix to store for indexing
-	private Collection<Barcode> barcodes;
+	protected Collection<Barcode> barcodes;
 	
 	/**
 	 * @param setId Barcode set ID
@@ -135,7 +135,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		try {
 			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
 				if(barcode.matchesSubstringNoGaps(s, 0)) {
-					return new MatchedElement(this, length);
+					return new MatchedElement(barcode, barcode.getLength());
 				}
 			}
 		} catch (NullPointerException e) {}
@@ -145,7 +145,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
 			} catch(NullPointerException e) {}
 			if(barcode.matchesSubstringNoGaps(s, 0)) {
-				return new MatchedElement(this, length);
+				return new MatchedElement(barcode, barcode.getLength());
 			}
 		}
 		// Gapped match for barcodes starting with prefix
@@ -153,7 +153,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
 				MatchedElement matchedElt = barcode.matchedElement(s);
 				if(matchedElt != null) {
-					return new MatchedElement(this, length);
+					return new MatchedElement(barcode, barcode.getLength());
 				}
 			}
 		} catch (NullPointerException e) {}
@@ -164,7 +164,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 			} catch(NullPointerException e) {}
 			MatchedElement matchedElt = barcode.matchedElement(s);
 			if(matchedElt != null) {
-				return new MatchedElement(this, length);
+				return new MatchedElement(barcode, barcode.getLength());
 			}
 		}
 		return null;
@@ -190,6 +190,21 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	public String getSequence() {
 		return null;
 	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		for(Barcode barcode : barcodes) {
+			rtrn.putAll(barcode.sequenceToElement());
+		}
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		throw new UnsupportedOperationException("NA");
+	}
+
 
 
 }

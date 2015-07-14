@@ -1,5 +1,7 @@
 package readelement;
 
+import java.util.Map;
+
 /**
  * An element that can be found in a read sequence
  * @author prussell
@@ -79,5 +81,19 @@ public interface ReadSequenceElement {
 	 * @return The sequence of this element, or null if not applicable (e.g. if a set of possible sequences)
 	 */
 	public String getSequence();
+	
+	/**
+	 * Identify elemental sequences with the sequence elements they represent
+	 * For example, in a BarcodeSet, sequences of single barcodes represent the single barcode,
+	 * while in a BarcodeEquivalenceClass, sequences of single barcodes represent the equivalence class
+	 * @return
+	 */
+	public Map<String, ReadSequenceElement> sequenceToElement();
+	
+	/**
+	 * Get the minimum number of matched positions to call a match in a read
+	 * @return Minimum number of matches in local alignment to read
+	 */
+	public int minMatch();
 	
 }

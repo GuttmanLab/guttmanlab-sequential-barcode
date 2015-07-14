@@ -2,8 +2,10 @@ package readelement;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A collection of possibilities of fixed sequences that indicate something about the identity of the fragment
@@ -142,6 +144,20 @@ public class Switch extends AbstractReadSequenceElement {
 	@Override
 	public String getSequence() {
 		return null;
+	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		for(FixedSequence seq : fixedSequences) {
+			rtrn.putAll(seq.sequenceToElement());
+		}
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		throw new UnsupportedOperationException("NA");
 	}
 
 }

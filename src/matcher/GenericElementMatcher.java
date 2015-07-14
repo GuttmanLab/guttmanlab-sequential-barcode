@@ -20,7 +20,7 @@ import readlayout.ReadLayout;
  */
 public class GenericElementMatcher implements ElementMatcher {
 	
-	private String readSequence;
+	protected String readSequence;
 	private int currStart;
 	private ReadSequenceElement currElt;
 	private int currEltIndex;
@@ -29,7 +29,7 @@ public class GenericElementMatcher implements ElementMatcher {
 	private ReadSequenceElement nextElt;
 	private boolean[] found;
 	private List<List<ReadSequenceElement>> matchedElements;
-	private ReadLayout readLayout;
+	protected ReadLayout readLayout;
 	public static Logger logger = Logger.getLogger(GenericElementMatcher.class.getName());
 	/*
 	 * The length of the part of the read up to the end of the last matched element
@@ -62,6 +62,7 @@ public class GenericElementMatcher implements ElementMatcher {
 		// Make sure all elements have been found at least once in the specified order
 		found = new boolean[readLayout.getElements().size()];
 		// Match elements
+		cacheMatches();
 		matchElements();
 	}
 	
@@ -240,7 +241,7 @@ public class GenericElementMatcher implements ElementMatcher {
 				if(!(currStart + nextElt.getLength() > readLen)) {
 					if(lookNext()) {
 						debugLookingForNextElt();
-						MatchedElement nextMatch = getMatchedElement(nextElt, readSequence, currStart);
+						MatchedElement nextMatch = getMatchedElement(nextElt, currStart);
 						boolean nextMatches = nextMatch != null;
 						if(stopNoMatchFoundNextBeforeCurrent(nextMatches)) {matchedElements = null; return;} // Found next element before current element
 						if(nextMatches) {
@@ -265,7 +266,7 @@ public class GenericElementMatcher implements ElementMatcher {
 				}
 			}
 			// Look for current element
-			MatchedElement currMatch = getMatchedElement(currElt, readSequence, currStart);
+			MatchedElement currMatch = getMatchedElement(currElt, currStart);
 			if(currMatch != null) { // Found an instance of current element
 				debugMatchedCurrElt();
 				found[currEltIndex] = true;
@@ -299,8 +300,14 @@ public class GenericElementMatcher implements ElementMatcher {
 	}
 
 	@Override
-	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, String readSequence, int startPosOnRead) {
+	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, int startPosOnRead) {
 		return toMatch.matchedElement(readSequence, startPosOnRead);
+	}
+
+	@Override
+	public void cacheMatches() {
+		// Don't do anything
+		return;
 	}
 
 	

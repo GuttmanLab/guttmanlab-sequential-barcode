@@ -42,11 +42,10 @@ public interface ElementMatcher {
 	 * the read at the position, this method should return the one barcode that matches.
 	 * Return null if no match
 	 * @param toMatch The read sequence element to match to the read
-	 * @param readSequence Read sequence
 	 * @param startPosOnRead Start position of potential match
 	 * @return The matching element from the element to be matched, or null if no match starting at this position
 	 */
-	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, String readSequence, int startPosOnRead);
+	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, int startPosOnRead);
 	
 	/**
 	 * Get the length in the read of all the matched elements including positions before and between them
@@ -55,5 +54,10 @@ public interface ElementMatcher {
 	 * @throws IOException 
 	 */
 	public int matchedElementsLengthInRead();
+	
+	/**
+	 * Optionally store element matches up front
+	 */
+	public void cacheMatches();
 	
 }

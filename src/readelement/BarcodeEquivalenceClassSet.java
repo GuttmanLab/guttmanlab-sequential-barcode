@@ -1,6 +1,8 @@
 package readelement;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A collection of barcode equivalence classes
@@ -104,6 +106,20 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 
 	public Barcode toBarcode() {
 		return new Barcode("NA", getId());
+	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
+		for(BarcodeEquivalenceClass equivClass : equivClasses) {
+			rtrn.putAll(equivClass.sequenceToElement());
+		}
+		return rtrn;
+	}
+
+	@Override
+	public int minMatch() {
+		throw new UnsupportedOperationException("NA");
 	}
 
 }

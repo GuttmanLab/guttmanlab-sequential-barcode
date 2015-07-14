@@ -1,5 +1,7 @@
 package readelement;
 
+import java.util.Map;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -69,6 +71,16 @@ public class AnySequence extends AbstractReadSequenceElement {
 	@Override
 	public String getSequence() {
 		return null;
+	}
+
+	@Override
+	public Map<String, ReadSequenceElement> sequenceToElement() {
+		throw new UnsupportedOperationException("NA");
+	}
+
+	@Override
+	public int minMatch() {
+		return 0;
 	}
 
 }
