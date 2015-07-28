@@ -131,12 +131,13 @@ public class ReadLayoutFactory {
 	 * One single barcode is at beginning of read 1
 	 * @param evenBarcodes Even barcodes
 	 * @param oddBarcodes Odd barcodes
+	 * @param yShapeBarcodes Y shape barcodes at beginning of read2
 	 * @param totalNumBarcodes Total barcode ligations
 	 * @param read2Length Read length
 	 * @param enforceOddEven Enforce odd/even order of barcodes
 	 * @return Read 2 layout
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJuly2015(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, int totalNumBarcodes, int read2Length, boolean enforceOddEven) {
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJuly2015(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, Collection<Barcode> yShapeBarcodes, int totalNumBarcodes, int read2Length, boolean enforceOddEven) {
 		if(enforceOddEven && totalNumBarcodes % 2 != 0) {
 			throw new IllegalArgumentException("Total number of barcodes must be even if enforcing odd/even alternation");
 		}
@@ -145,10 +146,13 @@ public class ReadLayoutFactory {
 		allBarcodes.addAll(oddBarcodes);
 		allBarcodes.addAll(evenBarcodes);
 		
+		BarcodeSet yShapeBarcodesSet = new BarcodeSet("y_shape_barcodes", yShapeBarcodes);
+		eltsSequence.add(yShapeBarcodesSet);
+		
 		if(enforceOddEven) {
 			BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes);
 			BarcodeSet evenBarcodesSet = new BarcodeSet("even_barcodes", evenBarcodes);
-			for(int i = 0; i < totalNumBarcodes; i++) {
+			for(int i = 1; i < totalNumBarcodes; i++) {
 				if(i % 2 == 0) {
 					eltsSequence.add(evenBarcodesSet);
 				} else {
@@ -157,7 +161,7 @@ public class ReadLayoutFactory {
 			}
 		} else {
 			BarcodeSet allBarcodesSet = new BarcodeSet("all_barcodes", allBarcodes, false, null);
-			for(int i = 0; i < totalNumBarcodes; i++) {
+			for(int i = 1; i < totalNumBarcodes; i++) {
 				eltsSequence.add(allBarcodesSet);
 			}
 		}
@@ -170,17 +174,21 @@ public class ReadLayoutFactory {
 	 * One single barcode is at beginning of read 1
 	 * @param oddBarcodeTableFile Table of odd barcodes (line format: barcode_ID   barcode_sequence)
 	 * @param evenBarcodeTableFile Table of even barcodes (line format: barcode_ID   barcode_sequence)
+	 * @param yShapeBarcodeTableFile Table of Y shape barcodes (line format: barcode_ID   barcode_sequence)
 	 * @param totalNumBarcodes Total number of barcode ligations
-	 * @param maxMismatchBarcode Max mismatches in each barcode
+	 * @param maxMismatchEvenOddBarcode Max mismatches in each even or odd barcode
+	 * @param maxMismatchYShapeBarcode Max mismatches in each Y shape barcode
 	 * @param read2Length Read length
 	 * @param enforceOddEven Enforce odd/even order of barcodes
 	 * @return Read 2 layout
 	 * @throws IOException
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJuly2015(String oddBarcodeTableFile, String evenBarcodeTableFile, int totalNumBarcodes, int maxMismatchBarcode, int read2Length, boolean enforceOddEven) throws IOException {
-		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchBarcode);
-		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchBarcode);
-		return getRead2LayoutRnaDna3DPairedDesignJuly2015(evenBarcodes, oddBarcodes, totalNumBarcodes, read2Length, enforceOddEven);
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJuly2015(String oddBarcodeTableFile, String evenBarcodeTableFile, String yShapeBarcodeTableFile, 
+			int totalNumBarcodes, int maxMismatchEvenOddBarcode, int maxMismatchYShapeBarcode, int read2Length, boolean enforceOddEven) throws IOException {
+		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodeTableFile, maxMismatchEvenOddBarcode);
+		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodeTableFile, maxMismatchEvenOddBarcode);
+		Collection<Barcode> yShapeBarcodes = Barcode.createBarcodesFromTable(yShapeBarcodeTableFile, maxMismatchYShapeBarcode);
+		return getRead2LayoutRnaDna3DPairedDesignJuly2015(evenBarcodes, oddBarcodes, yShapeBarcodes, totalNumBarcodes, read2Length, enforceOddEven);
 	}
 	
 	/**

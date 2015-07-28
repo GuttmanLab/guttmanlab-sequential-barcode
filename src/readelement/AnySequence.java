@@ -83,4 +83,9 @@ public class AnySequence extends AbstractReadSequenceElement {
 		return 0;
 	}
 
+	@Override
+	public int maxLevenshteinDist() {
+		throw new UnsupportedOperationException("NA");
+	}
+
 }

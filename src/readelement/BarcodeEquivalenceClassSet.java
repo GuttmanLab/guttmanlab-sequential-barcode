@@ -18,6 +18,7 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	private String stopSignalSeq;
 	private FixedSequenceCollection stopSignalSeqCollection;
 	private int stopSignalMaxMismatches;
+	private int maxLevDist;
 	
 	
 	
@@ -33,9 +34,13 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 		repeatable = isRepeatable;
 		stopSignalSeqCollection = stopSignal;
 		int len = equivClasses.iterator().next().getLength();
+		maxLevDist = equivClasses.iterator().next().maxLevenshteinDist();
 		for(BarcodeEquivalenceClass b : equivClasses) {
 			if(b.getLength() != len) {
 				throw new IllegalArgumentException("All barcode equivalence classes must have the same length");
+			}
+			if(b.maxLevenshteinDist() != maxLevDist) {
+				throw new IllegalArgumentException("All barcode equivalence classes must have the same max Levenshtein distance");
 			}
 		}
 		length = len;
@@ -120,6 +125,11 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	@Override
 	public int minMatch() {
 		throw new UnsupportedOperationException("NA");
+	}
+
+	@Override
+	public int maxLevenshteinDist() {
+		return maxLevDist;
 	}
 
 }

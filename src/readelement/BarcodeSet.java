@@ -24,6 +24,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	private int stopSignalMaxMismatches;
 	protected static int barcodePrefixLen = 2; // Length of barcode prefix to store for indexing
 	protected Collection<Barcode> barcodes;
+	private int maxLevDist;
 	
 	/**
 	 * @param setId Barcode set ID
@@ -44,9 +45,13 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 		repeatable = isRepeatable;
 		int len = barcodeSet.iterator().next().getLength();
 		barcodesByPrefix = new HashMap<String, Collection<Barcode>>();
+		maxLevDist = barcodeSet.iterator().next().maxLevenshteinDist();
 		for(Barcode b : barcodeSet) {
 			if(b.getLength() != len) {
 				throw new IllegalArgumentException("All barcode sequences must have the same length");
+			}
+			if(b.maxLevenshteinDist() != maxLevDist) {
+				throw new IllegalArgumentException("All barcodes in set must have same max Levenshtein distance");
 			}
 			String prefix = b.getSequence().substring(0, barcodePrefixLen);
 			if(!barcodesByPrefix.containsKey(prefix)) {
@@ -108,8 +113,10 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 
 	@Override
 	public boolean matchesFullString(String s) {
-		if(matchedElement(s) == null) return false;
-		return true;
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		if(matchedElement(s) == null) return false;
+//		return true;
 	}
 
 
@@ -120,7 +127,9 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 
 	@Override
 	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
 
 	@Override
@@ -130,44 +139,46 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		String prefix = s.substring(0, barcodePrefixLen);
-		// Ungapped match for barcodes starting with prefix
-		try {
-			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
-				if(barcode.matchesSubstringNoGaps(s, 0)) {
-					return new MatchedElement(barcode, barcode.getLength());
-				}
-			}
-		} catch (NullPointerException e) {}
-		// Ungapped match for barcodes not starting with prefix
-		for(Barcode barcode : getBarcodes()) {
-			try {
-				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
-			} catch(NullPointerException e) {}
-			if(barcode.matchesSubstringNoGaps(s, 0)) {
-				return new MatchedElement(barcode, barcode.getLength());
-			}
-		}
-		// Gapped match for barcodes starting with prefix
-		try {
-			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
-				MatchedElement matchedElt = barcode.matchedElement(s);
-				if(matchedElt != null) {
-					return new MatchedElement(barcode, barcode.getLength());
-				}
-			}
-		} catch (NullPointerException e) {}
-		// Gapped match for barcodes not starting with prefix
-		for(Barcode barcode : getBarcodes()) {
-			try {
-				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
-			} catch(NullPointerException e) {}
-			MatchedElement matchedElt = barcode.matchedElement(s);
-			if(matchedElt != null) {
-				return new MatchedElement(barcode, barcode.getLength());
-			}
-		}
-		return null;
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		String prefix = s.substring(0, barcodePrefixLen);
+//		// Ungapped match for barcodes starting with prefix
+//		try {
+//			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
+//				if(barcode.matchesSubstringNoGaps(s, 0)) {
+//					return new MatchedElement(barcode, barcode.getLength());
+//				}
+//			}
+//		} catch (NullPointerException e) {}
+//		// Ungapped match for barcodes not starting with prefix
+//		for(Barcode barcode : getBarcodes()) {
+//			try {
+//				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
+//			} catch(NullPointerException e) {}
+//			if(barcode.matchesSubstringNoGaps(s, 0)) {
+//				return new MatchedElement(barcode, barcode.getLength());
+//			}
+//		}
+//		// Gapped match for barcodes starting with prefix
+//		try {
+//			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
+//				MatchedElement matchedElt = barcode.matchedElement(s);
+//				if(matchedElt != null) {
+//					return new MatchedElement(barcode, barcode.getLength());
+//				}
+//			}
+//		} catch (NullPointerException e) {}
+//		// Gapped match for barcodes not starting with prefix
+//		for(Barcode barcode : getBarcodes()) {
+//			try {
+//				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
+//			} catch(NullPointerException e) {}
+//			MatchedElement matchedElt = barcode.matchedElement(s);
+//			if(matchedElt != null) {
+//				return new MatchedElement(barcode, barcode.getLength());
+//			}
+//		}
+//		return null;
 	}
 
 	@Override
@@ -203,6 +214,11 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	@Override
 	public int minMatch() {
 		throw new UnsupportedOperationException("NA");
+	}
+
+	@Override
+	public int maxLevenshteinDist() {
+		return maxLevDist;
 	}
 
 

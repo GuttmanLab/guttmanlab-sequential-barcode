@@ -1,32 +1,33 @@
 package matcher;
 
-import guttmanlab.core.alignment.SmithWatermanAlignment;
-
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import bitap.Bitap;
 import readelement.MatchedElement;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 
 /**
- * Use Smith-Waterman to pre-cache matches for sequence elements within the read
+ * Use Bitap algorithm to pre-cache matches for sequence elements within the read
  * @author prussell
  *
  */
-public class SmithWatermanMatcher extends GenericElementMatcher {
+public class BitapMatcher extends GenericElementMatcher {
 	
-	public static Logger logger = Logger.getLogger(SmithWatermanMatcher.class.getName());
+	public static Logger logger = Logger.getLogger(BitapMatcher.class.getName());
 	private Map<ReadSequenceElement, Map<Integer, MatchedElement>> matches;
+	private static Character[] alphabet = {'A', 'C', 'G', 'T'};
 	
 	/**
 	 * @param layout Read layout
 	 * @param readSeq Read sequence
 	 */
-	public SmithWatermanMatcher(ReadLayout layout, String readSeq) {
+	public BitapMatcher(ReadLayout layout, String readSeq) {
 		super(layout, readSeq);
 	}
 
@@ -48,6 +49,7 @@ public class SmithWatermanMatcher extends GenericElementMatcher {
 		}
 	}
 	
+
 	/**
 	 * Match a read element to the read and get match locations
 	 * @param element The element to match
@@ -56,14 +58,14 @@ public class SmithWatermanMatcher extends GenericElementMatcher {
 	private Map<Integer, MatchedElement> matchLocations(ReadSequenceElement element) {
 		Map<String, ReadSequenceElement> seqs = element.sequenceToElement();
 		Map<Integer, MatchedElement> rtrn = new HashMap<Integer, MatchedElement>();
-		int minMatches = element.minMatch();
+		int lev = element.maxLevenshteinDist();
 		for(String seq : seqs.keySet()) {
-			Collection<jaligner.Alignment> aligns = SmithWatermanAlignment.getAllAlignments(seq, readSequence, minMatches);
-			for(jaligner.Alignment align : aligns) {
-				int startOnRead = align.getStart2();
-				int lengthOnRead = align.getNumberOfMatches() + align.getGaps1(); //TODO is this right?
+			Bitap bitap = new Bitap(seq, readSequence, alphabet);
+			List<Integer> matches = bitap.wuManber(lev);
+			for(Integer start : matches) {
+				int lengthOnRead = element.getLength() - lev; // TODO this is wrong! Just a placeholder!
 				MatchedElement match = new MatchedElement(seqs.get(seq), lengthOnRead);
-				rtrn.put(Integer.valueOf(startOnRead), match); //TODO what to do if multiple elements match at same position?
+				rtrn.put(start, match); // TODO what to do if multiple elements match at same position?
 			}
 		}
 		return rtrn;

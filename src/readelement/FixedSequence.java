@@ -1,9 +1,15 @@
 package readelement;
 
+import guttmanlab.core.alignment.SmithWatermanAlignment;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import guttmanlab.core.alignment.SmithWatermanAlignment;
+//import guttmanlab.core.alignment.SmithWatermanAlignment;
+
+
+
+
 
 import org.apache.log4j.Logger;
 
@@ -54,13 +60,15 @@ public class FixedSequence extends AbstractReadSequenceElement {
 
 	@Override
 	public boolean matchesFullString(String s) {
-		if(getLength() != s.length()) {
-			return false;
-		}
-		if(s.equalsIgnoreCase(seq)) {
-			return true;
-		}
-		return AlignmentUtils.hammingDistanceAtMost(s, seq, maxNumMismatches, true);
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		if(getLength() != s.length()) {
+//			return false;
+//		}
+//		if(s.equalsIgnoreCase(seq)) {
+//			return true;
+//		}
+//		return AlignmentUtils.hammingDistanceAtMost(s, seq, maxNumMismatches, true);
 	}
 
 	@Override
@@ -70,7 +78,9 @@ public class FixedSequence extends AbstractReadSequenceElement {
 
 	@Override
 	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
 
 	@Override
@@ -80,16 +90,19 @@ public class FixedSequence extends AbstractReadSequenceElement {
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		if(matchesSubstringNoGaps(s, 0)) {
-			return new MatchedElement(this, length);
-		}
-		jaligner.Alignment align = SmithWatermanAlignment.align(s, seq, SW_MATCH_SCORE, SW_MISMATCH_SCORE, SW_GAP_OPEN_PENALTY, SW_GAP_EXTEND_PENALTY);
-		if(align.getStart1() != 0) return null; // Must match beginning of string
-		int matches = align.getNumberOfMatches();
-		int nonMatch = length - matches;
-		if(nonMatch > maxNumMismatches) return null; //TODO is this how we want to count indels?
-		int lengthOnSeq1 = align.getNumberOfMatches() + align.getGaps2(); //TODO is this right?
-		return new MatchedElement(this, lengthOnSeq1);
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		if(matchesSubstringNoGaps(s, 0)) {
+//			return new MatchedElement(this, length);
+//		}
+//		return null;
+//		jaligner.Alignment align = SmithWatermanAlignment.align(s, seq, SW_MATCH_SCORE, SW_MISMATCH_SCORE, SW_GAP_OPEN_PENALTY, SW_GAP_EXTEND_PENALTY);
+//		if(align.getStart1() != 0) return null; // Must match beginning of string
+//		int matches = align.getNumberOfMatches();
+//		int nonMatch = length - matches;
+//		if(nonMatch > maxNumMismatches) return null; //TODO is this how we want to count indels?
+//		int lengthOnSeq1 = align.getNumberOfMatches() + align.getGaps2(); //TODO is this right?
+//		return new MatchedElement(this, lengthOnSeq1);
 	}
 
 	@Override
@@ -112,6 +125,11 @@ public class FixedSequence extends AbstractReadSequenceElement {
 	@Override
 	public int minMatch() {
 		return length - maxNumMismatches;
+	}
+
+	@Override
+	public int maxLevenshteinDist() {
+		return maxNumMismatches; // TODO should there be separate parameters?
 	}
 
 	

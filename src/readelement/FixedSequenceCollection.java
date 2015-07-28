@@ -21,6 +21,7 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	protected Collection<FixedSequence> fixedSequences;
 	private int minLength;
 	private int maxLength;
+	private int maxLevDist;
 	private boolean repeatable;
 	
 	/**
@@ -37,6 +38,7 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 		FixedSequence first = iter.next();
 		seqs.add(first.getSequence());
 		names.add(first.getId());
+		maxLevDist = fixedSeqs.iterator().next().maxLevenshteinDist();
 		while(iter.hasNext()) {
 			FixedSequence fixedSeq = iter.next();
 			String seq = fixedSeq.getSequence();
@@ -48,6 +50,9 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 			// Check that all names are different
 			if(names.contains(name)) {
 				throw new IllegalArgumentException("Name " + name + " is used for multiple fixed sequence objects");
+			}
+			if(fixedSeq.maxLevenshteinDist() != maxLevDist) {
+				throw new IllegalArgumentException("All fixed sequences in set must have same max Levenshtein distance");
 			}
 			// Record min and max lengths
 			if(fixedSeq.getLength() > maxLength) {
@@ -135,18 +140,20 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesSubstringNoGaps(s, 0)) {
-				return new MatchedElement(fixedSeq, fixedSeq.getLength());
-			}
-		}		
-		for(FixedSequence fixedSeq : fixedSequences) {
-			MatchedElement matchedElt = fixedSeq.matchedElement(s);
-			if(matchedElt != null) {
-				return matchedElt;
-			}
-		}
-		return null;
+		throw new UnsupportedOperationException("NA"); 
+		// Don't want to do it this way anymore
+//		for(FixedSequence fixedSeq : fixedSequences) {
+//			if(fixedSeq.matchesSubstringNoGaps(s, 0)) {
+//				return new MatchedElement(fixedSeq, fixedSeq.getLength());
+//			}
+//		}		
+//		for(FixedSequence fixedSeq : fixedSequences) {
+//			MatchedElement matchedElt = fixedSeq.matchedElement(s);
+//			if(matchedElt != null) {
+//				return matchedElt;
+//			}
+//		}
+//		return null;
 	}
 
 	@Override
@@ -166,6 +173,11 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	@Override
 	public int minMatch() {
 		throw new UnsupportedOperationException("NA");
+	}
+
+	@Override
+	public int maxLevenshteinDist() {
+		return maxLevDist;
 	}
 
 }

@@ -160,4 +160,9 @@ public class Switch extends AbstractReadSequenceElement {
 		throw new UnsupportedOperationException("NA");
 	}
 
+	@Override
+	public int maxLevenshteinDist() {
+		throw new UnsupportedOperationException("NA");
+	}
+
 }

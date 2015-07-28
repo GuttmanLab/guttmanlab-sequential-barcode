@@ -42,8 +42,9 @@ import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.util.FastqUtils;
 import matcher.GenericElementMatcher;
-import matcher.SmithWatermanMatcher;
+import matcher.BitapMatcher;
 import nextgen.core.pipeline.util.OGSUtils;
+import broad.core.datastructures.Pair;
 import broad.pda.seq.fastq.FastqParser;
 import broad.pda.seq.fastq.FastqSequence;
 
@@ -60,6 +61,80 @@ public class BarcodeAnalysis {
 	private static int NUM_LAST_BARCODES = Integer.MAX_VALUE;
 	
 	/**
+	 * @param p Command line parser
+	 * @return The part of the arg string that can be used for a batched job
+	 */
+	private static String commonArgStringForBatched(CommandLineParser p) {
+		Collection<String> removeOptions = new ArrayList<String>();
+		removeOptions.add(batchOption);
+		removeOptions.add(fastqOption);
+		removeOptions.add(fastq1Option);
+		removeOptions.add(fastq2Option);
+		removeOptions.add(outPrefixOption);
+		removeOptions.add(suffixFastqOption);
+		removeOptions.add(suffixFastq1Option);
+		removeOptions.add(suffixFastq2Option);
+		return p.getArgString(removeOptions);
+	}
+	
+	/**
+	 * @param splitFastqs Split fastq file names
+	 * @param outPrefix Output prefix
+	 * @return Split output table names by fastq name
+	 */
+	private static Map<String, String> splitTables(Collection<String> splitFastqs, String outPrefix) {
+		Map<String, String> splitTables = new TreeMap<String, String>();
+		int i = 0;
+		for(String fq : splitFastqs) {
+			splitTables.put(fq, outPrefix + "." + i); // Create split table names and index by associated input fastq
+			i++;
+		}
+		return splitTables;
+	}
+	
+	/**
+	 * @param splitFastqs1 Split fastq1 file names
+	 * @param splitFastqs2 Split fastq2 file names
+	 * @param outPrefix Output prefix
+	 * @return Split output table names by fastq names
+	 */
+	private static Map<Pair<String>, String> splitTables(List<String> splitFastqs1, List<String> splitFastqs2, String outPrefix) {
+		Map<Pair<String>, String> splitTables = new HashMap<Pair<String>, String>();
+		for(int i=0; i<splitFastqs1.size(); i++) {
+			splitTables.put(new Pair<String>(splitFastqs1.get(i), splitFastqs2.get(i)), outPrefix + "." + i); // Create split table names and index by associated input fastq
+		}
+		return splitTables;
+	}
+	
+	/**
+	 * @param splitFastqs Split fastq file names
+	 * @return Split suffix fastq file names
+	 */
+	private static Collection<String> splitSuffixFastqs(Collection<String> splitFastqs) {
+		Collection<String> splitSuffixFastqs = new ArrayList<String>();
+		for(String fq : splitFastqs) {
+			splitSuffixFastqs.add(makeSuffixFastqName(fq));
+		}
+		return splitSuffixFastqs;
+	}
+	
+	private static void catFilesAndDelete(Collection<String> files, String outFile) throws IOException {
+		FileWriter w = new FileWriter(outFile);
+		for(String file : files) {
+			FileReader r = new FileReader(file);
+			BufferedReader b = new BufferedReader(r);
+			while(b.ready()) {
+				w.write(b.readLine() + "\n");
+			}
+			r.close();
+			b.close();
+			File f = new File(file);
+			f.delete();
+		}
+		w.close();
+	}
+	
+	/**
 	 * For RNA-DNA 3D barcoding method
 	 * Identify barcodes in reads and write to a table
 	 * Split the fastq file into several smaller files and batch out the writing of the table
@@ -68,80 +143,27 @@ public class BarcodeAnalysis {
 	 * @throws DrmaaException
 	 * @throws InterruptedException
 	 */
-	private static void divideFastqAndFindBarcodes(CommandLineParser p) throws IOException, DrmaaException, InterruptedException {
+	private static void divideFastqAndFindBarcodesSingleFastq(CommandLineParser p) throws IOException, DrmaaException, InterruptedException {
 		
 		String outPrefix = p.getStringArg(outPrefixOption);
 		String email = p.getStringArg(emailOption);
 		String fastq = p.getStringArg(fastqOption);
-		int readLength = p.getIntArg(readLengthOption);
-		String oddBarcodeList = p.getStringArg(oddBarcodeTableOption);
-		String evenBarcodeList = p.getStringArg(evenBarcodeTableOption);
-		String rpm = p.getStringArg(rpmOption);
-		String dpm = p.getStringArg(dpmOption);
-		int maxMismatchBarcode = p.getIntArg(maxMismatchBarcodeOption);
-		int maxMismatchRpm = p.getIntArg(maxMismatchRpmOption);
-		int maxMismatchDpm = p.getIntArg(maxMismatchDpmOption);
-		int maxMismatchAdapter = p.getIntArg(maxMismatchAdapterOption);
-		boolean enforceOddEven = p.getBooleanArg(enforceOddEvenOption);
-		boolean verbose = p.getBooleanArg(verboseOption);
 		String jar = p.getStringArg(jarOption);
 		int numFastq = p.getIntArg(numFastqOption);
-		String designName = p.getStringArg(designNameOption);
-		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
 		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
 		String suffixFastq = p.getStringArg(suffixFastqOption);
-		boolean getLastBarcodes = p.getBooleanArg(getLastBarcodesOption);
-		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
-		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
-		String may2015firstBarcodeFile = p.getStringArg(may2015firstBarcodeFileOption);
-		String may2015oddBarcodeFile = p.getStringArg(may2015oddBarcodeFileOption);
-		String may2015evenBarcodeFile = p.getStringArg(may2015evenBarcodeFileOption);
-		String may2015lastBarcodeFile = p.getStringArg(may2015lastBarcodeFileOption);
-		int may2015maxMismatchFirstBarcode = p.getIntArg(may2015maxMismatchFirstBarcodeOption);
-		int may2015maxMismatchLastBarcode = p.getIntArg(may2015maxMismatchLastBarcodeOption);
-		int may2015maxMismatchOddEvenBarcode = p.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
-		Map<String, String> splitTables = new TreeMap<String, String>();
-		int i = 0;
-		for(String fq : splitFastqs) {
-			splitTables.put(fq, outPrefix + "." + i); // Create split table names and index by associated input fastq
-			i++;
-		}
-		Collection<String> splitSuffixFastqs = new ArrayList<String>();
-		for(String fq : splitFastqs) {
-			splitSuffixFastqs.add(makeSuffixFastqName(fq));
-		}
+		Map<String, String> splitTables = splitTables(splitFastqs, outPrefix);
+		Collection<String> splitSuffixFastqs = splitSuffixFastqs(splitFastqs);
 		Collection<Job> jobs = new ArrayList<Job>();
+		
 		for(String fq : splitTables.keySet()) {
-			String cmmd = "java -jar -Xmx25g -Xms15g -Xmn10g " + jar;
-			cmmd += " " + outPrefixOption + " " + splitTables.get(fq);
-			cmmd += " " + fastqOption + " " + fq;
-			cmmd += " " + readLengthOption + " " + readLength;
-			cmmd += " " + oddBarcodeTableOption + " " + oddBarcodeList;
-			cmmd += " " + evenBarcodeTableOption + " " + evenBarcodeList;
-			cmmd += " " + rpmOption + " " + rpm;
-			cmmd += " " + dpmOption + " " + dpm;
-			cmmd += " " + maxMismatchBarcodeOption + " " + maxMismatchBarcode;
-			cmmd += " " + maxMismatchRpmOption + " " + maxMismatchRpm;
-			cmmd += " " + maxMismatchDpmOption + " " + maxMismatchDpm;
-			cmmd += " " + maxMismatchAdapterOption + " " + maxMismatchAdapter;
-			cmmd += " " + enforceOddEvenOption + " " + enforceOddEven;
-			cmmd += " " + verboseOption + " " + verbose;
-			cmmd += " " + designNameOption + " " + designName;
-			cmmd += " " + totalNumBarcodesOption + " " + totalNumBarcodes;
-			cmmd += " " + splitOutFilesBySwitchesOption + " " + splitOutputBySwitchesInLayout;
-			cmmd += " " + suffixFastqOption + " " + makeSuffixFastqName(fq);
-			cmmd += " " + getLastBarcodesOption + " " + getLastBarcodes;
-			cmmd += " " + lastNumBarcodesOption + " " + lastNumBarcodes;
-			cmmd += " " + adapterSeqFastaOption + " " + adapterSeqFasta;
-			cmmd += " " + may2015firstBarcodeFileOption + " " + may2015firstBarcodeFile;
-			cmmd += " " + may2015oddBarcodeFileOption + " " + may2015oddBarcodeFile;
-			cmmd += " " + may2015evenBarcodeFileOption + " " + may2015evenBarcodeFile;
-			cmmd += " " + may2015lastBarcodeFileOption + " " + may2015lastBarcodeFile;
-			cmmd += " " + may2015maxMismatchFirstBarcodeOption + " " + may2015maxMismatchFirstBarcode;
-			cmmd += " " + may2015maxMismatchLastBarcodeOption + " " + may2015maxMismatchLastBarcode;
-			cmmd += " " + may2015maxMismatchOddEvenBarcodeOption + " " + may2015maxMismatchOddEvenBarcode;
+			String cmmd = "java -jar -Xmx5g -Xms2g -Xmn1g " + jar + " ";
+			cmmd += commonArgStringForBatched(p) + " ";
+			cmmd += fastqOption + " " + fq + " ";
+			cmmd += outPrefixOption + " " + splitTables.get(fq) + " ";
+			cmmd += suffixFastqOption + " " + makeSuffixFastqName(fq) + " ";
 			String jobNameWithSlashes = "OGS_job_" + fq;
 			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
@@ -149,42 +171,76 @@ public class BarcodeAnalysis {
 			jobs.add(job);
 		}
 		JobUtils.waitForAll(jobs);
-		// Only try to concatenate the files if they were not split by switches
+		
 		if(!splitOutputBySwitchesInLayout) {
-			
-			FileWriter tableWriter = new FileWriter(outPrefix);
-			for(String fq : splitTables.keySet()) {
-				String table = splitTables.get(fq);
-				FileReader r = new FileReader(table);
-				BufferedReader b = new BufferedReader(r);
-				while(b.ready()) {
-					tableWriter.write(b.readLine() + "\n");
-				}
-				r.close();
-				b.close();
-				File f = new File(table);
-				f.delete();
-			}
-			tableWriter.close();
-
+			catFilesAndDelete(splitTables.values(), outPrefix);
 			if(suffixFastq != null) {
-				FileWriter fastqWriter = new FileWriter(suffixFastq);
-				for(String fq : splitSuffixFastqs) {
-					FileReader r = new FileReader(fq);
-					BufferedReader b = new BufferedReader(r);
-					while(b.ready()) {
-						fastqWriter.write(b.readLine() + "\n");
-					}
-					r.close();
-					b.close();
-					File f = new File(fq);
-					f.delete();
-				}
-				fastqWriter.close();
+				catFilesAndDelete(splitSuffixFastqs, suffixFastq);
 			}
 		}
+		
 	}
 	
+		
+	/**
+	 * For RNA-DNA 3D barcoding method
+	 * Identify barcodes in reads and write to a table
+	 * Split the fastq file into several smaller files and batch out the writing of the table
+	 * @param p CommandLineParser object containing all the options
+	 * @throws IOException
+	 * @throws DrmaaException
+	 * @throws InterruptedException
+	 */
+	private static void divideFastqAndFindBarcodesPairedFastq(CommandLineParser p) throws IOException, DrmaaException, InterruptedException {
+		
+		String outPrefix = p.getStringArg(outPrefixOption);
+		String email = p.getStringArg(emailOption);
+		String fastq1 = p.getStringArg(fastq1Option);
+		String fastq2 = p.getStringArg(fastq2Option);
+		String jar = p.getStringArg(jarOption);
+		int numFastq = p.getIntArg(numFastqOption);
+		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
+		String suffixFastq1 = p.getStringArg(suffixFastq1Option);
+		String suffixFastq2 = p.getStringArg(suffixFastq2Option);
+		
+		List<String> splitFastqs1 = FastqUtils.divideFastqFile(fastq1, numFastq);
+		List<String> splitFastqs2 = FastqUtils.divideFastqFile(fastq2, numFastq);
+		Map<Pair<String>, String> splitTables = splitTables(splitFastqs1, splitFastqs2, outPrefix);
+		Collection<String> splitSuffixFastqs1 = splitFastqs1 == null ? null : splitSuffixFastqs(splitFastqs1);
+		Collection<String> splitSuffixFastqs2 = splitFastqs2 == null ? null : splitSuffixFastqs(splitFastqs2);
+		Collection<Job> jobs = new ArrayList<Job>();
+		
+		for(Pair<String> fqs : splitTables.keySet()) {
+			String fq1 = fqs.getValue1();
+			String fq2 = fqs.getValue2();
+			String cmmd = "java -jar -Xmx5g -Xms2g -Xmn1g " + jar + " ";
+			cmmd += commonArgStringForBatched(p) + " ";
+			cmmd += fastq1Option + " " + fq1 + " ";
+			cmmd += fastq2Option + " " + fq2 + " ";
+			cmmd += outPrefixOption + " " + splitTables.get(fqs) + " ";
+			if(suffixFastq1 != null) cmmd += suffixFastq1Option + " " + makeSuffixFastqName(fq1) + " ";
+			if(suffixFastq2 != null) cmmd += suffixFastq2Option + " " + makeSuffixFastqName(fq2) + " ";
+			String jobNameWithSlashes = "OGS_job_" + fq1 + "_" + fq2;
+			String jobName = jobNameWithSlashes.replaceAll("/", "_");
+			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
+			job.submit();
+			jobs.add(job);
+		}
+		JobUtils.waitForAll(jobs);
+		
+		if(!splitOutputBySwitchesInLayout) {
+			catFilesAndDelete(splitTables.values(), outPrefix);
+			if(suffixFastq1 != null) {
+				catFilesAndDelete(splitSuffixFastqs1, suffixFastq1);
+			}
+			if(suffixFastq2 != null) {
+				catFilesAndDelete(splitSuffixFastqs2, suffixFastq2);
+			}
+		}
+		
+	}
+	
+		
 	/**
 	 * @param fastq Fastq file
 	 * @return Name of fastq file to write read suffixes to (removing matched element section)
@@ -250,7 +306,7 @@ public class BarcodeAnalysis {
 			String seq = record.getSequence();
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
-			GenericElementMatcher matcher = new GenericElementMatcher(layout, seq);
+			BitapMatcher matcher = new BitapMatcher(layout, seq);
 			List<List<ReadSequenceElement>> matchedElements = matcher.getMatchedElements();
 			if(matchedElements != null) {
 				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, seq, null, layout, null);
@@ -359,8 +415,8 @@ public class BarcodeAnalysis {
 				throw new IllegalStateException("Paired fastq records out of order: " + name1 + " " + name2);
 			}
 			String line = name1 + "\t";
-			GenericElementMatcher matcher1 = new GenericElementMatcher(layout1, seq1);
-			GenericElementMatcher matcher2 = new GenericElementMatcher(layout2, seq2);
+			BitapMatcher matcher1 = new BitapMatcher(layout1, seq1);
+			BitapMatcher matcher2 = new BitapMatcher(layout2, seq2);
 			List<List<ReadSequenceElement>> matchedElements1 = matcher1.getMatchedElements();
 			List<List<ReadSequenceElement>> matchedElements2 = matcher2.getMatchedElements();
 			if(matchedElements1 != null || matchedElements2 != null) {
@@ -450,7 +506,7 @@ public class BarcodeAnalysis {
 			FastqSequence record = iter.next();
 			String seq = record.getSequence();
 			String name = record.getName();
-			if(new GenericElementMatcher(layout, seq).getMatchedElements() != null) {
+			if(new BitapMatcher(layout, seq).getMatchedElements() != null) {
 				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout);
 				BarcodeSequence barcodes = f.getBarcodes();
 				for(Barcode b : barcodes.getBarcodes()) {
@@ -487,7 +543,7 @@ public class BarcodeAnalysis {
 		String dpm = commandLineParser.getStringArg(dpmOption);
 		int maxMismatchBarcode = commandLineParser.getIntArg(maxMismatchBarcodeOption);
 		int maxMismatchBarcodeRead1 = commandLineParser.getIntArg(maxMismatchBarcodeRead1Option);
-		int maxMismatchBarcodeRead2 = commandLineParser.getIntArg(maxMismatchBarcodeRead2Option);
+		int maxMismatchBarcodeRead2 = commandLineParser.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
 		int maxMismatchRpm = commandLineParser.getIntArg(maxMismatchRpmOption);
 		int maxMismatchDpm = commandLineParser.getIntArg(maxMismatchDpmOption);
 		boolean countBarcodes = commandLineParser.getBooleanArg(countBarcodesOption);
@@ -511,7 +567,16 @@ public class BarcodeAnalysis {
 		int may2015maxMismatchOddEvenBarcode = commandLineParser.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
 		String july2015firstBarcodeFile = commandLineParser.getStringArg(july2015read1BarcodeFileOption);
 
-
+		if(fastq != null) {
+			if(fastq1 != null || fastq2 != null) {
+				throw new IllegalArgumentException("Provide single fastq or both paired fastq1, fastq2");
+			}
+		}
+		
+		if((fastq1 != null && fastq2 == null) || (fastq1 == null && fastq2 != null)) {
+			throw new IllegalArgumentException("Provide single fastq or both paired fastq1, fastq2");
+		}
+		
 		if((outPrefix != null || countBarcodes) && fastq == null && fastq1 == null && fastq2 == null) {
 			throw new IllegalArgumentException("Must provide fastq file to write table of reads and barcodes");
 		}
@@ -694,11 +759,13 @@ public class BarcodeAnalysis {
 	private static String read2LengthOption = "-r2l";
 	private static String oddBarcodeTableOption = "-ob";
 	private static String evenBarcodeTableOption = "-eb";
+	private static String yShapeBarcodeTableOption = "-yb";
 	private static String rpmOption = "-rpm";
 	private static String dpmOption = "-dpm";
 	private static String maxMismatchBarcodeOption = "-mmb";
 	private static String maxMismatchBarcodeRead1Option = "-mmbr1";
-	private static String maxMismatchBarcodeRead2Option = "-mmbr2";
+	private static String maxMismatchEvenOddBarcodeRead2Option = "-mmeor2";
+	private static String maxMismatchYShapeBarcodeRead2Option = "-mmyr2";
 	private static String maxMismatchRpmOption = "-mmr";
 	private static String maxMismatchDpmOption = "-mmd";
 	private static String maxMismatchAdapterOption = "-mma";
@@ -759,11 +826,13 @@ public class BarcodeAnalysis {
 		p.addIntArg(read2LengthOption, "Read 2 length if identifying barcodes in both mates", false, -1);
 		p.addStringArg(oddBarcodeTableOption, "Odd barcode table file (format: barcode_id	barcode_seq)", false, null);
 		p.addStringArg(evenBarcodeTableOption, "Even barcode table file (format: barcode_id	barcode_seq)", false, null);
+		p.addStringArg(yShapeBarcodeTableOption, "Y shape barcode table file (format: barcode_id	barcode_seq)", false, null);
 		p.addStringArg(dpmOption, "DPM sequence", false, null);
 		p.addStringArg(rpmOption, "RPM sequence", false, null);
 		p.addIntArg(maxMismatchBarcodeOption, "Max mismatches in barcode if only identifying barcodes in one mate", false, -1);
 		p.addIntArg(maxMismatchBarcodeRead1Option, "Max mismatches in barcode in read 1 if identifying barcodes in both mates", false, -1);
-		p.addIntArg(maxMismatchBarcodeRead2Option, "Max mismatches in barcode in read 2 if identifying barcodes in both mates", false, -1);
+		p.addIntArg(maxMismatchEvenOddBarcodeRead2Option, "Max mismatches in even/odd barcode in read 2 if identifying barcodes in both mates", false, -1);
+		p.addIntArg(maxMismatchYShapeBarcodeRead2Option, "Max mismatches in Y shape barcode in read 2 if identifying barcodes in both mates", false, -1);
 		p.addIntArg(maxMismatchRpmOption, "Max mismatches in RPM", false, -1);
 		p.addIntArg(maxMismatchDpmOption, "Max mismatches in DPM", false, -1);
 		p.addIntArg(maxMismatchAdapterOption, "Max mismatches in adapter for single design from March 2015 with multiple adapters between barcodes and read", false, -1);
@@ -806,7 +875,7 @@ public class BarcodeAnalysis {
 			AnySequence.logger.setLevel(Level.DEBUG);
 			BarcodeAnalysis.logger.setLevel(Level.DEBUG);
 			GenericElementMatcher.logger.setLevel(Level.DEBUG);
-			SmithWatermanMatcher.logger.setLevel(Level.DEBUG);
+			BitapMatcher.logger.setLevel(Level.DEBUG);
 		}
 		
 		String outPrefix = p.getStringArg(outPrefixOption);
@@ -818,11 +887,13 @@ public class BarcodeAnalysis {
 		int read2Length = p.getIntArg(read2LengthOption);
 		String oddBarcodeList = p.getStringArg(oddBarcodeTableOption);
 		String evenBarcodeList = p.getStringArg(evenBarcodeTableOption);
+		String yShapeBarcodeList = p.getStringArg(yShapeBarcodeTableOption);
 		String rpm = p.getStringArg(rpmOption);
 		String dpm = p.getStringArg(dpmOption);
 		int maxMismatchBarcode = p.getIntArg(maxMismatchBarcodeOption);
 		int maxMismatchBarcodeRead1 = p.getIntArg(maxMismatchBarcodeRead1Option);
-		int maxMismatchBarcodeRead2 = p.getIntArg(maxMismatchBarcodeRead2Option);
+		int maxMismatchEvenOddBarcodeRead2 = p.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
+		int maxMismatchYShapeBarcodeRead2 = p.getIntArg(maxMismatchYShapeBarcodeRead2Option);
 		int maxMismatchRpm = p.getIntArg(maxMismatchRpmOption);
 		int maxMismatchDpm = p.getIntArg(maxMismatchDpmOption);
 		boolean enforceOddEven = p.getBooleanArg(enforceOddEvenOption);
@@ -859,7 +930,8 @@ public class BarcodeAnalysis {
 		// Make table of reads IDs and barcodes
 		if(outPrefix != null) {
 			if(batch) {
-				divideFastqAndFindBarcodes(p);
+				if(fastq != null) divideFastqAndFindBarcodesSingleFastq(p);
+				if(fastq1 != null && fastq2 != null) divideFastqAndFindBarcodesPairedFastq(p);
 			} else {
 				switch(design) {
 				case PAIRED_DESIGN_BARCODE_IN_READ2:
@@ -889,8 +961,10 @@ public class BarcodeAnalysis {
 					break;
 				case PAIRED_DESIGN_JULY_2015:
 					BarcodedReadLayout layout6read1 = ReadLayoutFactory.getRead1LayoutRnaDna3DPairedDesignJuly2015(july2015firstBarcodeFile, maxMismatchBarcodeRead1, read1Length);
-					BarcodedReadLayout layout6read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJuly2015(oddBarcodeList, evenBarcodeList, totalNumBarcodesRead2, maxMismatchBarcodeRead2, read2Length, enforceOddEven);
+					BarcodedReadLayout layout6read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJuly2015(oddBarcodeList, evenBarcodeList, yShapeBarcodeList, totalNumBarcodesRead2, 
+							maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length, enforceOddEven);
 					findBarcodes(fastq1, fastq2, layout6read1, layout6read2, outPrefix, suffixFastq1, suffixFastq2, verbose);
+					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
 				}

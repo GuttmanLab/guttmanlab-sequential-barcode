@@ -29,6 +29,7 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	protected String sequence;
 	protected String id;
 	private int maxNumMismatches;
+	private int maxLevDist;
 	public static Logger logger = Logger.getLogger(Barcode.class.getName());
 	private boolean repeatable;
 	private String stopSignal;
@@ -102,7 +103,6 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 		sequence = seq;
 		id = barcodeId;
 		maxNumMismatches = maxMismatches;
-		//matchedStrings = new HashSet<String>();
 		repeatable = isRepeatable;
 		stopSignal = stopSignalForRepeatable;
 		stopSignalMaxMismatches = stopSignalMaxMismatch;
@@ -201,13 +201,15 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	
 	@Override
 	public boolean matchesFullString(String s) {
-		if(getLength() != s.length()) {
-			return false;
-		}
-		if(s.equalsIgnoreCase(sequence)) {
-			return true;
-		}
-		return AlignmentUtils.hammingDistanceAtMost(s, sequence, maxNumMismatches, true);
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		if(getLength() != s.length()) {
+//			return false;
+//		}
+//		if(s.equalsIgnoreCase(sequence)) {
+//			return true;
+//		}
+//		return AlignmentUtils.hammingDistanceAtMost(s, sequence, maxNumMismatches, true);
 	}
 
 	@Override
@@ -217,25 +219,31 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 
 	@Override
 	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		if(matchesSubstringNoGaps(s, 0)) {
-			return new MatchedElement(this, length);
-		}
-		jaligner.Alignment align = SmithWatermanAlignment.align(s, sequence, SW_MATCH_SCORE, SW_MISMATCH_SCORE, SW_GAP_OPEN_PENALTY, SW_GAP_EXTEND_PENALTY);
-		if(align.getStart1() != 0) {
-			return null; // Must match beginning of string
-		}
-		int matches = align.getNumberOfMatches();
-		int nonMatch = length - matches;
-		if(nonMatch > maxNumMismatches) {
-			return null; //TODO is this how we want to count indels?
-		}
-		int lengthOnSeq1 = align.getNumberOfMatches() + align.getGaps2(); //TODO is this right?
-		return new MatchedElement(this, lengthOnSeq1);
+		throw new UnsupportedOperationException("NA");
+		// Don't want to do it this way anymore
+//		if(matchesSubstringNoGaps(s, 0)) {
+//			return new MatchedElement(this, length);
+//		}
+//		return null;
+//		//TODO take SW in/out
+//		jaligner.Alignment align = SmithWatermanAlignment.align(s, sequence, SW_MATCH_SCORE, SW_MISMATCH_SCORE, SW_GAP_OPEN_PENALTY, SW_GAP_EXTEND_PENALTY);
+//		if(align.getStart1() != 0) {
+//			return null; // Must match beginning of string
+//		}
+//		int matches = align.getNumberOfMatches();
+//		int nonMatch = length - matches;
+//		if(nonMatch > maxNumMismatches) {
+//			return null; //TODO is this how we want to count indels?
+//		}
+//		int lengthOnSeq1 = align.getNumberOfMatches() + align.getGaps2(); //TODO is this right?
+//		return new MatchedElement(this, lengthOnSeq1);
 	}
 
 	@Override
@@ -258,6 +266,11 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	@Override
 	public int minMatch() {
 		return length - maxNumMismatches;
+	}
+
+	@Override
+	public int maxLevenshteinDist() {
+		return maxNumMismatches; // TODO should there be separate parameters?
 	}
 
 

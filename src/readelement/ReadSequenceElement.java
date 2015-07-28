@@ -96,4 +96,10 @@ public interface ReadSequenceElement {
 	 */
 	public int minMatch();
 	
+	/**
+	 * Get the maximum Levenshtein distance to call a match to a read
+	 * @return Maximum Levenshtein used to identify matches
+	 */
+	public int maxLevenshteinDist();
+	
 }

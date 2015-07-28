@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import matcher.BitapMatcher;
 import matcher.GenericElementMatcher;
 import readelement.FixedSequence;
 import readelement.ReadSequenceElement;
@@ -44,7 +45,7 @@ public class BarcodedFragmentWithSwitches extends BarcodedFragmentImpl {
 	private void findSwitches() {
 		switchValues = new HashMap<Switch, List<FixedSequence>>();
 			if(read1layout != null && read1sequence != null) {
-				List<List<ReadSequenceElement>> read1elements = new GenericElementMatcher(read1layout, read1sequence).getMatchedElements();
+				List<List<ReadSequenceElement>> read1elements = new BitapMatcher(read1layout, read1sequence).getMatchedElements();
 				if(read1elements != null) {
 					for(int i = 0; i < read1elements.size(); i++) {
 						ReadSequenceElement parentElement = read1layout.getElements().get(i);
@@ -62,7 +63,7 @@ public class BarcodedFragmentWithSwitches extends BarcodedFragmentImpl {
 				read1elements = null;
 			}
 			if(read2layout != null && read2sequence != null) {
-				List<List<ReadSequenceElement>> read2elements = new GenericElementMatcher(read2layout, read2sequence).getMatchedElements();
+				List<List<ReadSequenceElement>> read2elements = new BitapMatcher(read2layout, read2sequence).getMatchedElements();
 				if(read2elements != null) {
 					for(int i = 0; i < read2elements.size(); i++) {
 						ReadSequenceElement parentElement = read2layout.getElements().get(i);
