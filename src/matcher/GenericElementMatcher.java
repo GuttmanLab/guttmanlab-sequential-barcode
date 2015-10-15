@@ -66,6 +66,10 @@ public class GenericElementMatcher implements ElementMatcher {
 		matchElements();
 	}
 	
+	private static int firstMatch(ReadSequenceElement element, String sequence) {
+		throw new UnsupportedOperationException();
+	}
+	
 	/**
 	 * For repeatable elements, save the first occurrences of their "next" element so can keep looking up until next element
 	 * @return Map of element to position of its "next" element, or Integer.MAX_VALUE if no stop signal
@@ -80,7 +84,7 @@ public class GenericElementMatcher implements ElementMatcher {
 					stopSignalPos.put(elt, Integer.MAX_VALUE);
 					continue;
 				}
-				int posNext = stopSignal.firstMatch(readSequence);
+				int posNext = firstMatch(stopSignal, readSequence);
 				if(posNext != -1) {
 					stopSignalPos.put(elt, Integer.valueOf(posNext));
 					logger.debug("STOP_SIGNAL\t for element " + elt.getId() + " is at position " + posNext);

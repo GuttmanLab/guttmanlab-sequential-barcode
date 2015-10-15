@@ -423,20 +423,18 @@ public class BarcodeAnalysis {
 				if(matchedElements1 != null) {
 					BarcodedFragmentImpl f = new BarcodedFragmentImpl(name1, seq1, null, layout1, null);
 					BarcodeSequence barcodes = f.getBarcodes(matchedElements1, null);
-					line += "read1:" + barcodes.toString();
+					line += barcodes.toString();
 					FastqSequence trimmedRecord = suffixFastq1 != null ? record1.trimFirstNBPs(matcher1.matchedElementsLengthInRead()) : null;
 					if(suffixFastq1 != null) trimmedRecord.write(singleFastqWriter1);
-				} else {
-					line += "read1:NA";
 				}
 				if(matchedElements2 != null) {
 					BarcodedFragmentImpl f = new BarcodedFragmentImpl(name2, seq2, null, layout2, null);
 					BarcodeSequence barcodes = f.getBarcodes(null, matchedElements2);
-					line += ":read2:" + barcodes.toString() + "\t";
+					line += barcodes.toString() + "\t";
 					FastqSequence trimmedRecord = suffixFastq2 != null ? record2.trimFirstNBPs(matcher2.matchedElementsLengthInRead()) : null;
 					if(suffixFastq2 != null) trimmedRecord.write(singleFastqWriter2);
 				} else {
-					line += ":read2:NA\t";
+					line += "\t";
 				}
 				if(verbose) line += seq1 + "\t" + seq2 + "\t";
 				tableWriter.write(line + "\n");
@@ -827,8 +825,8 @@ public class BarcodeAnalysis {
 		p.addStringArg(oddBarcodeTableOption, "Odd barcode table file (format: barcode_id	barcode_seq)", false, null);
 		p.addStringArg(evenBarcodeTableOption, "Even barcode table file (format: barcode_id	barcode_seq)", false, null);
 		p.addStringArg(yShapeBarcodeTableOption, "Y shape barcode table file (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(dpmOption, "DPM sequence", false, null);
-		p.addStringArg(rpmOption, "RPM sequence", false, null);
+		p.addStringArg(dpmOption, "Single fixed DPM sequence", false, null);
+		p.addStringArg(rpmOption, "Single fixed RPM sequence", false, null);
 		p.addIntArg(maxMismatchBarcodeOption, "Max mismatches in barcode if only identifying barcodes in one mate", false, -1);
 		p.addIntArg(maxMismatchBarcodeRead1Option, "Max mismatches in barcode in read 1 if identifying barcodes in both mates", false, -1);
 		p.addIntArg(maxMismatchEvenOddBarcodeRead2Option, "Max mismatches in even/odd barcode in read 2 if identifying barcodes in both mates", false, -1);

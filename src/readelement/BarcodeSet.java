@@ -112,24 +112,8 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesFullString(String s) {
-		throw new UnsupportedOperationException("NA");
-		// Don't want to do it this way anymore
-//		if(matchedElement(s) == null) return false;
-//		return true;
-	}
-
-
-	@Override
 	public String elementName() {
 		return "barcode_set";
-	}
-
-	@Override
-	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		throw new UnsupportedOperationException("NA");
-		// Don't want to do it this way anymore
-//		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
 	}
 
 	@Override

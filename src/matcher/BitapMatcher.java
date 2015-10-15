@@ -21,7 +21,7 @@ public class BitapMatcher extends GenericElementMatcher {
 	
 	public static Logger logger = Logger.getLogger(BitapMatcher.class.getName());
 	private Map<ReadSequenceElement, Map<Integer, MatchedElement>> matches;
-	private static Character[] alphabet = {'A', 'C', 'G', 'T'};
+	private static Character[] alphabet = {'A', 'C', 'G', 'T', 'N'};
 	
 	/**
 	 * @param layout Read layout
@@ -41,11 +41,15 @@ public class BitapMatcher extends GenericElementMatcher {
 	@Override
 	public void cacheMatches() {
 		matches = new HashMap<ReadSequenceElement, Map<Integer, MatchedElement>>();
-		for(ReadSequenceElement element : readLayout.getElements()) {
-			Map<Integer, MatchedElement> matchLocations = matchLocations(element);
-			if(matchLocations != null) {
-				matches.put(element, matchLocations);
+		try {
+			for(ReadSequenceElement element : readLayout.getElements()) {
+				Map<Integer, MatchedElement> matchLocations = matchLocations(element);
+				if(matchLocations != null) {
+					matches.put(element, matchLocations);
+				}
 			}
+		} catch(NullPointerException e) {
+			logger.info("Caught null pointer exception on read " + readSequence);
 		}
 	}
 	

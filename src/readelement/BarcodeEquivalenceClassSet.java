@@ -52,22 +52,6 @@ public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesFullString(String s) {
-		for(BarcodeEquivalenceClass ec : equivClasses) {
-			if(ec.matchesFullString(s)) return true;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		for(BarcodeEquivalenceClass ec : equivClasses) {
-			if(ec.matchesSubstringNoGaps(s, startOnString)) return true;
-		}
-		return false;
-	}
-
-	@Override
 	public boolean isRepeatable() {
 		return repeatable;
 	}

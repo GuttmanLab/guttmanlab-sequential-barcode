@@ -200,50 +200,13 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	}
 	
 	@Override
-	public boolean matchesFullString(String s) {
-		throw new UnsupportedOperationException("NA");
-		// Don't want to do it this way anymore
-//		if(getLength() != s.length()) {
-//			return false;
-//		}
-//		if(s.equalsIgnoreCase(sequence)) {
-//			return true;
-//		}
-//		return AlignmentUtils.hammingDistanceAtMost(s, sequence, maxNumMismatches, true);
-	}
-
-	@Override
 	public String elementName() {
 		return "barcode";
 	}
 
 	@Override
-	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		throw new UnsupportedOperationException("NA");
-		// Don't want to do it this way anymore
-//		return matchesFullString(s.substring(startOnString, startOnString + getLength()));
-	}
-
-	@Override
 	public MatchedElement matchedElement(String s) {
 		throw new UnsupportedOperationException("NA");
-		// Don't want to do it this way anymore
-//		if(matchesSubstringNoGaps(s, 0)) {
-//			return new MatchedElement(this, length);
-//		}
-//		return null;
-//		//TODO take SW in/out
-//		jaligner.Alignment align = SmithWatermanAlignment.align(s, sequence, SW_MATCH_SCORE, SW_MISMATCH_SCORE, SW_GAP_OPEN_PENALTY, SW_GAP_EXTEND_PENALTY);
-//		if(align.getStart1() != 0) {
-//			return null; // Must match beginning of string
-//		}
-//		int matches = align.getNumberOfMatches();
-//		int nonMatch = length - matches;
-//		if(nonMatch > maxNumMismatches) {
-//			return null; //TODO is this how we want to count indels?
-//		}
-//		int lengthOnSeq1 = align.getNumberOfMatches() + align.getGaps2(); //TODO is this right?
-//		return new MatchedElement(this, lengthOnSeq1);
 	}
 
 	@Override

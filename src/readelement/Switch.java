@@ -87,26 +87,6 @@ public class Switch extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean matchesFullString(String s) {
-		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesFullString(s)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		for(FixedSequence fixedSeq : fixedSequences) {
-			if(fixedSeq.matchesSubstringNoGaps(s, startOnString)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
 	public boolean isRepeatable() {
 		return false;
 	}

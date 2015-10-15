@@ -66,12 +66,6 @@ public class BarcodeEquivalenceClass extends BarcodeSet {
 	}
 	
 	@Override
-	public boolean matchesFullString(String s) {
-		if(matchedElement(s) == null) return false;
-		return true;
-	}
-	
-	@Override
 	public String elementName() {
 		return "barcode_equivalence_class";
 	}

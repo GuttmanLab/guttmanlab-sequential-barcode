@@ -27,22 +27,9 @@ public class AnySequence extends AbstractReadSequenceElement {
 		return length;
 	}
 
-	/**
-	 * Only check that the string has this length
-	 */
-	@Override
-	public boolean matchesFullString(String s) {
-		return s.length() == length;
-	}
-
 	@Override
 	public String elementName() {
 		return "endogenous_sequence";
-	}
-
-	@Override
-	public boolean matchesSubstringNoGaps(String s, int startOnString) {
-		return startOnString + length <= s.length();
 	}
 
 	@Override
@@ -52,9 +39,7 @@ public class AnySequence extends AbstractReadSequenceElement {
 
 	@Override
 	public MatchedElement matchedElement(String s) {
-		if(!matchesFullString(s)) {
-			return null;
-		}
+		if(s.length() != length) {return null;}
 		return new MatchedElement(this, length);
 	}
 

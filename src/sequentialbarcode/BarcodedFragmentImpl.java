@@ -256,14 +256,16 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	public void findBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
 		barcodes = new BarcodeSequence();
 			if(read1layout != null && read1sequence != null) {
-				List<List<ReadSequenceElement>> read1elements = matchedEltsRead1 == null ? new BitapMatcher(read1layout, read1sequence).getMatchedElements() : matchedEltsRead1;
+				List<List<ReadSequenceElement>> read1elements = 
+						matchedEltsRead1 == null ? new BitapMatcher(read1layout, read1sequence).getMatchedElements() : matchedEltsRead1;
 				if(read1elements != null) {
 					findAndAppendBarcodes(read1layout, read1elements);
 				}
 				read1elements = null;
 			}
 			if(read2layout != null && read2sequence != null) {
-				List<List<ReadSequenceElement>> read2elements = matchedEltsRead2 == null ? new BitapMatcher(read2layout, read2sequence).getMatchedElements() : matchedEltsRead2;
+				List<List<ReadSequenceElement>> read2elements = 
+						matchedEltsRead2 == null ? new BitapMatcher(read2layout, read2sequence).getMatchedElements() : matchedEltsRead2;
 				if(read2elements != null) {
 					findAndAppendBarcodes(read2layout, read2elements);
 				}
