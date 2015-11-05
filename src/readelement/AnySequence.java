@@ -40,7 +40,7 @@ public class AnySequence extends AbstractReadSequenceElement {
 	@Override
 	public MatchedElement matchedElement(String s) {
 		if(s.length() != length) {return null;}
-		return new MatchedElement(this, length);
+		return new MatchedElement(this, 0, length);
 	}
 
 	@Override

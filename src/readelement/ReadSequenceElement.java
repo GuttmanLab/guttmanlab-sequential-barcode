@@ -80,4 +80,5 @@ public interface ReadSequenceElement {
 	 */
 	public int maxLevenshteinDist();
 	
+	
 }

@@ -37,12 +37,15 @@ public class GenericElementMatcher implements ElementMatcher {
 	 */
 	private int totalLengthMatchedEltSection;
 	private int readLen;
+	
 
 	/**
 	 * @param layout Read layout
 	 * @param readSeq Read sequence
+	 * @param cacheAndMatch Cache and identify matches. Only set to false if a superclass needs some of its own members before doing this.
+	 * In that case, you must call cacheAndMatch() after setting up the superclass object.
 	 */
-	public GenericElementMatcher(ReadLayout layout, String readSeq) {
+	public GenericElementMatcher(ReadLayout layout, String readSeq, boolean cacheAndMatch) {
 		readLayout = layout;
 		readSequence = readSeq;
 		// For repeatable elements, save the first occurrences of their "next" element so can keep looking up until next element
@@ -61,7 +64,19 @@ public class GenericElementMatcher implements ElementMatcher {
 		currStart = 0;
 		// Make sure all elements have been found at least once in the specified order
 		found = new boolean[readLayout.getElements().size()];
-		// Match elements
+		if(cacheAndMatch) {
+			// Match elements
+			cacheMatches();
+			matchElements();
+		}
+	}
+	
+	/**
+	 * Cache matches and match elements
+	 * This is an option in the constructor
+	 * It's separated here in case these methods or their clients are overridden and need something from a superclass
+	 */
+	protected void cacheAndMatch() {
 		cacheMatches();
 		matchElements();
 	}
@@ -93,6 +108,8 @@ public class GenericElementMatcher implements ElementMatcher {
 		}
 		return stopSignalPos;
 	}
+	
+	
 	
 	public int matchedElementsLengthInRead() {
 		if(totalLengthMatchedEltSection == -1) {

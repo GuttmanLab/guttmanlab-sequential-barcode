@@ -1,7 +1,9 @@
 package readlayout;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 
@@ -20,6 +22,7 @@ public class ReadLayout {
 	
 	private ArrayList<ReadSequenceElement> elements;	
 	private int readLen;
+	private Map<ReadSequenceElement, Map<String, ReadSequenceElement>> elementsByRepresentative;
 	
 	public static Logger logger = Logger.getLogger(ReadLayout.class.getName());
 	
@@ -43,6 +46,34 @@ public class ReadLayout {
 		}
 		elements = elementSequence;
 		readLen = readLength;
+		initializeElementsByRepresentative();
+	}
+	
+	private void initializeElementsByRepresentative() {
+		elementsByRepresentative = new HashMap<ReadSequenceElement, Map<String, ReadSequenceElement>>();
+		for(ReadSequenceElement element : elements) {
+			elementsByRepresentative.put(element, element.sequenceToElement());
+		}
+	}
+	
+	/**
+	 * Get read element (part of a parent element) represented by a particular sequence that is one possible representative of a parent element
+	 * For example, if parent element is a barcode equivalence class, any barcode in the equivalence class represents the whole equivalence class
+	 * @param parentElement Parent element
+	 * @param representative Sequence of representative element
+	 * @return The sub-element of the parent element represented by the representative
+	 */
+	public ReadSequenceElement getElementRepresentedBy(ReadSequenceElement parentElement, String representative) {
+		return elementsByRepresentative.get(parentElement).get(representative);
+	}
+	
+	/**
+	 * Get map of representative sequences to sub-elements of a parent element that they represent
+	 * @param parentElement Parent sequence element
+	 * @return For the parent element, map of all representative sequences and the sub-element they represent
+	 */
+	public Map<String, ReadSequenceElement> getSubElementsByRepresentative(ReadSequenceElement parentElement) {
+		return elementsByRepresentative.get(parentElement);
 	}
 	
 	/**

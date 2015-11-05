@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import com.sleepycat.persist.model.Persistent;

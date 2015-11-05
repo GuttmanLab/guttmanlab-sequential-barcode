@@ -31,6 +31,7 @@ import readlayout.BarcodedReadLayout;
 import readlayout.LigationDesign;
 import readlayout.ReadLayout;
 import readlayout.ReadLayoutFactory;
+import readlayout.ReadLayoutSequenceHash;
 import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedDNAFragment;
 import sequentialbarcode.BarcodedFragment;
@@ -41,8 +42,9 @@ import guttmanlab.core.pipeline.Job;
 import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.util.FastqUtils;
-import matcher.GenericElementMatcher;
 import matcher.BitapMatcher;
+import matcher.GenericElementMatcher;
+import matcher.HashMatcher;
 import nextgen.core.pipeline.util.OGSUtils;
 import broad.core.datastructures.Pair;
 import broad.pda.seq.fastq.FastqParser;
@@ -59,7 +61,14 @@ public class BarcodeAnalysis {
 	private static Session drmaaSession;
 	private static boolean GET_LAST_BARCODES = false;
 	private static int NUM_LAST_BARCODES = Integer.MAX_VALUE;
-	
+	private static int MAX_MISMATCH_BARCODE;
+	private static int MAX_MISMATCH_BARCODE_READ1;
+	private static int MAX_MISMATCH_EVEN_ODD_BARCODE_READ2;
+	private static int MAX_MISMATCH_Y_SHAPE_BARCODE_READ2;
+	private static int MAX_MISMATCH_RPM;
+	private static int MAX_MISMATCH_DPM;
+	private static int MAX_MISMATCH_ADAPTER;
+
 	/**
 	 * @param p Command line parser
 	 * @return The part of the arg string that can be used for a batched job
@@ -286,6 +295,7 @@ public class BarcodeAnalysis {
 		if(suffixFastq != null) {
 			logger.info("Also writing fastq file(s) of reads without matched elements to " + suffixFastq + "...");
 		}
+		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, MAX_MISMATCH_BARCODE);
 		FileWriter tableWriter = new FileWriter(outFile); // Write to table
 		BufferedWriter singleFastqWriter = suffixFastq != null ? new BufferedWriter(new FileWriter(suffixFastq)) : null; // Fastq writer if using and not using switches
 		Map<String, FileWriter> switchTableWriters = new HashMap<String, FileWriter>(); // Writers for tables if using switches
@@ -306,7 +316,8 @@ public class BarcodeAnalysis {
 			String seq = record.getSequence();
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
-			BitapMatcher matcher = new BitapMatcher(layout, seq);
+			HashMatcher matcher = new HashMatcher(layout, seq, hash);
+			//BitapMatcher matcher = new BitapMatcher(layout, seq);
 			List<List<ReadSequenceElement>> matchedElements = matcher.getMatchedElements();
 			if(matchedElements != null) {
 				BarcodedFragmentWithSwitches f = new BarcodedFragmentWithSwitches(name, seq, null, layout, null);
@@ -386,6 +397,8 @@ public class BarcodeAnalysis {
 		if(suffixFastq2 != null) {
 			logger.info("Also writing fastq file of read2 minus matched elements to " + suffixFastq2 + "...");
 		}
+		ReadLayoutSequenceHash hash1 = new ReadLayoutSequenceHash(layout1, MAX_MISMATCH_BARCODE_READ1);
+		ReadLayoutSequenceHash hash2 = new ReadLayoutSequenceHash(layout2, MAX_MISMATCH_EVEN_ODD_BARCODE_READ2);
 		FileWriter tableWriter = new FileWriter(outFile); // Write to table
 		BufferedWriter singleFastqWriter1 = suffixFastq1 != null ? new BufferedWriter(new FileWriter(suffixFastq1)) : null; // Fastq writer if using and not using switches
 		BufferedWriter singleFastqWriter2 = suffixFastq2 != null ? new BufferedWriter(new FileWriter(suffixFastq2)) : null; // Fastq writer if using and not using switches
@@ -415,8 +428,10 @@ public class BarcodeAnalysis {
 				throw new IllegalStateException("Paired fastq records out of order: " + name1 + " " + name2);
 			}
 			String line = name1 + "\t";
-			BitapMatcher matcher1 = new BitapMatcher(layout1, seq1);
-			BitapMatcher matcher2 = new BitapMatcher(layout2, seq2);
+			HashMatcher matcher1 = new HashMatcher(layout1, seq1, hash1);
+			HashMatcher matcher2 = new HashMatcher(layout2, seq2, hash2);
+			//BitapMatcher matcher1 = new BitapMatcher(layout1, seq1);
+			//BitapMatcher matcher2 = new BitapMatcher(layout2, seq1);
 			List<List<ReadSequenceElement>> matchedElements1 = matcher1.getMatchedElements();
 			List<List<ReadSequenceElement>> matchedElements2 = matcher2.getMatchedElements();
 			if(matchedElements1 != null || matchedElements2 != null) {
@@ -497,6 +512,7 @@ public class BarcodeAnalysis {
 		for(Barcode b : layout.getAllBarcodes()) {
 			barcodeCounts.put(b, Integer.valueOf(0));
 		}
+		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, MAX_MISMATCH_BARCODE);
 		FastqParser iter = new FastqParser();
 		iter.start(new File(fastq));
 		int numDone = 0;
@@ -504,7 +520,8 @@ public class BarcodeAnalysis {
 			FastqSequence record = iter.next();
 			String seq = record.getSequence();
 			String name = record.getName();
-			if(new BitapMatcher(layout, seq).getMatchedElements() != null) {
+			if(new HashMatcher(layout, seq, hash).getMatchedElements() != null) {
+			//if(new BitapMatcher(layout, seq).getMatchedElements() != null) {
 				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout);
 				BarcodeSequence barcodes = f.getBarcodes();
 				for(Barcode b : barcodes.getBarcodes()) {
@@ -874,6 +891,8 @@ public class BarcodeAnalysis {
 			BarcodeAnalysis.logger.setLevel(Level.DEBUG);
 			GenericElementMatcher.logger.setLevel(Level.DEBUG);
 			BitapMatcher.logger.setLevel(Level.DEBUG);
+			HashMatcher.logger.setLevel(Level.DEBUG);
+			ReadLayoutSequenceHash.logger.setLevel(Level.DEBUG);
 		}
 		
 		String outPrefix = p.getStringArg(outPrefixOption);
@@ -888,12 +907,12 @@ public class BarcodeAnalysis {
 		String yShapeBarcodeList = p.getStringArg(yShapeBarcodeTableOption);
 		String rpm = p.getStringArg(rpmOption);
 		String dpm = p.getStringArg(dpmOption);
-		int maxMismatchBarcode = p.getIntArg(maxMismatchBarcodeOption);
-		int maxMismatchBarcodeRead1 = p.getIntArg(maxMismatchBarcodeRead1Option);
-		int maxMismatchEvenOddBarcodeRead2 = p.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
-		int maxMismatchYShapeBarcodeRead2 = p.getIntArg(maxMismatchYShapeBarcodeRead2Option);
-		int maxMismatchRpm = p.getIntArg(maxMismatchRpmOption);
-		int maxMismatchDpm = p.getIntArg(maxMismatchDpmOption);
+		MAX_MISMATCH_BARCODE = p.getIntArg(maxMismatchBarcodeOption);
+		MAX_MISMATCH_BARCODE_READ1 = p.getIntArg(maxMismatchBarcodeRead1Option);
+		MAX_MISMATCH_EVEN_ODD_BARCODE_READ2 = p.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
+		MAX_MISMATCH_Y_SHAPE_BARCODE_READ2 = p.getIntArg(maxMismatchYShapeBarcodeRead2Option);
+		MAX_MISMATCH_RPM = p.getIntArg(maxMismatchRpmOption);
+		MAX_MISMATCH_DPM = p.getIntArg(maxMismatchDpmOption);
 		boolean enforceOddEven = p.getBooleanArg(enforceOddEvenOption);
 		boolean countBarcodes = p.getBooleanArg(countBarcodesOption);
 		boolean verbose = p.getBooleanArg(verboseOption);
@@ -908,7 +927,7 @@ public class BarcodeAnalysis {
 		GET_LAST_BARCODES = p.getBooleanArg(getLastBarcodesOption);
 		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
 		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
-		int maxMismatchAdapter = p.getIntArg(maxMismatchAdapterOption);
+		MAX_MISMATCH_ADAPTER = p.getIntArg(maxMismatchAdapterOption);
 		if(lastNumBarcodes > 0) {
 			NUM_LAST_BARCODES = lastNumBarcodes;
 		}
@@ -934,22 +953,22 @@ public class BarcodeAnalysis {
 				switch(design) {
 				case PAIRED_DESIGN_BARCODE_IN_READ2:
 					BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, 
-							readLength, maxMismatchBarcode, maxMismatchRpm, enforceOddEven);
+							readLength, MAX_MISMATCH_BARCODE, MAX_MISMATCH_RPM, enforceOddEven);
 					findBarcodes(fastq, layout1, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN_WITH_SWITCH:
 					BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, 
-							rpm, dpm, readLength, maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
+							rpm, dpm, readLength, MAX_MISMATCH_BARCODE, MAX_MISMATCH_RPM, MAX_MISMATCH_DPM, enforceOddEven);
 					findBarcodes(fastq, layout2, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN:
 					BarcodedReadLayout layout3 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, 
-							maxMismatchBarcode, maxMismatchDpm, enforceOddEven);
+							MAX_MISMATCH_BARCODE, MAX_MISMATCH_DPM, enforceOddEven);
 					findBarcodes(fastq, layout3, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN_MARCH_2015:
 					BarcodedReadLayout layout4 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMarch2015(evenBarcodeList, oddBarcodeList, totalNumBarcodes, adapterSeqFasta, 
-							readLength, maxMismatchBarcode, maxMismatchAdapter, enforceOddEven);
+							readLength, MAX_MISMATCH_BARCODE, MAX_MISMATCH_ADAPTER, enforceOddEven);
 					findBarcodes(fastq, layout4, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case SINGLE_DESIGN_MAY_2015:
@@ -958,9 +977,9 @@ public class BarcodeAnalysis {
 					findBarcodes(fastq, layout5, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
 					break;
 				case PAIRED_DESIGN_JULY_2015:
-					BarcodedReadLayout layout6read1 = ReadLayoutFactory.getRead1LayoutRnaDna3DPairedDesignJuly2015(july2015firstBarcodeFile, maxMismatchBarcodeRead1, read1Length);
+					BarcodedReadLayout layout6read1 = ReadLayoutFactory.getRead1LayoutRnaDna3DPairedDesignJuly2015(july2015firstBarcodeFile, MAX_MISMATCH_BARCODE_READ1, read1Length);
 					BarcodedReadLayout layout6read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJuly2015(oddBarcodeList, evenBarcodeList, yShapeBarcodeList, totalNumBarcodesRead2, 
-							maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length, enforceOddEven);
+							MAX_MISMATCH_EVEN_ODD_BARCODE_READ2, MAX_MISMATCH_Y_SHAPE_BARCODE_READ2, read2Length, enforceOddEven);
 					findBarcodes(fastq1, fastq2, layout6read1, layout6read2, outPrefix, suffixFastq1, suffixFastq2, verbose);
 					break;
 				default:
@@ -973,13 +992,13 @@ public class BarcodeAnalysis {
 		if(countBarcodes) {
 			switch(design) {
 			case PAIRED_DESIGN_BARCODE_IN_READ2:
-				BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, maxMismatchBarcode, 
-						maxMismatchRpm, enforceOddEven);
+				BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, MAX_MISMATCH_BARCODE, 
+						MAX_MISMATCH_RPM, enforceOddEven);
 				countBarcodes(fastq, layout1);
 				break;
 			case SINGLE_DESIGN_WITH_SWITCH:
 				BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, 
-						maxMismatchBarcode, maxMismatchRpm, maxMismatchDpm, enforceOddEven);
+						MAX_MISMATCH_BARCODE, MAX_MISMATCH_RPM, MAX_MISMATCH_DPM, enforceOddEven);
 				countBarcodes(fastq, layout2);
 				break;
 			default:
