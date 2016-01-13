@@ -124,6 +124,8 @@ public class ReadLayoutFactory {
 		eltsSequence.add(new FixedSequence("rpm", rpm, maxMismatchRpm));
 		return new BarcodedReadLayout(eltsSequence, readLength);
 	}
+	
+	
 
 	/**
 	 * Paired design from discussion on 7/13/15
@@ -167,7 +169,46 @@ public class ReadLayoutFactory {
 		}
 		return new BarcodedReadLayout(eltsSequence, read2Length);
 	}
+	
+	/**
+	 * January 2015 design
+	 * RPM or DPM is in read 1, barcodes are in read 2
+	 * @param evenBarcodesFile Even barcodes list file
+	 * @param oddBarcodesFile Odd barcodes list file
+	 * @param yShapeBarcodesFile Y shape barcodes list file
+	 * @param maxMismatchOddEven Max mismatch in odd/even barcodes
+	 * @param maxMismatchYshape Max mismatch in Y shape barcode
+	 * @param read2length Read 2 length
+	 * @return Read 2 layout
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJanuary2016(String evenBarcodesFile, String oddBarcodesFile, String yShapeBarcodesFile, int maxMismatchOddEven, int maxMismatchYshape, int read2length) throws IOException {
+		Collection<Barcode> oddBarcodes = Barcode.createBarcodesFromTable(oddBarcodesFile, maxMismatchOddEven);
+		Collection<Barcode> evenBarcodes = Barcode.createBarcodesFromTable(evenBarcodesFile, maxMismatchOddEven);
+		Collection<Barcode> yBarcodes = Barcode.createBarcodesFromTable(yShapeBarcodesFile, maxMismatchYshape);
+		return getRead2LayoutRnaDna3DPairedDesignJanuary2016(evenBarcodes, oddBarcodes, yBarcodes, read2length);
+	}
 
+	/**
+	 * January 2015 design
+	 * RPM or DPM is in read 1, barcodes are in read 2
+	 * @param evenBarcodes Even barcodes
+	 * @param oddBarcodes Odd barcodes
+	 * @param yShapeBarcodes Y shape barcodes
+	 * @param read2length Read 2 length
+	 * @return Read 2 layout
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignJanuary2016(Collection<Barcode> evenBarcodes, Collection<Barcode> oddBarcodes, Collection<Barcode> yShapeBarcodes, int read2length) {
+		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
+		BarcodeSet yShapeBarcodesSet = new BarcodeSet("y_shape_barcodes", yShapeBarcodes);
+		BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes);
+		BarcodeSet evenBarcodesSet = new BarcodeSet("even_barcodes", evenBarcodes);
+		eltsSequence.add(yShapeBarcodesSet);
+		eltsSequence.add(oddBarcodesSet);
+		eltsSequence.add(evenBarcodesSet);
+		eltsSequence.add(oddBarcodesSet);
+		return new BarcodedReadLayout(eltsSequence, read2length);
+	}
+	
 	/**
 	 * Paired design from discussion on 7/13/15
 	 * Sequential odd/even barcodes are in read 2

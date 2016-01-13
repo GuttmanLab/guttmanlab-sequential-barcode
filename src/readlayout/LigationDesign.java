@@ -50,7 +50,16 @@ public enum LigationDesign {
 	 * Even/odd barcodes in read 2
 	 * Read 1 contains a single barcode at the beginning and then DNA sequence
 	 */
-	PAIRED_DESIGN_JULY_2015;
+	PAIRED_DESIGN_JULY_2015,
+	
+	/**
+	 * Design from January 2016
+	 * Read 1 contains RPM or DPM at known position
+	 * Assume data have been divided into RNA/DNA and RPM/DPM removed before running this
+	 * Barcodes are in read2
+	 */
+	PAIRED_DESIGN_JANUARY_2016;
+	
 		
 	public String toString() {
 		switch(this) {
@@ -66,6 +75,8 @@ public enum LigationDesign {
 			return "single_design_may_2015";
 		case PAIRED_DESIGN_JULY_2015:
 			return "paired_design_july_2015";
+		case PAIRED_DESIGN_JANUARY_2016:
+			return "paired_design_january_2015";
 		default:
 			throw new UnsupportedOperationException("Not implemented");
 		}
@@ -83,6 +94,7 @@ public enum LigationDesign {
 		if(name.equals(SINGLE_DESIGN_MARCH_2015.toString())) return SINGLE_DESIGN_MARCH_2015;
 		if(name.equals(SINGLE_DESIGN_MAY_2015.toString())) return SINGLE_DESIGN_MAY_2015;
 		if(name.equals(PAIRED_DESIGN_JULY_2015.toString())) return PAIRED_DESIGN_JULY_2015;
+		if(name.equals(PAIRED_DESIGN_JANUARY_2016.toString())) return PAIRED_DESIGN_JANUARY_2016;
 		throw new IllegalArgumentException("Name " + name + " not recognized. Options: " + getNamesAsCommaSeparatedList());
 	}
 	

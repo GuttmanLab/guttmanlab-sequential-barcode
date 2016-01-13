@@ -268,7 +268,6 @@ public class BarcodeAnalysis {
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
 	 * @throws IOException
 	 */
-	@SuppressWarnings("unused")
 	private static void findBarcodes(String fastq, BarcodedReadLayout layout, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
 		findBarcodes(fastq, layout, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
 	}
@@ -554,11 +553,13 @@ public class BarcodeAnalysis {
 		int read2Length = commandLineParser.getIntArg(read2LengthOption);
 		String oddBarcodeList = commandLineParser.getStringArg(oddBarcodeTableOption);
 		String evenBarcodeList = commandLineParser.getStringArg(evenBarcodeTableOption);
+		String yShapeBarcodeList = commandLineParser.getStringArg(yShapeBarcodeTableOption);
 		String rpm = commandLineParser.getStringArg(rpmOption);
 		String dpm = commandLineParser.getStringArg(dpmOption);
 		int maxMismatchBarcode = commandLineParser.getIntArg(maxMismatchBarcodeOption);
 		int maxMismatchBarcodeRead1 = commandLineParser.getIntArg(maxMismatchBarcodeRead1Option);
 		int maxMismatchBarcodeRead2 = commandLineParser.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
+		int maxMismatchYShapeRead2 = commandLineParser.getIntArg(maxMismatchYShapeBarcodeRead2Option);
 		int maxMismatchRpm = commandLineParser.getIntArg(maxMismatchRpmOption);
 		int maxMismatchDpm = commandLineParser.getIntArg(maxMismatchDpmOption);
 		boolean countBarcodes = commandLineParser.getBooleanArg(countBarcodesOption);
@@ -659,6 +660,9 @@ public class BarcodeAnalysis {
 			if(maxMismatchBarcodeRead2 < 0) {
 				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
 			}
+			if(maxMismatchYShapeRead2 < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in Y shape barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
+			}
 			break;
 		case SINGLE_DESIGN_WITH_SWITCH:
 			if(oddBarcodeList == null) {
@@ -758,6 +762,26 @@ public class BarcodeAnalysis {
 				 throw new IllegalArgumentException("Must provide max mismatches in odd/even barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
 			 }
 			 break;
+		case PAIRED_DESIGN_JANUARY_2016:
+			if(oddBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide odd barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+			}
+			if(evenBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide even barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+			}
+			if(yShapeBarcodeList == null) {
+				throw new IllegalArgumentException("Must provide Y shape barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+			}
+			if(read2Length < 1) {
+				throw new IllegalArgumentException("Must provide read 2 length for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+			}
+			if(maxMismatchBarcodeRead2 < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+			}
+			if(maxMismatchYShapeRead2 < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in Y shape barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+			}
+			break;
 		default:
 			throw new UnsupportedOperationException("Not implemented for " + design.toString());		
 		}
@@ -808,6 +832,8 @@ public class BarcodeAnalysis {
 	private static String may2015maxMismatchOddEvenBarcodeOption = "-mmboe";
 	private static String july2015read1BarcodeFileOption = "-r1b";
 	private static String totalNumBarcodesRead2Option = "-nbr2";
+	private static String rpmOrDpmOption = "-rpmordpm";
+	private static String maxMismatchRpmOrDpmOption = "-mmrord";
 	
 	/**
 	 * @param args
@@ -876,6 +902,8 @@ public class BarcodeAnalysis {
 		p.addIntArg(may2015maxMismatchLastBarcodeOption, "Max mismatches in final barcode for single design from May 2015", false, -1);
 		p.addIntArg(may2015maxMismatchOddEvenBarcodeOption, "Max mismatches in odd/even barcode for single design from May 2015", false, -1);
 		p.addStringArg(july2015read1BarcodeFileOption, "Table of read1 barcodes for paired design from July 2015 (format: barcode_id	barcode_seq)", false, null);
+		p.addStringArg(rpmOrDpmOption, "RPM or DPM sequence for December 2015 design (depending on whether these are RNA or DNA reads", false, null);
+		p.addIntArg(maxMismatchRpmOrDpmOption, "Max mismatches in RPM or DPM for December 2015 design (depending on whether these are RNA or DNA reads", false, -1);
 		p.parse(args);
 		if(p.getBooleanArg(debugOption)) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
@@ -940,7 +968,6 @@ public class BarcodeAnalysis {
 		int may2015maxMismatchOddEvenBarcode = p.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
 		String july2015firstBarcodeFile = p.getStringArg(july2015read1BarcodeFileOption);
 		int totalNumBarcodesRead2 = p.getIntArg(totalNumBarcodesRead2Option);		
-
 		
 		validateCommandLine(p);
 		
@@ -981,6 +1008,11 @@ public class BarcodeAnalysis {
 					BarcodedReadLayout layout6read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJuly2015(oddBarcodeList, evenBarcodeList, yShapeBarcodeList, totalNumBarcodesRead2, 
 							MAX_MISMATCH_EVEN_ODD_BARCODE_READ2, MAX_MISMATCH_Y_SHAPE_BARCODE_READ2, read2Length, enforceOddEven);
 					findBarcodes(fastq1, fastq2, layout6read1, layout6read2, outPrefix, suffixFastq1, suffixFastq2, verbose);
+					break;
+				case PAIRED_DESIGN_JANUARY_2016:
+					BarcodedReadLayout layout7read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJanuary2016(evenBarcodeList, oddBarcodeList, 
+							yShapeBarcodeList, MAX_MISMATCH_EVEN_ODD_BARCODE_READ2, MAX_MISMATCH_Y_SHAPE_BARCODE_READ2, read2Length);
+					findBarcodes(fastq, layout7read2, outPrefix, verbose, false);
 					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
