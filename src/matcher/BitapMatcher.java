@@ -9,7 +9,6 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import bitap.Bitap;
-import readelement.MatchedElement;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 
@@ -18,11 +17,11 @@ import readlayout.ReadLayout;
  * @author prussell
  *
  */
-public class BitapMatcher extends GenericElementMatcher {
+public final class BitapMatcher extends GenericElementMatcher {
 	
 	public static Logger logger = Logger.getLogger(BitapMatcher.class.getName());
 	private Map<ReadSequenceElement, Map<Integer, MatchedElement>> matches;
-	private static Character[] alphabet = {'A', 'C', 'G', 'T', 'N'};
+	private static final Character[] alphabet = {'A', 'C', 'G', 'T', 'N'};
 	
 	/**
 	 * @param layout Read layout

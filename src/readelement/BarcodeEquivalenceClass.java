@@ -16,7 +16,7 @@ import java.util.Map;
  * @author prussell
  *
  */
-public class BarcodeEquivalenceClass extends BarcodeSet {
+public final class BarcodeEquivalenceClass extends BarcodeSet {
 	
 	/**
 	 * @param setId Barcode set ID

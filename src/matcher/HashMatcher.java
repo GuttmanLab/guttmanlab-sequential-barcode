@@ -2,7 +2,6 @@ package matcher;
 
 import org.apache.log4j.Logger;
 
-import readelement.MatchedElement;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 import readlayout.ReadLayoutSequenceHash;
@@ -13,7 +12,7 @@ import readlayout.ReadLayoutSequenceHash;
  * @author prussell
  *
  */
-public class HashMatcher extends GenericElementMatcher {
+public final class HashMatcher extends GenericElementMatcher {
 	
 	private ReadLayoutSequenceHash hash;
 	public static Logger logger = Logger.getLogger(HashMatcher.class.getName());

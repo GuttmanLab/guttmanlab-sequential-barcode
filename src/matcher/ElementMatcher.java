@@ -3,7 +3,6 @@ package matcher;
 import java.io.IOException;
 import java.util.List;
 
-import readelement.MatchedElement;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 

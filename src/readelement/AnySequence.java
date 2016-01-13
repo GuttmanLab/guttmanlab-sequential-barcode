@@ -2,6 +2,8 @@ package readelement;
 
 import java.util.Map;
 
+import matcher.MatchedElement;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -10,7 +12,7 @@ import org.apache.log4j.Logger;
  * @author prussell
  *
  */
-public class AnySequence extends AbstractReadSequenceElement {
+public final class AnySequence extends AbstractReadSequenceElement {
 	
 	private int length;
 	public static Logger logger = Logger.getLogger(AnySequence.class.getName());

@@ -1,6 +1,5 @@
 package readelement;
 
-import guttmanlab.core.alignment.SmithWatermanAlignment;
 import guttmanlab.core.util.StringParser;
 
 import java.io.BufferedReader;
@@ -11,12 +10,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import com.sleepycat.persist.model.Persistent;
 
-import nextgen.core.utils.AlignmentUtils;
+import matcher.MatchedElement;
 import nextgen.core.utils.FileUtil;
 
 /**
@@ -25,29 +23,17 @@ import nextgen.core.utils.FileUtil;
  *
  */
 @Persistent
-public class Barcode extends AbstractReadSequenceElement implements Comparable<Barcode> {
+public final class Barcode extends AbstractReadSequenceElement implements Comparable<Barcode> {
 	
 	protected String sequence;
 	protected String id;
 	private int maxNumMismatches;
-	private int maxLevDist;
 	public static Logger logger = Logger.getLogger(Barcode.class.getName());
 	private boolean repeatable;
 	private String stopSignal;
 	private int stopSignalMaxMismatches;
 	private int length;
-	// Smith waterman parameters
-	private static float SW_MATCH_SCORE = 5;
-	private static float SW_MISMATCH_SCORE = -4;
-	private static float SW_GAP_OPEN_PENALTY = 8;
-	private static float SW_GAP_EXTEND_PENALTY = 2;
 
-	
-	/**
-	 * For Berkeley DB only
-	 * Do not use this constructor
-	 */
-	public Barcode() {}
 	
 	/**
 	 * @param seq The barcode sequence
@@ -100,7 +86,7 @@ public class Barcode extends AbstractReadSequenceElement implements Comparable<B
 	 * @param stopSignalForRepeatable String whose presence in read signals the end of the region where this barcode is expected to be found
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public Barcode(String seq, String barcodeId, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable, int stopSignalMaxMismatch) {;
+	public Barcode(String seq, String barcodeId, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable, int stopSignalMaxMismatch) {
 		sequence = seq;
 		id = barcodeId;
 		maxNumMismatches = maxMismatches;

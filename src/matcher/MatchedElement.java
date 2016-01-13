@@ -1,11 +1,13 @@
-package readelement;
+package matcher;
+
+import readelement.ReadSequenceElement;
 
 /**
  * Class to store a ReadSequenceElement and where it matches on a read
  * @author prussell
  *
  */
-public class MatchedElement {
+public final class MatchedElement {
 	
 	private ReadSequenceElement element;
 	private int lengthOnRead;

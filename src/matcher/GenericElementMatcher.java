@@ -9,7 +9,6 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import readelement.MatchedElement;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 
@@ -42,8 +41,9 @@ public class GenericElementMatcher implements ElementMatcher {
 	/**
 	 * @param layout Read layout
 	 * @param readSeq Read sequence
-	 * @param cacheAndMatch Cache and identify matches. Only set to false if a superclass needs some of its own members before doing this.
-	 * In that case, you must call cacheAndMatch() after setting up the superclass object.
+	 * @param cacheAndMatch Cache and identify matches. Only set to false from within a subclass constructor,
+	 * if the subclass needs some of its own members before caching and matching.
+	 * In that case, you must call cacheAndMatch() after setting up the subclass object.
 	 */
 	public GenericElementMatcher(ReadLayout layout, String readSeq, boolean cacheAndMatch) {
 		readLayout = layout;

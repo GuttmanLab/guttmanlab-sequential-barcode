@@ -7,13 +7,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
+import matcher.MatchedElement;
+
 /**
  * A collection of possibilities of fixed sequences that indicate something about the identity of the fragment
  * For example, an adapter that indicates whether the fragment is DNA or RNA
  * @author prussell
  *
  */
-public class Switch extends AbstractReadSequenceElement {
+public final class Switch extends AbstractReadSequenceElement {
 	
 	protected Collection<FixedSequence> fixedSequences;
 	private int length;

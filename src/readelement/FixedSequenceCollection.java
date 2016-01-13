@@ -10,13 +10,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
+import matcher.MatchedElement;
+
 /**
  * A collection of possibilities of fixed sequences
  * Sequences can have different lengths
  * @author prussell
  *
  */
-public class FixedSequenceCollection extends AbstractReadSequenceElement {
+public final class FixedSequenceCollection extends AbstractReadSequenceElement {
 	
 	protected Collection<FixedSequence> fixedSequences;
 	private int minLength;
@@ -121,19 +123,6 @@ public class FixedSequenceCollection extends AbstractReadSequenceElement {
 	@Override
 	public MatchedElement matchedElement(String s) {
 		throw new UnsupportedOperationException("NA"); 
-		// Don't want to do it this way anymore
-//		for(FixedSequence fixedSeq : fixedSequences) {
-//			if(fixedSeq.matchesSubstringNoGaps(s, 0)) {
-//				return new MatchedElement(fixedSeq, fixedSeq.getLength());
-//			}
-//		}		
-//		for(FixedSequence fixedSeq : fixedSequences) {
-//			MatchedElement matchedElt = fixedSeq.matchedElement(s);
-//			if(matchedElt != null) {
-//				return matchedElt;
-//			}
-//		}
-//		return null;
 	}
 
 	@Override

@@ -4,12 +4,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import matcher.MatchedElement;
+
 /**
  * A collection of barcode equivalence classes
  * @author prussell
  *
  */
-public class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
+public final class BarcodeEquivalenceClassSet extends AbstractReadSequenceElement {
 
 	private Collection<BarcodeEquivalenceClass> equivClasses;
 	private int length;

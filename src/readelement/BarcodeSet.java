@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import matcher.MatchedElement;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -124,45 +126,6 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	@Override
 	public MatchedElement matchedElement(String s) {
 		throw new UnsupportedOperationException("NA");
-		// Don't want to do it this way anymore
-//		String prefix = s.substring(0, barcodePrefixLen);
-//		// Ungapped match for barcodes starting with prefix
-//		try {
-//			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
-//				if(barcode.matchesSubstringNoGaps(s, 0)) {
-//					return new MatchedElement(barcode, barcode.getLength());
-//				}
-//			}
-//		} catch (NullPointerException e) {}
-//		// Ungapped match for barcodes not starting with prefix
-//		for(Barcode barcode : getBarcodes()) {
-//			try {
-//				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
-//			} catch(NullPointerException e) {}
-//			if(barcode.matchesSubstringNoGaps(s, 0)) {
-//				return new MatchedElement(barcode, barcode.getLength());
-//			}
-//		}
-//		// Gapped match for barcodes starting with prefix
-//		try {
-//			for(Barcode barcode : barcodesByPrefix.get(prefix)) {
-//				MatchedElement matchedElt = barcode.matchedElement(s);
-//				if(matchedElt != null) {
-//					return new MatchedElement(barcode, barcode.getLength());
-//				}
-//			}
-//		} catch (NullPointerException e) {}
-//		// Gapped match for barcodes not starting with prefix
-//		for(Barcode barcode : getBarcodes()) {
-//			try {
-//				if(barcodesByPrefix.get(prefix).contains(barcode)) continue;
-//			} catch(NullPointerException e) {}
-//			MatchedElement matchedElt = barcode.matchedElement(s);
-//			if(matchedElt != null) {
-//				return new MatchedElement(barcode, barcode.getLength());
-//			}
-//		}
-//		return null;
 	}
 
 	@Override

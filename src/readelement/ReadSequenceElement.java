@@ -2,6 +2,8 @@ package readelement;
 
 import java.util.Map;
 
+import matcher.MatchedElement;
+
 /**
  * An element that can be found in a read sequence
  * @author prussell

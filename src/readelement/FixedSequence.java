@@ -1,38 +1,25 @@
 package readelement;
 
-import guttmanlab.core.alignment.SmithWatermanAlignment;
-
 import java.util.HashMap;
 import java.util.Map;
 
-//import guttmanlab.core.alignment.SmithWatermanAlignment;
-
-
-
-
-
+import matcher.MatchedElement;
 
 import org.apache.log4j.Logger;
 
-import nextgen.core.utils.AlignmentUtils;
 
 /**
  * A fixed sequence that should be the same in all reads
  * @author prussell
  *
  */
-public class FixedSequence extends AbstractReadSequenceElement {
+public final class FixedSequence extends AbstractReadSequenceElement {
 	
 	private String seq;
 	private int maxNumMismatches;
 	private String name;
 	public static Logger logger = Logger.getLogger(FixedSequence.class.getName());
 	private int length;
-	// Smith waterman parameters
-	private static float SW_MATCH_SCORE = 5;
-	private static float SW_MISMATCH_SCORE = -4;
-	private static float SW_GAP_OPEN_PENALTY = 8;
-	private static float SW_GAP_EXTEND_PENALTY = 2;
 
 	/**
 	 * @param fixedSeqName Name of fixed sequence
