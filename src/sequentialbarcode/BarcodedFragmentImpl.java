@@ -3,7 +3,7 @@ package sequentialbarcode;
 
 import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
 import fragmentgroup.FragmentGroup;
-import fragmentgroup.NamedBarcodedFragmentGroup;
+import fragmentgroup.BarcodedFragmentGroup;
 import guttmanlab.core.util.StringParser;
 
 import java.io.File;
@@ -87,7 +87,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		id = StringParser.firstField(fragmentId);
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
-		fragmentGroup = new NamedBarcodedFragmentGroup(barcodes);
+		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 		infoString = getInfoString(id, location.getChr(), location.getStart(), location.getEnd());
 	}
 	
@@ -150,7 +150,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		id = fragmentId;
 		setBarcodes(barcodeSignature);
 		location = new BasicAnnotation(samRecord);
-		fragmentGroup = NamedBarcodedFragmentGroup.fromSAMRecord(samRecord);
+		fragmentGroup = BarcodedFragmentGroup.createFromSAMRecord(samRecord);
 		
 		infoString = getInfoString(id, location.getChr(), location.getStart(), location.getEnd());
 		
@@ -179,7 +179,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		read2sequence = read2seq;
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
-		fragmentGroup = new NamedBarcodedFragmentGroup(barcodes);
+		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 		infoString = getInfoString(id, location.getChr(), location.getStart(), location.getEnd());
 	}
 
@@ -196,7 +196,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		read2sequence = read2seq;
 		read1layout = layoutRead1;
 		read2layout = layoutRead2;
-		fragmentGroup = new NamedBarcodedFragmentGroup(barcodes);
+		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 	}
 	
 	private BarcodedFragmentImpl() {}

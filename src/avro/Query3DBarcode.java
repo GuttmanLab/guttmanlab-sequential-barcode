@@ -42,10 +42,15 @@ import guttmanlab.core.serialize.sam.AvroSamStringIndex;
  * @author prussell
  *
  */
-public class Query3DBarcode {
+public final class Query3DBarcode {
 	
 	private static Logger logger = Logger.getLogger(Query3DBarcode.class.getName());
 	private static int MIN_NUM_BARCODES_PER_FRAGMENT = 0;
+	
+	/**
+	 * Prohibit instantiation
+	 */
+	private Query3DBarcode(){}
 	
 	private static boolean numBarcodesOk(String barcodeString) {
 		BarcodeSequence barcodes = BarcodeSequence.fromSamAttributeString(barcodeString);

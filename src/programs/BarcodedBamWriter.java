@@ -1,7 +1,7 @@
 package programs;
 
 import fragmentgroup.FragmentGroup;
-import fragmentgroup.NamedBarcodedFragmentGroup;
+import fragmentgroup.BarcodedFragmentGroup;
 import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.CountLogger;
 import guttmanlab.core.util.StringParser;
@@ -546,7 +546,7 @@ public class BarcodedBamWriter {
 			BarcodedFragment fragment = new BarcodedFragmentImpl(record);
 			BarcodeSequence b = fragment.getBarcodes();
 			if(!rtrn.containsKey(b)) {
-				rtrn.put(b, new NamedBarcodedFragmentGroup(b));
+				rtrn.put(b, new BarcodedFragmentGroup(b));
 			}
 			rtrn.get(b).addFragment(fragment);
 			record = null;
@@ -593,7 +593,7 @@ public class BarcodedBamWriter {
 				throw new IllegalArgumentException("Line format: barcode_signature   fragment_group");
 			}
 			BarcodeSequence barcodes = BarcodeSequence.fromSamAttributeString(s.asString(0));
-			FragmentGroup fragments = NamedBarcodedFragmentGroup.fromSamAttributeStrings(s.asString(0), s.asString(1));
+			FragmentGroup fragments = BarcodedFragmentGroup.createFromSamAttributeStrings(s.asString(0), s.asString(1));
 			rtrn.put(barcodes, fragments);
 		}
 		r.close();

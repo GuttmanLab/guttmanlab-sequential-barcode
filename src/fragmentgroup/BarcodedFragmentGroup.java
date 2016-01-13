@@ -19,7 +19,7 @@ import nextgen.core.annotation.BasicAnnotation;
  * @author prussell
  *
  */
-public class NamedBarcodedFragmentGroup implements FragmentGroup {
+public final class BarcodedFragmentGroup implements FragmentGroup {
 	
 	private BarcodeSequence barcodes;
 	private Collection<BarcodedFragment> fragments;
@@ -27,7 +27,7 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	/**
 	 * @param barcodeSignature The shared barcodes
 	 */
-	public NamedBarcodedFragmentGroup(BarcodeSequence barcodeSignature) {
+	public BarcodedFragmentGroup(BarcodeSequence barcodeSignature) {
 		this(barcodeSignature, new TreeSet<BarcodedFragment>());
 	}
 	
@@ -35,7 +35,7 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	 * @param barcodeSignature The shared barcodes
 	 * @param barcodedFragments Some fragments with the barcodes
 	 */
-	public NamedBarcodedFragmentGroup(BarcodeSequence barcodeSignature, Collection<BarcodedFragment> barcodedFragments) {
+	public BarcodedFragmentGroup(BarcodeSequence barcodeSignature, Collection<BarcodedFragment> barcodedFragments) {
 		barcodes = barcodeSignature;
 		fragments = new TreeSet<BarcodedFragment>();
 		for(BarcodedFragment fragment : barcodedFragments) {
@@ -60,13 +60,13 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	 * @param record SAM record
 	 * @return Fragment group object represented in the SAM attribute, or null if attribute is not present
 	 */
-	public static NamedBarcodedFragmentGroup fromSAMRecord(SAMRecord record) {
+	public static BarcodedFragmentGroup createFromSAMRecord(SAMRecord record) {
 		BarcodeSequence barcodeSignature = BarcodeSequence.fromSamRecord(record);
-		Collection<BarcodedFragment> fragments = NamedBarcodedFragmentGroup.fromSamAttributeFragmentGroup(record, barcodeSignature);
+		Collection<BarcodedFragment> fragments = BarcodedFragmentGroup.createFromSamAttributeFragmentGroup(record, barcodeSignature);
 		if(fragments == null) {
 			return null;
 		}
-		return new NamedBarcodedFragmentGroup(barcodeSignature, fragments);
+		return new BarcodedFragmentGroup(barcodeSignature, fragments);
 	}
 	
 	/**
@@ -75,11 +75,11 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	 * @param fragmentGroupAttribute The fragment group attribute string from a SAM record
 	 * @return Fragment group object with these barcodes and the set of fragments specified in the SAM attribute string, or null if attribute string is null
 	 */
-	public static NamedBarcodedFragmentGroup fromSamAttributeString(BarcodeSequence barcodes, String fragmentGroupAttribute) {
+	public static BarcodedFragmentGroup createFromSamAttributeString(BarcodeSequence barcodes, String fragmentGroupAttribute) {
 		if(fragmentGroupAttribute == null) {
 			return null;
 		}
-		return new NamedBarcodedFragmentGroup(barcodes, NamedBarcodedFragmentGroup.fromSamAttributeFragmentGroup(fragmentGroupAttribute, barcodes));
+		return new BarcodedFragmentGroup(barcodes, BarcodedFragmentGroup.createFromSamAttributeFragmentGroup(fragmentGroupAttribute, barcodes));
 	}
 	
 	/**
@@ -88,12 +88,12 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	 * @param fragmentGroupAttribute Fragment group attribute
 	 * @return Fragment group with barcode set and fragments specified in these SAM attributes, or null if fragment group attribute string is null
 	 */
-	public static NamedBarcodedFragmentGroup fromSamAttributeStrings(String barcodeAttribute, String fragmentGroupAttribute) {
+	public static BarcodedFragmentGroup createFromSamAttributeStrings(String barcodeAttribute, String fragmentGroupAttribute) {
 		if(fragmentGroupAttribute == null) {
 			return null;
 		}
 		BarcodeSequence barcode = BarcodeSequence.fromSamAttributeString(barcodeAttribute);
-		return new NamedBarcodedFragmentGroup(barcode, NamedBarcodedFragmentGroup.fromSamAttributeFragmentGroup(fragmentGroupAttribute, barcode));
+		return new BarcodedFragmentGroup(barcode, BarcodedFragmentGroup.createFromSamAttributeFragmentGroup(fragmentGroupAttribute, barcode));
 	}
 	
 	public BarcodeSequence getBarcodes() {
@@ -120,12 +120,12 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	 * @param barcodeSequence Barcodes for this fragment group
 	 * @return The fragment objects or null if sam tag is not present
 	 */
-	private static Collection<BarcodedFragment> fromSamAttributeFragmentGroup(SAMRecord samRecord, BarcodeSequence barcodeSequence) {
+	private static Collection<BarcodedFragment> createFromSamAttributeFragmentGroup(SAMRecord samRecord, BarcodeSequence barcodeSequence) {
 		String attribute = samRecord.getStringAttribute(BarcodedBamWriter.FRAGMENT_GROUP_SAM_TAG);
 		if(attribute == null) {
 			return null;
 		}
-		return fromSamAttributeFragmentGroup(attribute, barcodeSequence);
+		return createFromSamAttributeFragmentGroup(attribute, barcodeSequence);
 	}
 
 	/**
@@ -134,7 +134,7 @@ public class NamedBarcodedFragmentGroup implements FragmentGroup {
 	 * @param barcodeSequence The barcodes shared by these fragments
 	 * @return The fragment objects or null if attribute string is null
 	 */
-	private static Collection<BarcodedFragment> fromSamAttributeFragmentGroup(String attributeString, BarcodeSequence barcodeSequence) {
+	private static Collection<BarcodedFragment> createFromSamAttributeFragmentGroup(String attributeString, BarcodeSequence barcodeSequence) {
 		if(attributeString == null) {
 			return null;
 		}
