@@ -35,7 +35,7 @@ import readlayout.ReadLayoutSequenceHash;
 import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedDNAFragment;
 import sequentialbarcode.BarcodedFragment;
-import sequentialbarcode.BarcodedFragmentImpl;
+import sequentialbarcode.BasicBarcodedFragment;
 import sequentialbarcode.BarcodedFragmentWithSwitches;
 import sequentialbarcode.BarcodedRNAFragment;
 import guttmanlab.core.pipeline.Job;
@@ -435,14 +435,14 @@ public class BarcodeAnalysis {
 			List<List<ReadSequenceElement>> matchedElements2 = matcher2.getMatchedElements();
 			if(matchedElements1 != null || matchedElements2 != null) {
 				if(matchedElements1 != null) {
-					BarcodedFragmentImpl f = new BarcodedFragmentImpl(name1, seq1, null, layout1, null);
+					BasicBarcodedFragment f = new BasicBarcodedFragment(name1, seq1, null, layout1, null);
 					BarcodeSequence barcodes = f.getBarcodes(matchedElements1, null);
 					line += barcodes.toString();
 					FastqSequence trimmedRecord = suffixFastq1 != null ? record1.trimFirstNBPs(matcher1.matchedElementsLengthInRead()) : null;
 					if(suffixFastq1 != null) trimmedRecord.write(singleFastqWriter1);
 				}
 				if(matchedElements2 != null) {
-					BarcodedFragmentImpl f = new BarcodedFragmentImpl(name2, seq2, null, layout2, null);
+					BasicBarcodedFragment f = new BasicBarcodedFragment(name2, seq2, null, layout2, null);
 					BarcodeSequence barcodes = f.getBarcodes(null, matchedElements2);
 					line += barcodes.toString() + "\t";
 					FastqSequence trimmedRecord = suffixFastq2 != null ? record2.trimFirstNBPs(matcher2.matchedElementsLengthInRead()) : null;
@@ -521,7 +521,7 @@ public class BarcodeAnalysis {
 			String name = record.getName();
 			if(new HashMatcher(layout, seq, hash).getMatchedElements() != null) {
 			//if(new BitapMatcher(layout, seq).getMatchedElements() != null) {
-				BarcodedFragment f = new BarcodedFragmentImpl(name, null, seq, null, layout);
+				BarcodedFragment f = new BasicBarcodedFragment(name, null, seq, null, layout);
 				BarcodeSequence barcodes = f.getBarcodes();
 				for(Barcode b : barcodes.getBarcodes()) {
 					barcodeCounts.put(b, Integer.valueOf(barcodeCounts.get(b).intValue() + 1));
@@ -911,7 +911,7 @@ public class BarcodeAnalysis {
 			ReadLayoutFactory.logger.setLevel(Level.DEBUG);
 			BarcodeSequence.logger.setLevel(Level.DEBUG);
 			Barcode.logger.setLevel(Level.DEBUG);
-			BarcodedFragmentImpl.logger.setLevel(Level.DEBUG);
+			BasicBarcodedFragment.logger.setLevel(Level.DEBUG);
 			FixedSequence.logger.setLevel(Level.DEBUG);
 			BarcodedDNAFragment.logger.setLevel(Level.DEBUG);
 			BarcodedRNAFragment.logger.setLevel(Level.DEBUG);

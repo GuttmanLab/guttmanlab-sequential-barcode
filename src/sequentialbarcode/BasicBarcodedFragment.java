@@ -32,7 +32,6 @@ import com.sleepycat.persist.model.PrimaryKey;
 import com.sleepycat.persist.model.SecondaryKey;
 
 import matcher.BitapMatcher;
-import matcher.GenericElementMatcher;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
 import net.sf.samtools.SAMRecordIterator;
@@ -51,7 +50,7 @@ import nextgen.core.model.AlignmentModel;
  *
  */
 @Entity(version=0)
-public class BarcodedFragmentImpl implements BarcodedFragment {
+public class BasicBarcodedFragment implements BarcodedFragment {
 	@PrimaryKey
 	protected String infoString;
 	protected String id;
@@ -64,7 +63,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	protected BarcodeSequence barcodes;
 	@SecondaryKey(relate=MANY_TO_ONE)
 	private String barcodeString;
-	public static Logger logger = Logger.getLogger(BarcodedFragmentImpl.class.getName());
+	public static Logger logger = Logger.getLogger(BasicBarcodedFragment.class.getName());
 	protected FragmentGroup fragmentGroup;
 	
 	/**
@@ -74,7 +73,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param mappedStart Mapped start
 	 * @param mappedEnd Mapped end
 	 */
-	public BarcodedFragmentImpl(String fragmentId, BarcodeSequence barcodeSignature, String mappedChr, int mappedStart, int mappedEnd) {
+	public BasicBarcodedFragment(String fragmentId, BarcodeSequence barcodeSignature, String mappedChr, int mappedStart, int mappedEnd) {
 		this(fragmentId, barcodeSignature, new BasicAnnotation(mappedChr, mappedStart, mappedEnd));
 	}
 	
@@ -83,7 +82,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param barcodeSignature Barcodes for the fragment
 	 * @param mappedLocation Mapped location of the fragment
 	 */
-	public BarcodedFragmentImpl(String fragmentId, BarcodeSequence barcodeSignature, Annotation mappedLocation) {
+	public BasicBarcodedFragment(String fragmentId, BarcodeSequence barcodeSignature, Annotation mappedLocation) {
 		id = StringParser.firstField(fragmentId);
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
@@ -129,7 +128,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * Instantiate from a SAM record by reading location and attributes
 	 * @param samRecord SAM record
 	 */
-	public BarcodedFragmentImpl(SAMRecord samRecord) {
+	public BasicBarcodedFragment(SAMRecord samRecord) {
 		
 		String fragmentId = getIdFromSamRecord(samRecord);
 		read1sequence = null;
@@ -162,7 +161,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param read2seq Read2 sequence
 	 * @param barcodeSignature Barcodes for the fragment
 	 */
-	public BarcodedFragmentImpl(String fragmentId, String read1seq, String read2seq, BarcodeSequence barcodeSignature) {
+	public BasicBarcodedFragment(String fragmentId, String read1seq, String read2seq, BarcodeSequence barcodeSignature) {
 		this(fragmentId, read1seq, read2seq, barcodeSignature, null);
 	}
 
@@ -173,7 +172,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param barcodeSignature Barcodes for the fragment
 	 * @param mappedLocation Mapped location of the fragment
 	 */
-	public BarcodedFragmentImpl(String fragmentId, String read1seq, String read2seq, BarcodeSequence barcodeSignature, Annotation mappedLocation) {
+	public BasicBarcodedFragment(String fragmentId, String read1seq, String read2seq, BarcodeSequence barcodeSignature, Annotation mappedLocation) {
 		id = StringParser.firstField(fragmentId);
 		read1sequence = read1seq;
 		read2sequence = read2seq;
@@ -190,7 +189,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param layoutRead1 Read1 layout or null if not specified
 	 * @param layoutRead2 Read2 layout or null if not specified
 	 */
-	public BarcodedFragmentImpl(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2) {
+	public BasicBarcodedFragment(String fragmentId, String read1seq, String read2seq, ReadLayout layoutRead1, ReadLayout layoutRead2) {
 		id = StringParser.firstField(fragmentId);
 		read1sequence = read1seq;
 		read2sequence = read2seq;
@@ -199,9 +198,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 	}
 	
-	private BarcodedFragmentImpl() {}
-
-	public BarcodeSequence getBarcodes() {
+	public final BarcodeSequence getBarcodes() {
 		return getBarcodes(null, null);
 	}
 	
@@ -210,14 +207,14 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param matchedEltsRead1 Matched elements for read 1 or null if identifying here for the first time or there is no read 1
 	 * @param matchedEltsRead2 Matched elements for read 2 or null if identifying here for the first time or there is no read 2
 	 */
-	public BarcodeSequence getBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
+	public final BarcodeSequence getBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
 		if(barcodes == null) {
 			findBarcodes(matchedEltsRead1, matchedEltsRead2);
 		}
 		return barcodes;
 	}
 	
-	public void findBarcodes() {
+	public final void findBarcodes() {
 		findBarcodes(null, null);
 	}
 	
@@ -253,7 +250,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param matchedEltsRead1 Matched elements for read 1 or null if identifying here for the first time or there is no read 1
 	 * @param matchedEltsRead2 Matched elements for read 2 or null if identifying here for the first time or there is no read 2
 	 */
-	public void findBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
+	public final void findBarcodes(List<List<ReadSequenceElement>> matchedEltsRead1, List<List<ReadSequenceElement>> matchedEltsRead2) {
 		barcodes = new BarcodeSequence();
 			if(read1layout != null && read1sequence != null) {
 				List<List<ReadSequenceElement>> read1elements = 
@@ -274,31 +271,31 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		setBarcodes(barcodes);
 	}
 	
-	public String getId() {
+	public final String getId() {
 		return id;
 	}
 	
-	public String getUnpairedSequence() {
+	public final String getUnpairedSequence() {
 		return unpairedSequence;
 	}
 	
-	public String getRead1Sequence() {
+	public final String getRead1Sequence() {
 		return read1sequence;
 	}
 	
-	public String getRead2Sequence() {
+	public final String getRead2Sequence() {
 		return read2sequence;
 	}
 	
-	public ReadLayout getRead1Layout() {
+	public final ReadLayout getRead1Layout() {
 		return read1layout;
 	}
 	
-	public ReadLayout getRead2Layout() {
+	public final ReadLayout getRead2Layout() {
 		return read2layout;
 	}
 	
-	public Annotation getMappedLocation() {
+	public final Annotation getMappedLocation() {
 		return location;
 	}
 	
@@ -306,11 +303,11 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * Set mapped location of fragment
 	 * @param mappedLocation Mapped location
 	 */
-	public void setMappedLocation(Annotation mappedLocation) {
+	public final void setMappedLocation(Annotation mappedLocation) {
 		location = mappedLocation;
 	}
 	
-	public int compareTo(BarcodedFragment other) {
+	public final int compareTo(BarcodedFragment other) {
 		if(location != null && other.getMappedLocation() != null) {
 			int l = location.compareTo(other.getMappedLocation());
 			if(l != 0) return l;
@@ -319,17 +316,17 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	}
 
 	@Override
-	public FragmentGroup getFragmentGroup() {
+	public final FragmentGroup getFragmentGroup() {
 		return fragmentGroup;
 	}
 
 	@Override
-	public void addFragmentWithSameBarcodes(BarcodedFragment fragment) {
+	public final void addFragmentWithSameBarcodes(BarcodedFragment fragment) {
 		fragmentGroup.addFragment(fragment);
 	}
 
 	@Override
-	public String getFullInfoString() {
+	public final String getFullInfoString() {
 		return location.getFullInfoString();
 	}
 	
@@ -341,11 +338,10 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @param transactional Database is transactional
 	 * @return Data accessor
 	 */
-	public static DataAccessor getDataAccessor(String environmentHome, String storeName, boolean readOnly, boolean transactional) {
+	public static final DataAccessor getDataAccessor(String environmentHome, String storeName, boolean readOnly, boolean transactional) {
 		logger.info("");
 		logger.info("Getting data accessor for database environment " + environmentHome + " and entity store " + storeName + ".");
-		BarcodedFragmentImpl b = new BarcodedFragmentImpl();
-		return b.new DataAccessor(environmentHome, storeName, readOnly, transactional);
+		return new DataAccessor(environmentHome, storeName, readOnly, transactional);
 	}
 	
 	/*
@@ -359,11 +355,11 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 	 * @author prussell
 	 *
 	 */
-	public class DataAccessor {
+	public static final class DataAccessor {
 		
-		PrimaryIndex<String, BarcodedFragmentImpl> primaryIndex;
-		SecondaryIndex<String, String, BarcodedFragmentImpl> secondaryIndexBarcodeString;
-		SecondaryIndex<String, String, BarcodedFragmentImpl> secondaryIndexReadID;
+		PrimaryIndex<String, BasicBarcodedFragment> primaryIndex;
+		SecondaryIndex<String, String, BasicBarcodedFragment> secondaryIndexBarcodeString;
+		SecondaryIndex<String, String, BasicBarcodedFragment> secondaryIndexReadID;
 		private DatabaseEnvironment environment;
 		private DatabaseStore entityStore;
 		
@@ -395,7 +391,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 				System.exit(-1);
 			}
 			
-			primaryIndex = entityStore.getStore().getPrimaryIndex(String.class, BarcodedFragmentImpl.class);
+			primaryIndex = entityStore.getStore().getPrimaryIndex(String.class, BasicBarcodedFragment.class);
 			secondaryIndexBarcodeString = entityStore.getStore().getSecondaryIndex(primaryIndex, String.class, "barcodeString");
 
 			// Attach shutdown hook to close
@@ -422,13 +418,13 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		/*
 		 * http://docs.oracle.com/cd/E17277_02/html/GettingStartedGuide/simpleput.html
 		 */
-		public void put(Collection<BarcodedFragmentImpl> fragments) {
-			for(BarcodedFragmentImpl fragment : fragments) {
+		public void put(Collection<BasicBarcodedFragment> fragments) {
+			for(BasicBarcodedFragment fragment : fragments) {
 				primaryIndex.put(fragment);
 			}
 		}
 		
-		public void put(BarcodedFragmentImpl fragment) {
+		public void put(BasicBarcodedFragment fragment) {
 			primaryIndex.putNoReturn(fragment);
 		}
 
@@ -449,7 +445,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		 * Can either use an iterator over the cursor or treat like a collection
 		 * @return Cursor over all fragments
 		 */
-		public EntityCursor<BarcodedFragmentImpl> getAllFragments() {
+		public EntityCursor<BasicBarcodedFragment> getAllFragments() {
 			return primaryIndex.entities();
 		}
 		
@@ -464,7 +460,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		 * @return Iterator over all fragments sharing barcodes with fragments mapping to the window, or null if the window contains no mappings
 		 * @throws Exception
 		 */
-		public JoinedEntityCursor<BarcodedFragmentImpl> getAllFragmentsWithBarcodesMatchingFragmentInChr(String barcodedBam, String chr) throws Exception {
+		public JoinedEntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodesMatchingFragmentInChr(String barcodedBam, String chr) throws Exception {
 			return getAllFragmentsWithBarcodesMatchingFragmentInWindow(barcodedBam, chr, 0, Integer.MAX_VALUE, true);
 		}
 		
@@ -480,10 +476,10 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		 * @return Iterator over all fragments sharing barcodes with fragments mapping to the window, or null if the window contains no mappings
 		 * @throws Exception
 		 */
-		public JoinedEntityCursor<BarcodedFragmentImpl> getAllFragmentsWithBarcodesMatchingFragmentInWindow(String barcodedBam, String chr, int start, int end, boolean contained) throws Exception {
+		public JoinedEntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodesMatchingFragmentInWindow(String barcodedBam, String chr, int start, int end, boolean contained) throws Exception {
 			SAMFileReader reader = new SAMFileReader(new File(barcodedBam));
 			SAMRecordIterator iter = reader.query(chr, start, end, contained);
-			List<EntityCursor<BarcodedFragmentImpl>> cursors = new ArrayList<EntityCursor<BarcodedFragmentImpl>>();
+			List<EntityCursor<BasicBarcodedFragment>> cursors = new ArrayList<EntityCursor<BasicBarcodedFragment>>();
 			if(!iter.hasNext()) {
 				reader.close();
 				return null;
@@ -496,7 +492,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 					String b = record.getStringAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
 					barcodeSeqs.add(b);
 				} catch (Exception e) {
-					for(EntityCursor<BarcodedFragmentImpl> c : cursors) {
+					for(EntityCursor<BasicBarcodedFragment> c : cursors) {
 						c.close();
 					}
 					reader.close();
@@ -507,7 +503,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 				try {
 					cursors.add(getAllFragmentsWithBarcodes(b));
 				} catch (Exception e) {
-					for(EntityCursor<BarcodedFragmentImpl> c : cursors) {
+					for(EntityCursor<BasicBarcodedFragment> c : cursors) {
 						c.close();
 					}
 					reader.close();
@@ -515,7 +511,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 				}
 			}
 			reader.close();
-			return new JoinedEntityCursor<BarcodedFragmentImpl>(cursors);
+			return new JoinedEntityCursor<BasicBarcodedFragment>(cursors);
 		}
 		
 		/**
@@ -526,9 +522,9 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		 * @return Iterator over all fragments sharing barcodes with fragments mapping to the region, or null if the region contains no mappings
 		 * @throws Exception
 		 */
-		public JoinedEntityCursor<BarcodedFragmentImpl> getAllFragmentsWithBarcodesMatchingFragmentInWindow(AlignmentModel alignmentModel, Annotation region, boolean contained) {
+		public JoinedEntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodesMatchingFragmentInWindow(AlignmentModel alignmentModel, Annotation region, boolean contained) {
 			CloseableIterator<Alignment> iter = alignmentModel.getOverlappingReads(region, contained);
-			List<EntityCursor<BarcodedFragmentImpl>> cursors = new ArrayList<EntityCursor<BarcodedFragmentImpl>>();
+			List<EntityCursor<BasicBarcodedFragment>> cursors = new ArrayList<EntityCursor<BasicBarcodedFragment>>();
 			if(!iter.hasNext()) {
 				iter.close();
 				return null;
@@ -540,14 +536,14 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 					String b = record.getStringAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
 					cursors.add(getAllFragmentsWithBarcodes(b));
 				} catch (Exception e) {
-					for(EntityCursor<BarcodedFragmentImpl> c : cursors) {
+					for(EntityCursor<BasicBarcodedFragment> c : cursors) {
 						c.close();
 					}
 					e.printStackTrace();
 				}
 			}
 			iter.close();
-			return new JoinedEntityCursor<BarcodedFragmentImpl>(cursors);
+			return new JoinedEntityCursor<BasicBarcodedFragment>(cursors);
 		}
 		
 		/**
@@ -557,7 +553,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		 * @param barcodeString Barcode string
 		 * @return Cursor over all fragments with this barcode string
 		 */
-		public EntityCursor<BarcodedFragmentImpl> getAllFragmentsWithBarcodes(String barcodeString) {
+		public EntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodes(String barcodeString) {
 			return secondaryIndexBarcodeString.subIndex(barcodeString).entities();
 		}
 		
@@ -568,7 +564,7 @@ public class BarcodedFragmentImpl implements BarcodedFragment {
 		 * @param id ID
 		 * @return Cursor over all fragments with this ID
 		 */
-		public EntityCursor<BarcodedFragmentImpl> getAllFragmentsWithID(String id) {
+		public EntityCursor<BasicBarcodedFragment> getAllFragmentsWithID(String id) {
 			return secondaryIndexReadID.subIndex(id).entities();
 		}
 		

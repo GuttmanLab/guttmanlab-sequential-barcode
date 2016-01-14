@@ -104,12 +104,12 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	/**
 	 * @return The barcodes
 	 */
-	public Collection<Barcode> getBarcodes() {
+	public final Collection<Barcode> getBarcodes() {
 		return barcodes;
 	}
 	
 	@Override
-	public int getLength() {
+	public final int getLength() {
 		return length;
 	}
 
@@ -119,7 +119,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public String getId() {
+	public final String getId() {
 		return id;
 	}
 
@@ -129,12 +129,12 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public boolean isRepeatable() {
+	public final boolean isRepeatable() {
 		return repeatable;
 	}
 
 	@Override
-	public ReadSequenceElement getStopSignalForRepeatable() {
+	public final ReadSequenceElement getStopSignalForRepeatable() {
 		if(stopSignalSeq != null) {
 			return new FixedSequence("stop_signal", stopSignalSeq, stopSignalMaxMismatches);
 		}
@@ -164,7 +164,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	}
 
 	@Override
-	public int maxLevenshteinDist() {
+	public final int maxLevenshteinDist() {
 		return maxLevDist;
 	}
 

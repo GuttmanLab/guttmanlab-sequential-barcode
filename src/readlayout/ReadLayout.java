@@ -24,13 +24,7 @@ public class ReadLayout {
 	private int readLen;
 	private Map<ReadSequenceElement, Map<String, ReadSequenceElement>> elementsByRepresentative;
 	
-	public static Logger logger = Logger.getLogger(ReadLayout.class.getName());
-	
-	/**
-	 * For Berkeley DB only
-	 * Do not use this constructor
-	 */
-	public ReadLayout() {}
+	public static final Logger logger = Logger.getLogger(ReadLayout.class.getName());
 	
 	/**
 	 * @param elementSequence Sequence of elements expected in each read
@@ -63,7 +57,7 @@ public class ReadLayout {
 	 * @param representative Sequence of representative element
 	 * @return The sub-element of the parent element represented by the representative
 	 */
-	public ReadSequenceElement getElementRepresentedBy(ReadSequenceElement parentElement, String representative) {
+	public final ReadSequenceElement getElementRepresentedBy(ReadSequenceElement parentElement, String representative) {
 		return elementsByRepresentative.get(parentElement).get(representative);
 	}
 	
@@ -72,7 +66,7 @@ public class ReadLayout {
 	 * @param parentElement Parent sequence element
 	 * @return For the parent element, map of all representative sequences and the sub-element they represent
 	 */
-	public Map<String, ReadSequenceElement> getSubElementsByRepresentative(ReadSequenceElement parentElement) {
+	public final Map<String, ReadSequenceElement> getSubElementsByRepresentative(ReadSequenceElement parentElement) {
 		return elementsByRepresentative.get(parentElement);
 	}
 	
@@ -80,7 +74,7 @@ public class ReadLayout {
 	 * Get the read length
 	 * @return The read length
 	 */
-	public int getReadLength() {
+	public final int getReadLength() {
 		return readLen;
 	}
 	
@@ -88,7 +82,7 @@ public class ReadLayout {
 	 * Get names of read elements expected in each read
 	 * @return Ordered list of read element names
 	 */
-	public ArrayList<String> getElementNames() {
+	public final ArrayList<String> getElementNames() {
 		ArrayList<String> rtrn = new ArrayList<String>();
 		for(ReadSequenceElement elt : elements) {
 			rtrn.add(elt.elementName());
@@ -100,12 +94,12 @@ public class ReadLayout {
 	 * Get read elements expected in each read
 	 * @return Ordered list of read elements
 	 */
-	public ArrayList<ReadSequenceElement> getElements() {
+	public final ArrayList<ReadSequenceElement> getElements() {
 		return elements;
 	}
 	
 	
-	public String toString() {
+	public final String toString() {
 		Iterator<ReadSequenceElement> iter = elements.iterator();
 		String rtrn = iter.next().elementName();
 		while(iter.hasNext()) {

@@ -21,7 +21,7 @@ import net.sf.samtools.SAMRecord;
  *
  */
 @Persistent
-public class BarcodeSequence implements Comparable<BarcodeSequence> {
+public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 	
 	private List<Barcode> barcodes;
 	public static Logger logger = Logger.getLogger(BarcodeSequence.class.getName());

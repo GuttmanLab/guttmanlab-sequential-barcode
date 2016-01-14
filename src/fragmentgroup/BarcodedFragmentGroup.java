@@ -9,7 +9,7 @@ import java.util.TreeSet;
 import programs.BarcodedBamWriter;
 import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedFragment;
-import sequentialbarcode.BarcodedFragmentImpl;
+import sequentialbarcode.BasicBarcodedFragment;
 import net.sf.samtools.SAMRecord;
 import nextgen.core.annotation.Annotation;
 import nextgen.core.annotation.BasicAnnotation;
@@ -144,7 +144,7 @@ public final class BarcodedFragmentGroup implements FragmentGroup {
 		for(int i = 0; i < s1.getFieldCount(); i++) {
 			String coord = s1.asString(i);
 			Annotation a = BasicAnnotation.fromFullInfoString(coord);
-			BarcodedFragment bf = new BarcodedFragmentImpl(a.getName(), barcodeSequence, a);
+			BarcodedFragment bf = new BasicBarcodedFragment(a.getName(), barcodeSequence, a);
 			rtrn.add(bf);
 		}
 		return rtrn;

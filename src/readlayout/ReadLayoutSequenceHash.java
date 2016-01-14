@@ -14,9 +14,15 @@ import org.apache.log4j.Logger;
 
 import readelement.ReadSequenceElement;
 
-public class ReadLayoutSequenceHash {
+/**
+ * Hash-based cache of imperfect sequences mapped to the sequence they represent
+ * Stores all possible imperfect matches for an entire read layout
+ * @author prussell
+ *
+ */
+public final class ReadLayoutSequenceHash {
 	
-	public static Logger logger = Logger.getLogger(ReadLayoutSequenceHash.class.getName());
+	public static final Logger logger = Logger.getLogger(ReadLayoutSequenceHash.class.getName());
 	
 	private int maxMismatches;
 	/*
@@ -25,6 +31,10 @@ public class ReadLayoutSequenceHash {
 	private Map<Integer, HashMap<String, Integer>> seqToElementIndex;
 	private ReadSequenceElement[] elements;
 	
+	/**
+	 * @param layout Read layout
+	 * @param maxNumMismatches Max number of mismatches in cached imperfect matches
+	 */
 	public ReadLayoutSequenceHash(ReadLayout layout, int maxNumMismatches) {
 		maxMismatches = maxNumMismatches;
 		initialize(layout);
@@ -78,8 +88,11 @@ public class ReadLayoutSequenceHash {
 	}
 		
 	
-	
-		
+	/**
+	 * Get best element match for a sequence
+	 * @param sequence Actual observed sequence
+	 * @return Cached element match with fewest mismatches
+	 */
 	public ReadSequenceElement bestMatch(String sequence) {
 		for(int i = 0; i <= maxMismatches; i++) {
 			Integer index = seqToElementIndex.get(Integer.valueOf(i)).get(sequence);

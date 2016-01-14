@@ -21,7 +21,7 @@ import readelement.Switch;
  * @author prussell
  *
  */
-public class ReadLayoutFactory {
+public final class ReadLayoutFactory {
 
 	public static Logger logger = Logger.getLogger(ReadLayoutFactory.class.getName());
 	

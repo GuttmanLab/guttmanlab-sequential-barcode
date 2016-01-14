@@ -11,7 +11,7 @@ import readlayout.ReadLayout;
  * @author prussell
  *
  */
-public class BarcodedRNAFragment extends BarcodedFragmentImpl {
+public final class BarcodedRNAFragment extends BasicBarcodedFragment {
 
 	public static Logger logger = Logger.getLogger(BarcodedRNAFragment.class.getName());
 

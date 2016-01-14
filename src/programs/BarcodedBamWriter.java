@@ -29,7 +29,7 @@ import guttmanlab.core.pipeline.Scheduler;
 import guttmanlab.core.pipeline.util.BamUtils;
 import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedFragment;
-import sequentialbarcode.BarcodedFragmentImpl;
+import sequentialbarcode.BasicBarcodedFragment;
 import net.sf.samtools.BAMFileWriter;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFormatException;
@@ -543,7 +543,7 @@ public class BarcodedBamWriter {
 			@SuppressWarnings("unused")
 			String dummy = record.getSAMString(); // This somehow prevents a picard bug from surfacing. Do not remove.
 			record.setReadName(shortNames.get(record.getReadName()));
-			BarcodedFragment fragment = new BarcodedFragmentImpl(record);
+			BarcodedFragment fragment = new BasicBarcodedFragment(record);
 			BarcodeSequence b = fragment.getBarcodes();
 			if(!rtrn.containsKey(b)) {
 				rtrn.put(b, new BarcodedFragmentGroup(b));

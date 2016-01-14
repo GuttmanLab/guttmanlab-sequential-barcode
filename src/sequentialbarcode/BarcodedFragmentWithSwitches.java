@@ -17,7 +17,7 @@ import readlayout.ReadLayout;
  * @author prussell
  *
  */
-public class BarcodedFragmentWithSwitches extends BarcodedFragmentImpl {
+public final class BarcodedFragmentWithSwitches extends BasicBarcodedFragment {
 	
 	private Map<Switch, List<FixedSequence>> switchValues;
 	
