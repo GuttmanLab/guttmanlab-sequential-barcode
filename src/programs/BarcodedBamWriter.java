@@ -42,7 +42,11 @@ import nextgen.core.pipeline.util.OGSUtils;
  * @author prussell
  *
  */
-public class BarcodedBamWriter {
+public final class BarcodedBamWriter {
+	
+	private BarcodedBamWriter() {
+		// Prevent instantiation
+	}
 	
 	private static Session drmaaSession;
 
@@ -174,17 +178,8 @@ public class BarcodedBamWriter {
 	 * @param inputBam Regular bam file
 	 * @return Name of barcoded bam file
 	 */
-	public static String getBarcodedBamFileName(String inputBam) {
+	private static String getBarcodedBamFileName(String inputBam) {
 		return inputBam.replaceAll(".bam", "") + BARCODED_BAM_SUFFIX;
-	}
-	
-	/**
-	 * Find out if a barcoded bam file exists for the bam file
-	 * @param regularBam Regular bam file
-	 * @return True iff corresponding barcoded bam file exists in same directory
-	 */
-	public static boolean barcodedBamExists(String regularBam) {
-		return new File(getBarcodedBamFileName(regularBam)).exists();
 	}
 	
 	/**
@@ -205,34 +200,8 @@ public class BarcodedBamWriter {
 	 * @param overrideOutputName Name for output bam file other than default. Warning: file will not be recognized by other code.
 	 * @throws IOException
 	 */
-	public static void writeBarcodedBam(String inputBam, String barcodeTable, String overrideOutputName) throws IOException {
+	private static void writeBarcodedBam(String inputBam, String barcodeTable, String overrideOutputName) throws IOException {
 		writeBarcodedBam(inputBam, readBarcodesFromTable(barcodeTable), overrideOutputName);
-	}
-	
-	/**
-	 * Add barcode attribute to bam file entries using a barcode mapping
-	 * @param inputBam Regular bam file
-	 * @param barcodeTable Table of read name and barcode sequence
-	 * @throws IOException
-	 */
-	public static void writeBarcodedBam(String inputBam, String barcodeTable) throws IOException {
-		writeBarcodedBam(inputBam, readBarcodesFromTable(barcodeTable));
-	}
-	
-	/**
-	 * Add barcode attribute to bam file entries using a barcode mapping
-	 * Use OGS to batch out writing of barcoded bam file
-	 * @param inputBam Regular bam file
-	 * @param barcodeTable Table of read name and barcode sequence
-	 * @param drmaaSession Active DRMAA session
-	 * @param barcodedBamWriterJar Jar file of BarcodedBamWriter class
-	 * @param picardJarDir Directory containing Picard jar files
-	 * @throws IOException 
-	 * @throws InterruptedException 
-	 * @throws DrmaaException 
-	 */
-	public void batchWriteBarcodedBam(String inputBam, String barcodeTable, Session drmaaSession, String barcodedBamWriterJar, String picardJarDir) throws IOException, DrmaaException, InterruptedException {
-		batchWriteBarcodedBam(inputBam, barcodeTable, drmaaSession, 10000000, barcodedBamWriterJar, picardJarDir);
 	}
 	
 	/**
@@ -248,7 +217,7 @@ public class BarcodedBamWriter {
 	 * @throws DrmaaException 
 	 * @throws InterruptedException 
 	 */
-	public void batchWriteBarcodedBam(String inputBam, String barcodeTable, Session drmaaSession, int readsPerJob, String barcodedBamWriterJar, String picardJarDir) throws IOException, DrmaaException, InterruptedException {
+	private static void batchWriteBarcodedBam(String inputBam, String barcodeTable, Session drmaaSession, int readsPerJob, String barcodedBamWriterJar, String picardJarDir) throws IOException, DrmaaException, InterruptedException {
 		logger.info("");
 		logger.info("Adding barcode attribute to bam file " + inputBam + " by batching out to OGS cluster.");
 		logger.info("Reading barcodes from " + barcodeTable + ".");
@@ -433,7 +402,7 @@ public class BarcodedBamWriter {
 		
 	}
 	
-	private class SplitBarcodeTableFileNameFilter implements FilenameFilter {
+	private static class SplitBarcodeTableFileNameFilter implements FilenameFilter {
 		
 		private String barcodeTable;
 		
@@ -448,11 +417,11 @@ public class BarcodedBamWriter {
 		
 	}
 	
-	private int splitBarcodeTable(String barcodeTable, int readsPerJob) throws IOException {
+	private static int splitBarcodeTable(String barcodeTable, int readsPerJob) throws IOException {
 		
 		BufferedReader reader = new BufferedReader(new FileReader(barcodeTable));
 		
-		SplitBarcodeTableFileNameFilter filter = this.new SplitBarcodeTableFileNameFilter(barcodeTable);
+		SplitBarcodeTableFileNameFilter filter = new SplitBarcodeTableFileNameFilter(barcodeTable);
 		File parentDir = new File(barcodeTable).getParentFile();
 		String[] splitFiles = parentDir != null ? parentDir.list(filter) : new File(".").list(filter);
 		if(splitFiles.length > 0) {
@@ -641,7 +610,7 @@ public class BarcodedBamWriter {
 			if(picardJarDir == null) {
 				throw new IllegalArgumentException("Must provide Picard jar directory with -pj option");
 			}
-			new BarcodedBamWriter().batchWriteBarcodedBam(inputBam, barcodeTable, drmaaSession, readsPerJob, barcodedBamWriterJar, picardJarDir);
+			batchWriteBarcodedBam(inputBam, barcodeTable, drmaaSession, readsPerJob, barcodedBamWriterJar, picardJarDir);
 		} else {
 			writeBarcodedBam(inputBam, barcodeTable, overrideName);
 		}

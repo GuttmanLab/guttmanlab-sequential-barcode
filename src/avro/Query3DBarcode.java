@@ -65,7 +65,7 @@ public final class Query3DBarcode {
 	 * @param end Region end
 	 * @return Collection of barcodes for reads overlapping the region. Each barcode only included once.
 	 */
-	public static Collection<String> getBarcodesOfReadsInRegion(SAMFileReader samReader, String chr, int start, int end) {
+	private static Collection<String> getBarcodesOfReadsInRegion(SAMFileReader samReader, String chr, int start, int end) {
 		Collection<String> rtrn = new HashSet<String>();
 		SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
 		while(iter.hasNext()) {
@@ -90,7 +90,7 @@ public final class Query3DBarcode {
 	 * @param end Region end
 	 * @return Collection of read IDs for all reads overlapping the region. Each ID only included once.
 	 */
-	public static Collection<String> getReadIDs(SAMFileReader samReader, String chr, int start, int end) {
+	private static Collection<String> getReadIDs(SAMFileReader samReader, String chr, int start, int end) {
 		Collection<String> rtrn = new HashSet<String>();
 		SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
 		while(iter.hasNext()) {
@@ -135,7 +135,7 @@ public final class Query3DBarcode {
 	 * @param records The records
 	 * @return Set of string representations of locations
 	 */
-	public static Set<String> getUniqueLocations(FeatureCollection<AvroSamRecord> records) {
+	private static Set<String> getUniqueLocations(FeatureCollection<AvroSamRecord> records) {
 		Set<String> rtrn = new TreeSet<String>();
 		for(AvroSamRecord record : records) {
 			rtrn.add(record.toUCSC());
@@ -151,7 +151,7 @@ public final class Query3DBarcode {
 	 * @return The set of unique locations represented as strings
 	 * @throws IOException
 	 */
-	public static Set<String> getUniqueLocationsOfInteractors(SAMRecord record, AvroSamStringIndex index, Collection<String> readIDsToExclude) throws IOException {
+	private static Set<String> getUniqueLocationsOfInteractors(SAMRecord record, AvroSamStringIndex index, Collection<String> readIDsToExclude) throws IOException {
 		Set<String> rtrn = new TreeSet<String>();
 		String barcode = (String) record.getAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
 		if(!numBarcodesOk(barcode)) {
@@ -183,7 +183,7 @@ public final class Query3DBarcode {
 	 * @return Map of read location to the set of string representations of the mapped locations of all reads that share the same barcode
 	 * @throws IOException 
 	 */
-	public static Map<String, Set<String>> getInteractingLocations(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+	private static Map<String, Set<String>> getInteractingLocations(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
 		Collection<String> regionReadIDs = excludeSelfMatches ? getReadIDs(samReader, chr, start, end) : null;
 		SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
 		Map<String, Set<String>> rtrn = new TreeMap<String, Set<String>>();
@@ -210,7 +210,7 @@ public final class Query3DBarcode {
 	 * @param regions The regions whose barcodes will be intersected
 	 * @return The intersection of barcode sets for all the regions
 	 */
-	public static Collection<String> getIntersectionOfBarcodes(SAMFileReader samReader, Collection<SingleInterval> regions) {
+	private static Collection<String> getIntersectionOfBarcodes(SAMFileReader samReader, Collection<SingleInterval> regions) {
 		java.util.Iterator<SingleInterval> regionIter = regions.iterator();
 		SingleInterval firstRegion = regionIter.next();
 		Collection<String> rtrn = getBarcodesOfReadsInRegion(samReader, firstRegion.getReferenceName(), firstRegion.getReferenceStartPosition(), firstRegion.getReferenceEndPosition());
@@ -233,7 +233,7 @@ public final class Query3DBarcode {
 	 * @return The set of unique locations represented as strings
 	 * @throws IOException
 	 */
-	public static Set<String> getUniqueLocationsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+	private static Set<String> getUniqueLocationsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
 		Collection<String> barcodes = getBarcodesOfReadsInRegion(samReader, chr, start, end);
 		Collection<String> ids = null;
 		if(excludeSelfMatches) {
@@ -260,27 +260,12 @@ public final class Query3DBarcode {
 	 * @param start Region start
 	 * @param end Region end
 	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
-	 * @return Map of reference name to number of reads
-	 * @throws IOException
-	 */
-	public static Map<String, Double> getChrCountsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
-		return getChrCountsOfAllReadsWithBarcodesMatchingRegion(index, samReader, chr, start, end, excludeSelfMatches, false, -1);
-	}
-	
-	/**
-	 * Get number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
-	 * @param index Avro index
-	 * @param samReader SAM reader for bam file of read mappings
-	 * @param chr Region chromosome
-	 * @param start Region start
-	 * @param end Region end
-	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
 	 * @param normalizeByQueryRegionRPKM Normalize all returned counts by RPKM of the query region
 	 * @param totalMappedReads Total number of mapped reads for RPKM calculation, or pass a nonpositive number to calculate on the fly
 	 * @return Map of reference name to number of reads
 	 * @throws IOException
 	 */
-	public static Map<String, Double> getChrCountsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, boolean normalizeByQueryRegionRPKM, long totalMappedReads) throws IOException {
+	private static Map<String, Double> getChrCountsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, boolean normalizeByQueryRegionRPKM, long totalMappedReads) throws IOException {
 		Collection<String> barcodes = getBarcodesOfReadsInRegion(samReader, chr, start, end);
 		Collection<String> ids = null;
 		if(excludeSelfMatches) {
@@ -343,25 +328,11 @@ public final class Query3DBarcode {
 	 * @param start Region start
 	 * @param end Region end
 	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
-	 * @throws IOException
-	 */
-	public static void printReferenceCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
-		printReferenceCountsOfAllReadsWithBarcodesInRegion(index, samReader, chr, start, end, excludeSelfMatches, false, -1);
-	}
-	
-	/**
-	 * Print number of reads per chr for all reads that share the same barcode as some read mapping to the region of interest
-	 * @param index Avro index
-	 * @param samReader SAM reader for bam file of read mappings
-	 * @param chr Region chromosome
-	 * @param start Region start
-	 * @param end Region end
-	 * @param excludeSelfMatches Exclude all reads with read ID matching a read in the region
 	 * @param normalizeByQueryRegionRPKM Normalize all returned counts by RPKM of the query region
 	 * @param totalMappedReads Total number of mapped reads for RPKM calculation, or pass a nonpositive number to calculate on the fly
 	 * @throws IOException
 	 */
-	public static void printReferenceCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, boolean normalizeByQueryRegionRPKM, long totalMappedReads) throws IOException {
+	private static void printReferenceCountsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, boolean normalizeByQueryRegionRPKM, long totalMappedReads) throws IOException {
 		Map<String, Double> counts = getChrCountsOfAllReadsWithBarcodesMatchingRegion(index, samReader, chr, start, end, excludeSelfMatches, normalizeByQueryRegionRPKM, totalMappedReads);
 		for(String c : counts.keySet()) {
 			System.out.println(c + "\t" + counts.get(c));
@@ -380,7 +351,7 @@ public final class Query3DBarcode {
 	 * @param outputBed Write in bed format to this location, or null if stdout
 	 * @throws IOException
 	 */
-	public static void printUniqueLocationsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, String outputBed) throws IOException {
+	private static void printUniqueLocationsOfAllReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, String outputBed) throws IOException {
 		Collection<String> locations = getUniqueLocationsOfAllReadsWithBarcodesMatchingRegion(index, samReader, chr, start, end, excludeSelfMatches);
 		if(outputBed != null) {
 			FileWriter w = new FileWriter(outputBed);
@@ -415,7 +386,7 @@ public final class Query3DBarcode {
 	 * @param outputBed Write in bed format to this location, or null if stdout
 	 * @throws IOException 
 	 */
-	public static void printInteractorPairsForRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, String outputBed) throws IOException {
+	private static void printInteractorPairsForRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches, String outputBed) throws IOException {
 		Map<String, Set<String>> interactors = getInteractingLocations(index, samReader, chr, start, end, excludeSelfMatches);
 		if(outputBed != null) {
 			FileWriter w = new FileWriter(outputBed);
@@ -450,41 +421,13 @@ public final class Query3DBarcode {
 	 * @param outputBed Write in bed format to this location, or null if stdout
 	 * @throws IOException
 	 */
-	public static void printReadsWithBarcode(AvroSamStringIndex index, String barcode, String outputBed) throws IOException {
+	private static void printReadsWithBarcode(AvroSamStringIndex index, String barcode, String outputBed) throws IOException {
 		try {
 			FeatureCollection<AvroSamRecord> records = index.getAsAnnotationCollection(barcode);
 			printRecords(records, outputBed);
 		} catch(IllegalArgumentException e) {
 			logger.warn("Skipping key: " + e.getMessage());
 		}
-	}
-	
-	/**
-	 * Print all reads with a barcode in a collection
-	 * @param index Avro index
-	 * @param barcodes Collection of barcodes to look for
-	 * @param outputBed Write in bed format to this location, or null if stdout
-	 * @throws IOException 
-	 */
-	public static void printReadsWithBarcodes(AvroSamStringIndex index, Collection<String> barcodes, String outputBed) throws IOException {
-		for(String barcode : barcodes) {
-			printReadsWithBarcode(index, barcode, outputBed);
-		}
-	}
-	
-	/**
-	 * Print all reads with the same barcode as any read overlapping a region
-	 * @param index Avro index
-	 * @param samReader SAM reader for bam file of read mappings
-	 * @param chr Region chromosome
-	 * @param start Region start
-	 * @param end Region end
-	 * @param outputBed Write in bed format to this location, or null if stdout
-	 * @throws IOException
-	 */
-	public static void printReadsWithBarcodesInRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, String outputBed) throws IOException {
-		Collection<String> barcodes = getBarcodesOfReadsInRegion(samReader, chr, start, end);
-		printReadsWithBarcodes(index, barcodes, outputBed);
 	}
 	
 	private static Map<String, Integer> readChrSizes(String file) throws IOException {

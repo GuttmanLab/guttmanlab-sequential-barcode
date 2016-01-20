@@ -55,34 +55,29 @@ import broad.pda.seq.fastq.FastqSequence;
  * @author prussell
  *
  */
-public class BarcodeAnalysis {
+public final class BarcodeAnalysis {
 
-	public static Logger logger = Logger.getLogger(BarcodeAnalysis.class.getName());
+	private static Logger logger = Logger.getLogger(BarcodeAnalysis.class.getName());
 	private static Session drmaaSession;
-	private static boolean GET_LAST_BARCODES = false;
-	private static int NUM_LAST_BARCODES = Integer.MAX_VALUE;
-	private static int MAX_MISMATCH_BARCODE;
-	private static int MAX_MISMATCH_BARCODE_READ1;
-	private static int MAX_MISMATCH_EVEN_ODD_BARCODE_READ2;
-	private static int MAX_MISMATCH_Y_SHAPE_BARCODE_READ2;
-	private static int MAX_MISMATCH_RPM;
-	private static int MAX_MISMATCH_DPM;
-	private static int MAX_MISMATCH_ADAPTER;
 
+	private BarcodeAnalysis() {
+		// Prevent instantiation
+	}
+	
 	/**
 	 * @param p Command line parser
 	 * @return The part of the arg string that can be used for a batched job
 	 */
 	private static String commonArgStringForBatched(CommandLineParser p) {
 		Collection<String> removeOptions = new ArrayList<String>();
-		removeOptions.add(batchOption);
-		removeOptions.add(fastqOption);
-		removeOptions.add(fastq1Option);
-		removeOptions.add(fastq2Option);
-		removeOptions.add(outPrefixOption);
-		removeOptions.add(suffixFastqOption);
-		removeOptions.add(suffixFastq1Option);
-		removeOptions.add(suffixFastq2Option);
+		removeOptions.add(CommandLineOption.BATCH.getFlag());
+		removeOptions.add(CommandLineOption.FASTQ.getFlag());
+		removeOptions.add(CommandLineOption.FASTQ_1.getFlag());
+		removeOptions.add(CommandLineOption.FASTQ_2.getFlag());
+		removeOptions.add(CommandLineOption.OUTPUT_PREFIX.getFlag());
+		removeOptions.add(CommandLineOption.SUFFIX_FASTQ.getFlag());
+		removeOptions.add(CommandLineOption.SUFFIX_FASTQ_1.getFlag());
+		removeOptions.add(CommandLineOption.SUFFIX_FASTQ_2.getFlag());
 		return p.getArgString(removeOptions);
 	}
 	
@@ -154,13 +149,13 @@ public class BarcodeAnalysis {
 	 */
 	private static void divideFastqAndFindBarcodesSingleFastq(CommandLineParser p) throws IOException, DrmaaException, InterruptedException {
 		
-		String outPrefix = p.getStringArg(outPrefixOption);
-		String email = p.getStringArg(emailOption);
-		String fastq = p.getStringArg(fastqOption);
-		String jar = p.getStringArg(jarOption);
-		int numFastq = p.getIntArg(numFastqOption);
-		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
-		String suffixFastq = p.getStringArg(suffixFastqOption);
+		String outPrefix = p.getStringArg(CommandLineOption.OUTPUT_PREFIX.getFlag());
+		String email = p.getStringArg(CommandLineOption.EMAIL.getFlag());
+		String fastq = p.getStringArg(CommandLineOption.FASTQ.getFlag());
+		String jar = p.getStringArg(CommandLineOption.JAR.getFlag());
+		int numFastq = p.getIntArg(CommandLineOption.NUM_FASTQ.getFlag());
+		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(CommandLineOption.SPLIT_BY_SWITCHES.getFlag());
+		String suffixFastq = p.getStringArg(CommandLineOption.SUFFIX_FASTQ.getFlag());
 		
 		Collection<String> splitFastqs = FastqUtils.divideFastqFile(fastq, numFastq);
 		Map<String, String> splitTables = splitTables(splitFastqs, outPrefix);
@@ -170,9 +165,9 @@ public class BarcodeAnalysis {
 		for(String fq : splitTables.keySet()) {
 			String cmmd = "java -jar -Xmx5g -Xms2g -Xmn1g " + jar + " ";
 			cmmd += commonArgStringForBatched(p) + " ";
-			cmmd += fastqOption + " " + fq + " ";
-			cmmd += outPrefixOption + " " + splitTables.get(fq) + " ";
-			cmmd += suffixFastqOption + " " + makeSuffixFastqName(fq) + " ";
+			cmmd += CommandLineOption.FASTQ.getFlag() + " " + fq + " ";
+			cmmd += CommandLineOption.OUTPUT_PREFIX.getFlag() + " " + splitTables.get(fq) + " ";
+			cmmd += CommandLineOption.SUFFIX_FASTQ.getFlag() + " " + makeSuffixFastqName(fq) + " ";
 			String jobNameWithSlashes = "OGS_job_" + fq;
 			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
@@ -202,15 +197,15 @@ public class BarcodeAnalysis {
 	 */
 	private static void divideFastqAndFindBarcodesPairedFastq(CommandLineParser p) throws IOException, DrmaaException, InterruptedException {
 		
-		String outPrefix = p.getStringArg(outPrefixOption);
-		String email = p.getStringArg(emailOption);
-		String fastq1 = p.getStringArg(fastq1Option);
-		String fastq2 = p.getStringArg(fastq2Option);
-		String jar = p.getStringArg(jarOption);
-		int numFastq = p.getIntArg(numFastqOption);
-		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
-		String suffixFastq1 = p.getStringArg(suffixFastq1Option);
-		String suffixFastq2 = p.getStringArg(suffixFastq2Option);
+		String outPrefix = p.getStringArg(CommandLineOption.OUTPUT_PREFIX.getFlag());
+		String email = p.getStringArg(CommandLineOption.EMAIL.getFlag());
+		String fastq1 = p.getStringArg(CommandLineOption.FASTQ_1.getFlag());
+		String fastq2 = p.getStringArg(CommandLineOption.FASTQ_2.getFlag());
+		String jar = p.getStringArg(CommandLineOption.JAR.getFlag());
+		int numFastq = p.getIntArg(CommandLineOption.NUM_FASTQ.getFlag());
+		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(CommandLineOption.SPLIT_BY_SWITCHES.getFlag());
+		String suffixFastq1 = p.getStringArg(CommandLineOption.SUFFIX_FASTQ_1.getFlag());
+		String suffixFastq2 = p.getStringArg(CommandLineOption.SUFFIX_FASTQ_2.getFlag());
 		
 		List<String> splitFastqs1 = FastqUtils.divideFastqFile(fastq1, numFastq);
 		List<String> splitFastqs2 = FastqUtils.divideFastqFile(fastq2, numFastq);
@@ -224,11 +219,11 @@ public class BarcodeAnalysis {
 			String fq2 = fqs.getValue2();
 			String cmmd = "java -jar -Xmx5g -Xms2g -Xmn1g " + jar + " ";
 			cmmd += commonArgStringForBatched(p) + " ";
-			cmmd += fastq1Option + " " + fq1 + " ";
-			cmmd += fastq2Option + " " + fq2 + " ";
-			cmmd += outPrefixOption + " " + splitTables.get(fqs) + " ";
-			if(suffixFastq1 != null) cmmd += suffixFastq1Option + " " + makeSuffixFastqName(fq1) + " ";
-			if(suffixFastq2 != null) cmmd += suffixFastq2Option + " " + makeSuffixFastqName(fq2) + " ";
+			cmmd += CommandLineOption.FASTQ_1.getFlag() + " " + fq1 + " ";
+			cmmd += CommandLineOption.FASTQ_2.getFlag() + " " + fq2 + " ";
+			cmmd += CommandLineOption.OUTPUT_PREFIX.getFlag() + " " + splitTables.get(fqs) + " ";
+			if(suffixFastq1 != null) cmmd += CommandLineOption.SUFFIX_FASTQ_1.getFlag() + " " + makeSuffixFastqName(fq1) + " ";
+			if(suffixFastq2 != null) cmmd += CommandLineOption.SUFFIX_FASTQ_2.getFlag() + " " + makeSuffixFastqName(fq2) + " ";
 			String jobNameWithSlashes = "OGS_job_" + fq1 + "_" + fq2;
 			String jobName = jobNameWithSlashes.replaceAll("/", "_");
 			OGSJob job = new OGSJob(drmaaSession, cmmd, true, jobName, email);
@@ -263,13 +258,14 @@ public class BarcodeAnalysis {
 	 * Identify barcodes in reads and write to a table
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
+	 * @param maxMismatchBarcode Max mismatches in barcode
 	 * @param outFilePrefix Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
-		findBarcodes(fastq, layout, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
+		findBarcodes(fastq, layout, maxMismatchBarcode, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
 	}
 	
 	/**
@@ -277,6 +273,7 @@ public class BarcodeAnalysis {
 	 * Identify barcodes in reads and write to a table
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
+	 * @param maxMismatchBarcode Max mismatches in barcode
 	 * @param outFile Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
@@ -285,7 +282,7 @@ public class BarcodeAnalysis {
 	 * Obeys the switch scenario, so if using switches, this will also write multiple fastq files, one for each switch
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, String suffixFastq) throws IOException {
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, String suffixFastq) throws IOException {
 		logger.info("");
 		logger.info("Identifying barcodes and writing to table(s) "+ outFile +"...");
 		if(splitOutputBySwitchesInLayout) {
@@ -294,7 +291,7 @@ public class BarcodeAnalysis {
 		if(suffixFastq != null) {
 			logger.info("Also writing fastq file(s) of reads without matched elements to " + suffixFastq + "...");
 		}
-		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, MAX_MISMATCH_BARCODE);
+		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, maxMismatchBarcode);
 		FileWriter tableWriter = new FileWriter(outFile); // Write to table
 		BufferedWriter singleFastqWriter = suffixFastq != null ? new BufferedWriter(new FileWriter(suffixFastq)) : null; // Fastq writer if using and not using switches
 		Map<String, FileWriter> switchTableWriters = new HashMap<String, FileWriter>(); // Writers for tables if using switches
@@ -323,10 +320,6 @@ public class BarcodeAnalysis {
 				BarcodeSequence barcodes = f.getBarcodes(matchedElements, null);
 				if(verbose) line += barcodes.getNumBarcodes() + "\t";
 				line += barcodes.toString() + "\t";
-				if(GET_LAST_BARCODES) {
-					BarcodeSequence lastBarcodes = barcodes.getLastBarcodes(NUM_LAST_BARCODES);
-					line += lastBarcodes.toString() + "\t";
-				}
 				if(verbose) line += seq + "\t";
 				// Fastq sequence with layout elements removed if writing fastq
 				FastqSequence trimmedRecord = suffixFastq != null ? record.trimFirstNBPs(matcher.matchedElementsLengthInRead()) : null;
@@ -379,6 +372,8 @@ public class BarcodeAnalysis {
 	 * @param fastq2 Read 2 fastq
 	 * @param layout1 Read 1 layout
 	 * @param layout2 Read 2 layout
+	 * @param maxMismatchBarcodeRead1 Max mismatches in barcode in read1
+	 * @param maxMismatchBarcodeRead2 Max mismatches in barcode in read2
 	 * @param outFile Output table
 	 * @param suffixFastq1 Also write new fastq file(s) of the reads with all layout elements, and positions before/between them removed.
 	 * In other words, keep the part of the read after the last matched element.
@@ -387,7 +382,9 @@ public class BarcodeAnalysis {
 	 * @param verbose
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq1, String fastq2, BarcodedReadLayout layout1, BarcodedReadLayout layout2, String outFile, String suffixFastq1, String suffixFastq2, boolean verbose) throws IOException {
+	@SuppressWarnings("unused")
+	private static void findBarcodes(String fastq1, String fastq2, BarcodedReadLayout layout1, BarcodedReadLayout layout2, int maxMismatchBarcodeRead1, int maxMismatchBarcodeRead2,
+			String outFile, String suffixFastq1, String suffixFastq2, boolean verbose) throws IOException {
 		logger.info("");
 		logger.info("Identifying barcodes and writing to table(s) "+ outFile +"...");
 		if(suffixFastq1 != null) {
@@ -396,8 +393,8 @@ public class BarcodeAnalysis {
 		if(suffixFastq2 != null) {
 			logger.info("Also writing fastq file of read2 minus matched elements to " + suffixFastq2 + "...");
 		}
-		ReadLayoutSequenceHash hash1 = new ReadLayoutSequenceHash(layout1, MAX_MISMATCH_BARCODE_READ1);
-		ReadLayoutSequenceHash hash2 = new ReadLayoutSequenceHash(layout2, MAX_MISMATCH_EVEN_ODD_BARCODE_READ2);
+		ReadLayoutSequenceHash hash1 = new ReadLayoutSequenceHash(layout1, maxMismatchBarcodeRead1);
+		ReadLayoutSequenceHash hash2 = new ReadLayoutSequenceHash(layout2, maxMismatchBarcodeRead2);
 		FileWriter tableWriter = new FileWriter(outFile); // Write to table
 		BufferedWriter singleFastqWriter1 = suffixFastq1 != null ? new BufferedWriter(new FileWriter(suffixFastq1)) : null; // Fastq writer if using and not using switches
 		BufferedWriter singleFastqWriter2 = suffixFastq2 != null ? new BufferedWriter(new FileWriter(suffixFastq2)) : null; // Fastq writer if using and not using switches
@@ -502,16 +499,18 @@ public class BarcodeAnalysis {
 	 * Count instances of each barcode and print totals
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
+	 * @param maxMismatchBarcode Max mismatches in barcode
 	 * @throws IOException
 	 */
-	private static void countBarcodes(String fastq, BarcodedReadLayout layout) throws IOException {
+	@SuppressWarnings("unused")
+	private static void countBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode) throws IOException {
 		logger.info("");
 		logger.info("Counting read2 barcodes for RNA-DNA-3D...");
 		Map<Barcode, Integer> barcodeCounts = new TreeMap<Barcode, Integer>();
 		for(Barcode b : layout.getAllBarcodes()) {
 			barcodeCounts.put(b, Integer.valueOf(0));
 		}
-		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, MAX_MISMATCH_BARCODE);
+		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, maxMismatchBarcode);
 		FastqParser iter = new FastqParser();
 		iter.start(new File(fastq));
 		int numDone = 0;
@@ -544,44 +543,16 @@ public class BarcodeAnalysis {
 	 */
 	private static void validateCommandLine(CommandLineParser commandLineParser) {
 		
-		String outPrefix = commandLineParser.getStringArg(outPrefixOption);
-		String fastq = commandLineParser.getStringArg(fastqOption);
-		String fastq1 = commandLineParser.getStringArg(fastq1Option);
-		String fastq2 = commandLineParser.getStringArg(fastq2Option);
-		int readLength = commandLineParser.getIntArg(readLengthOption);
-		int read1Length = commandLineParser.getIntArg(read1LengthOption);
-		int read2Length = commandLineParser.getIntArg(read2LengthOption);
-		String oddBarcodeList = commandLineParser.getStringArg(oddBarcodeTableOption);
-		String evenBarcodeList = commandLineParser.getStringArg(evenBarcodeTableOption);
-		String yShapeBarcodeList = commandLineParser.getStringArg(yShapeBarcodeTableOption);
-		String rpm = commandLineParser.getStringArg(rpmOption);
-		String dpm = commandLineParser.getStringArg(dpmOption);
-		int maxMismatchBarcode = commandLineParser.getIntArg(maxMismatchBarcodeOption);
-		int maxMismatchBarcodeRead1 = commandLineParser.getIntArg(maxMismatchBarcodeRead1Option);
-		int maxMismatchBarcodeRead2 = commandLineParser.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
-		int maxMismatchYShapeRead2 = commandLineParser.getIntArg(maxMismatchYShapeBarcodeRead2Option);
-		int maxMismatchRpm = commandLineParser.getIntArg(maxMismatchRpmOption);
-		int maxMismatchDpm = commandLineParser.getIntArg(maxMismatchDpmOption);
-		boolean countBarcodes = commandLineParser.getBooleanArg(countBarcodesOption);
-		boolean batch = commandLineParser.getBooleanArg(batchOption);
-		String jar = commandLineParser.getStringArg(jarOption);
-		int numFastq = commandLineParser.getIntArg(numFastqOption);
-		String designName = commandLineParser.getStringArg(designNameOption);
+		String fastq = commandLineParser.getStringArg(CommandLineOption.FASTQ.getFlag());
+		String fastq1 = commandLineParser.getStringArg(CommandLineOption.FASTQ_1.getFlag());
+		String fastq2 = commandLineParser.getStringArg(CommandLineOption.FASTQ_2.getFlag());
+		int maxMismatchBarcodeRead2 = commandLineParser.getIntArg(CommandLineOption.MAX_MISMATCH_EVEN_ODD_BARCODE_READ2.getFlag());
+		boolean countBarcodes = commandLineParser.getBooleanArg(CommandLineOption.COUNT_BARCODES.getFlag());
+		boolean batch = commandLineParser.getBooleanArg(CommandLineOption.BATCH.getFlag());
+		String jar = commandLineParser.getStringArg(CommandLineOption.JAR.getFlag());
+		int numFastq = commandLineParser.getIntArg(CommandLineOption.NUM_FASTQ.getFlag());
+		String designName = commandLineParser.getStringArg(CommandLineOption.DESIGN_NAME.getFlag());
 		LigationDesign design = LigationDesign.fromString(designName);
-		int totalNumBarcodes = commandLineParser.getIntArg(totalNumBarcodesOption);		
-		int totalNumBarcodesRead2 = commandLineParser.getIntArg(totalNumBarcodesRead2Option);		
-		int maxMismatchAdapter = commandLineParser.getIntArg(maxMismatchAdapterOption);
-		String adapterSeqFasta = commandLineParser.getStringArg(adapterSeqFastaOption);
-		@SuppressWarnings("unused")
-		boolean splitOutputBySwitchesInLayout = commandLineParser.getBooleanArg(splitOutFilesBySwitchesOption);
-		String may2015firstBarcodeFile = commandLineParser.getStringArg(may2015firstBarcodeFileOption);
-		String may2015OddBarcodeFile = commandLineParser.getStringArg(may2015oddBarcodeFileOption);
-		String may2015evenBarcodeFile = commandLineParser.getStringArg(may2015evenBarcodeFileOption);
-		String may2015lastBarcodeFile = commandLineParser.getStringArg(may2015lastBarcodeFileOption);
-		int may2015maxMismatchFirstBarcode = commandLineParser.getIntArg(may2015maxMismatchFirstBarcodeOption);
-		int may2015maxMismatchLastBarcode = commandLineParser.getIntArg(may2015maxMismatchLastBarcodeOption);
-		int may2015maxMismatchOddEvenBarcode = commandLineParser.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
-		String july2015firstBarcodeFile = commandLineParser.getStringArg(july2015read1BarcodeFileOption);
 
 		if(fastq != null) {
 			if(fastq1 != null || fastq2 != null) {
@@ -593,7 +564,7 @@ public class BarcodeAnalysis {
 			throw new IllegalArgumentException("Provide single fastq or both paired fastq1, fastq2");
 		}
 		
-		if((outPrefix != null || countBarcodes) && fastq == null && fastq1 == null && fastq2 == null) {
+		if((countBarcodes) && fastq == null && fastq1 == null && fastq2 == null) {
 			throw new IllegalArgumentException("Must provide fastq file to write table of reads and barcodes");
 		}
 		
@@ -606,234 +577,209 @@ public class BarcodeAnalysis {
 		}
 		
 		switch(design) {
-		case PAIRED_DESIGN_BARCODE_IN_READ2:
-			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			if(rpm == null) {
-				throw new IllegalArgumentException("Must provide RPM sequence for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			if(maxMismatchRpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.PAIRED_DESIGN_BARCODE_IN_READ2.toString() + ".");
-			}
-			break;
-		case PAIRED_DESIGN_JULY_2015:
-			if(fastq1 == null) {
-				throw new IllegalArgumentException("Must provide fastq file 1 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(fastq2 == null) {
-				throw new IllegalArgumentException("Must provide fastq file 2 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(july2015firstBarcodeFile == null) {
-				throw new IllegalArgumentException("Must provide read 1 barcode list for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(totalNumBarcodesRead2 < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(read1Length < 1) {
-				throw new IllegalArgumentException("Must provide read 1 length for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(read2Length < 1) {
-				throw new IllegalArgumentException("Must provide read 2 length for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(maxMismatchBarcodeRead1 < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 1 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(maxMismatchBarcodeRead2 < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			if(maxMismatchYShapeRead2 < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in Y shape barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JULY_2015.toString() + ".");
-			}
-			break;
-		case SINGLE_DESIGN_WITH_SWITCH:
-			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(rpm == null) {
-				throw new IllegalArgumentException("Must provide RPM sequence for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(dpm == null) {
-				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(maxMismatchRpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in RPM for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			if(maxMismatchDpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN_WITH_SWITCH.toString() + ".");
-			}
-			break;
-		case SINGLE_DESIGN:
-			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			if(dpm == null) {
-				throw new IllegalArgumentException("Must provide DPM sequence for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			if(maxMismatchDpm < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in DPM for " + LigationDesign.SINGLE_DESIGN.toString() + ".");
-			}
-			break;
-		case SINGLE_DESIGN_MARCH_2015:
-			if(adapterSeqFasta == null) {
-				throw new IllegalArgumentException("Must provide fasta file of adapter sequences for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			if(totalNumBarcodes < 1) {
-				throw new IllegalArgumentException("Must provide number of barcode ligations for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			if(readLength < 1) {
-				throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			if(maxMismatchBarcode < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			if(maxMismatchAdapter < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in adapters for " + LigationDesign.SINGLE_DESIGN_MARCH_2015.toString() + ".");
-			}
-			break;
-		case SINGLE_DESIGN_MAY_2015:
-			 if(may2015firstBarcodeFile == null) {
-				 throw new IllegalArgumentException("Must provide file of initial barcode equivalence classesfor " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");
-			 }
-			 if(may2015OddBarcodeFile == null || may2015evenBarcodeFile == null) {
-				 throw new IllegalArgumentException("Must provide file of odd and even barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
-			 }
-			 if(may2015lastBarcodeFile == null) {
-				 throw new IllegalArgumentException("Must provide file of final barcode equivalence classes for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
-			 }
-			 if(readLength < 1) {
-				 throw new IllegalArgumentException("Must provide read length for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
-			 }
-			 if(may2015maxMismatchFirstBarcode < 0) {
-				 throw new IllegalArgumentException("Must provide max mismatches in initial barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
-			 }
-			 if(may2015maxMismatchLastBarcode < 0) {
-				 throw new IllegalArgumentException("Must provide max mismatches in final barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
-			 }
-			 if(may2015maxMismatchOddEvenBarcode < 0) {
-				 throw new IllegalArgumentException("Must provide max mismatches in odd/even barcode for " + LigationDesign.SINGLE_DESIGN_MAY_2015.toString() + ".");				 
-			 }
-			 break;
 		case PAIRED_DESIGN_JANUARY_2016:
-			if(oddBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide odd barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
-			}
-			if(evenBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide even barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
-			}
-			if(yShapeBarcodeList == null) {
-				throw new IllegalArgumentException("Must provide Y shape barcode list (for read 2) for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
-			}
-			if(read2Length < 1) {
-				throw new IllegalArgumentException("Must provide read 2 length for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
-			}
+			CommandLineOption.ODD_BARCODE_TABLE.validateCommandLine(commandLineParser);
+			CommandLineOption.EVEN_BARCODE_TABLE.validateCommandLine(commandLineParser);
+			CommandLineOption.Y_SHAPE_BARCODE_TABLE.validateCommandLine(commandLineParser);
+			CommandLineOption.READ2_LENGTH.validateCommandLine(commandLineParser);
 			if(maxMismatchBarcodeRead2 < 0) {
 				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
 			}
-			if(maxMismatchYShapeRead2 < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in Y shape barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
-			}
+			CommandLineOption.MAX_MISMATCH_Y_SHAPE_READ2.validateCommandLine(commandLineParser);
 			break;
 		default:
 			throw new UnsupportedOperationException("Not implemented for " + design.toString());		
 		}
 	}
 	
-	private static String debugOption = "-d";
-	private static String outPrefixOption = "-ob3d";
-	private static String emailOption = "-e";
-	private static String fastqOption = "-fq";
-	private static String fastq1Option = "-fq1";
-	private static String fastq2Option = "-fq2";
-	private static String readLengthOption = "-rl";
-	private static String read1LengthOption = "-r1l";
-	private static String read2LengthOption = "-r2l";
-	private static String oddBarcodeTableOption = "-ob";
-	private static String evenBarcodeTableOption = "-eb";
-	private static String yShapeBarcodeTableOption = "-yb";
-	private static String rpmOption = "-rpm";
-	private static String dpmOption = "-dpm";
-	private static String maxMismatchBarcodeOption = "-mmb";
-	private static String maxMismatchBarcodeRead1Option = "-mmbr1";
-	private static String maxMismatchEvenOddBarcodeRead2Option = "-mmeor2";
-	private static String maxMismatchYShapeBarcodeRead2Option = "-mmyr2";
-	private static String maxMismatchRpmOption = "-mmr";
-	private static String maxMismatchDpmOption = "-mmd";
-	private static String maxMismatchAdapterOption = "-mma";
-	private static String enforceOddEvenOption = "-oe";
-	private static String countBarcodesOption = "-cb";
-	private static String verboseOption = "-v";
-	private static String batchOption = "-bt";
-	private static String jarOption = "-j";
-	private static String numFastqOption = "-nf";
-	private static String designNameOption = "-l";
-	private static String totalNumBarcodesOption = "-nb";
-	private static String splitOutFilesBySwitchesOption = "-ss";
-	private static String suffixFastqOption = "-wsf";
-	private static String suffixFastq1Option = "-wsf1";
-	private static String suffixFastq2Option = "-wsf2";
-	private static String getLastBarcodesOption = "-lb";
-	private static String lastNumBarcodesOption = "-nlb";
-	private static String adapterSeqFastaOption = "-afa";
-	private static String may2015firstBarcodeFileOption = "-fbecf";
-	private static String may2015oddBarcodeFileOption = "-oecf";
-	private static String may2015evenBarcodeFileOption = "-eecf";
-	private static String may2015lastBarcodeFileOption = "-lbecf";
-	private static String may2015maxMismatchFirstBarcodeOption = "-mmfb";
-	private static String may2015maxMismatchLastBarcodeOption = "-mmlb";
-	private static String may2015maxMismatchOddEvenBarcodeOption = "-mmboe";
-	private static String july2015read1BarcodeFileOption = "-r1b";
-	private static String totalNumBarcodesRead2Option = "-nbr2";
-	private static String rpmOrDpmOption = "-rpmordpm";
-	private static String maxMismatchRpmOrDpmOption = "-mmrord";
+	private enum CommandLineOption {
+		
+		BATCH("-bt", "Batch out writing of barcode table", null) {
+			public void addToCommandLineParser(CommandLineParser p) {p.addBooleanArg(getFlag(), getDescription(), false, false);}
+			public void validateCommandLine(CommandLineParser p) {}
+		},
+		COUNT_BARCODES("-cb", "Count barcodes and write to table", null) {
+			public void addToCommandLineParser(CommandLineParser p) {p.addBooleanArg(getFlag(), getDescription(), false, false);}
+			public void validateCommandLine(CommandLineParser p) {}
+		},
+		DESIGN_NAME("-l", "Ligation design. Options: " + LigationDesign.getNamesAsCommaSeparatedList(), "Must provide ligation design name") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), true);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg  = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		DEBUG("-d", "Debug logging on", null) {
+			void addToCommandLineParser(CommandLineParser p) {p.addBooleanArg(getFlag(), getDescription(), false, false);}
+			public void validateCommandLine(CommandLineParser p) {}
+		},
+		DPM("-dpm", "Single fixed DPM sequence", "Must provide DPM sequence") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		EMAIL("-e", "Email address for OGS jobs", "Must provide email address") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		ENFORCE_ODD_EVEN("-oe", "Enforce odd/even alternation for barcodes", null) {
+			void addToCommandLineParser(CommandLineParser p) {p.addBooleanArg(getFlag(), getDescription(), false, false);}
+			public void validateCommandLine(CommandLineParser p) {}
+		},
+		EVEN_BARCODE_TABLE("-eb", "Even barcode table file (format: barcode_id	barcode_seq)", "Must provide file containing list of even barcodes") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		FASTQ("-fq", "Fastq file if only identifying barcodes in one mate", "Must provide fastq file") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		FASTQ_1("-fq1", "Fastq file read 1 if identifying barcodes in both mates", "Must provide fastq file for read 1") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		FASTQ_2("-fq2", "Fastq file read 2 if identifying barcodes in both mates", "Must provide fastq file for read 2") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		JAR("-j", "This jar file for batched jobs", "") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		LAST_NUM_BARCODES("-nlb", "Number of last barcodes to get for get last N barcodes option", "Must provide number of last barcodes to get") {
+			void addToCommandLineParser(CommandLineParser p) {p.addIntArg(getFlag(), getDescription(), false, -1);}
+			public void validateCommandLine(CommandLineParser p) {
+				int arg = p.getIntArg(getFlag());
+				if(arg < 0) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		MAX_MISMATCH_Y_SHAPE_READ2("-mmyr2", "Max mismatches in Y shape barcode in read 2 if identifying barcodes in both mates", "Must provide max mismatches in Y shape barcode in read 2") {
+			void addToCommandLineParser(CommandLineParser p) {p.addIntArg(getFlag(), getDescription(), false, -1);}
+			public void validateCommandLine(CommandLineParser p) {
+				int arg = p.getIntArg(getFlag());
+				if(arg < 0) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		OUTPUT_PREFIX("-op", "Output file prefix", "Must provide output file prefix") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), true);}
+			public void validateCommandLine(CommandLineParser p) {
+				// No validation needed; argument is required
+			}
+		},
+		READ2_LENGTH("-r2l", "Read 2 length", "Must provide read 2 length") {
+			void addToCommandLineParser(CommandLineParser p) {p.addIntArg(getFlag(), getDescription(), false, -1);}
+			public void validateCommandLine(CommandLineParser p) {
+				int arg = p.getIntArg(getFlag());
+				if(arg < 0) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		ODD_BARCODE_TABLE("-ob", "Odd barcode table file (format: barcode_id	barcode_seq)", "Must provide table of odd barcodes") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		Y_SHAPE_BARCODE_TABLE("-yb", "Y shape barcode table file (format: barcode_id	barcode_seq)", "Must provide table of Y shape barcodes") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		MAX_MISMATCH_EVEN_ODD_BARCODE_READ2("-mmeor2", "Max mismatches in even/odd barcode in read 2 if identifying barcodes in both mates", 
+				"Must provide max mismatches in even/odd barcode in read 2") {
+			void addToCommandLineParser(CommandLineParser p) {p.addIntArg(getFlag(), getDescription(), false, -1);}
+			public void validateCommandLine(CommandLineParser p) {
+				int arg = p.getIntArg(getFlag());
+				if(arg < 0) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		NUM_FASTQ("-nf", "Number of fastq files to divide into if batching", "Must specify number of fastq files to divide into") {
+			void addToCommandLineParser(CommandLineParser p) {p.addIntArg(getFlag(), getDescription(), false, 20);}
+			public void validateCommandLine(CommandLineParser p) {}
+		},
+		SPLIT_BY_SWITCHES("-ss", "Split output files by switch values in reads", "Must specify whether to split output by switches in reads") {
+			void addToCommandLineParser(CommandLineParser p) {p.addBooleanArg(getFlag(), getDescription(), false, false);}
+			public void validateCommandLine(CommandLineParser p) {}
+		},
+		SUFFIX_FASTQ("-wsf", "Also write fastq file of the part of each read after the last matched layout element, if only identifying barcodes in one mate",
+				"Must provide output suffix fastq file") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		SUFFIX_FASTQ_1("-wsf1", "Also write fastq file of the part of each read 1 after the last matched layout element, if identifying barcodes in both mates",
+				"Must provide output suffix fastq file for read 1") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		SUFFIX_FASTQ_2("-wsf2", "Also write fastq file of the part of each read 2 after the last matched layout element, if identifying barcodes in both mates",
+				"Must provide output suffix fastq file for read 2") {
+			void addToCommandLineParser(CommandLineParser p) {p.addStringArg(getFlag(), getDescription(), false, null);}
+			public void validateCommandLine(CommandLineParser p) {
+				String arg = p.getStringArg(getFlag());
+				if(arg == null) throw new IllegalArgumentException(getErrorMessage());
+			}
+		},
+		VERBOSE_OUTPUT("-v", "Use verbose output in barcode identification table", "Must specify whether to provide verbose output") {
+			void addToCommandLineParser(CommandLineParser p) {p.addBooleanArg(getFlag(), getDescription(), false, false);}
+			public void validateCommandLine(CommandLineParser p) {}
+		}
+		;
+		
+		private String flag;
+		private String description;
+		private String errorMessage;
+		
+		private CommandLineOption(String flag, String description, String errorMessage) {
+			this.flag = flag;
+			this.description = description;
+			this.errorMessage = errorMessage;
+		}
+		
+		abstract void addToCommandLineParser(CommandLineParser p);
+		
+		public abstract void validateCommandLine(CommandLineParser p);
+		
+		public static CommandLineParser createCommandLineParser() {
+			CommandLineParser rtrn = new CommandLineParser();
+			for(CommandLineOption option : values()) {
+				option.addToCommandLineParser(rtrn);
+			}
+			return rtrn;
+		}
+		
+		public String getFlag() {return flag;}
+		public String getDescription() {return description;}
+		public String getErrorMessage() {return errorMessage;}
+		
+	}
 	
 	/**
 	 * @param args
@@ -856,56 +802,9 @@ public class BarcodeAnalysis {
 			logger.warn("");
 		}
 		
-		CommandLineParser p = new CommandLineParser();
-		p.addBooleanArg(debugOption, "Debug logging on", false, false);
-		p.addStringArg(outPrefixOption, "Output file prefix for barcode identification", false, null);
-		p.addStringArg(fastqOption, "Fastq file if only identifying barcodes in one mate", false, null);
-		p.addStringArg(fastq1Option, "Fastq file read 1 if identifying barcodes in both mates", false, null);
-		p.addStringArg(fastq2Option, "Fastq file read 2 if identifying barcodes in both mates", false, null);
-		p.addIntArg(readLengthOption, "Read length if only identifying barcodes in one mate", false, -1);
-		p.addIntArg(read1LengthOption, "Read 1 length if identifying barcodes in both mates", false, -1);
-		p.addIntArg(read2LengthOption, "Read 2 length if identifying barcodes in both mates", false, -1);
-		p.addStringArg(oddBarcodeTableOption, "Odd barcode table file (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(evenBarcodeTableOption, "Even barcode table file (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(yShapeBarcodeTableOption, "Y shape barcode table file (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(dpmOption, "Single fixed DPM sequence", false, null);
-		p.addStringArg(rpmOption, "Single fixed RPM sequence", false, null);
-		p.addIntArg(maxMismatchBarcodeOption, "Max mismatches in barcode if only identifying barcodes in one mate", false, -1);
-		p.addIntArg(maxMismatchBarcodeRead1Option, "Max mismatches in barcode in read 1 if identifying barcodes in both mates", false, -1);
-		p.addIntArg(maxMismatchEvenOddBarcodeRead2Option, "Max mismatches in even/odd barcode in read 2 if identifying barcodes in both mates", false, -1);
-		p.addIntArg(maxMismatchYShapeBarcodeRead2Option, "Max mismatches in Y shape barcode in read 2 if identifying barcodes in both mates", false, -1);
-		p.addIntArg(maxMismatchRpmOption, "Max mismatches in RPM", false, -1);
-		p.addIntArg(maxMismatchDpmOption, "Max mismatches in DPM", false, -1);
-		p.addIntArg(maxMismatchAdapterOption, "Max mismatches in adapter for single design from March 2015 with multiple adapters between barcodes and read", false, -1);
-		p.addBooleanArg(enforceOddEvenOption, "Enforce odd/even alternation for barcodes", false, false);
-		p.addBooleanArg(countBarcodesOption, "Count barcodes and write to table", false, false);
-		p.addBooleanArg(verboseOption, "Use verbose output in barcode identification table", false, false);
-		p.addBooleanArg(batchOption, "Batch out writing of barcode table", false, false);
-		p.addStringArg(jarOption, "This jar file for batched jobs", false, null);
-		p.addIntArg(numFastqOption, "Number of fastq files to divide into if batching", false, 20);
-		p.addStringArg(emailOption, "Email address for OGS jobs", false, null);
-		p.addStringArg(designNameOption, "Ligation design. Options: " + LigationDesign.getNamesAsCommaSeparatedList(), true);
-		p.addIntArg(totalNumBarcodesOption, "Total number of barcode ligations if only identifying barcodes in one mate", false, -1);
-		p.addIntArg(totalNumBarcodesRead2Option, "Total number of barcode ligations on read 2 for paired design with barcodes in both mates", false, -1);
-		p.addBooleanArg(splitOutFilesBySwitchesOption, "Split output files by switch values in reads", false, false);
-		p.addStringArg(suffixFastqOption, "Also write fastq file of the part of each read after the last matched layout element, if only identifying barcodes in one mate", false, null);
-		p.addStringArg(suffixFastq1Option, "Also write fastq file of the part of each read 1 after the last matched layout element, if identifying barcodes in both mates", false, null);
-		p.addStringArg(suffixFastq2Option, "Also write fastq file of the part of each read 2 after the last matched layout element, if identifying barcodes in both mates", false, null);
-		p.addBooleanArg(getLastBarcodesOption, "Also get the last N barcodes from each fragment and write as a column in table", false, false);
-		p.addIntArg(lastNumBarcodesOption, "Number of last barcodes to get for " + getLastBarcodesOption + " option", false, -1);
-		p.addStringArg(adapterSeqFastaOption, "Fasta file of adapter sequences for single design from March 2015 with multiple adapters between barcodes and read", false, null);
-		p.addStringArg(may2015firstBarcodeFileOption, "Table of initial barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
-		p.addStringArg(may2015lastBarcodeFileOption, "Table of final barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
-		p.addStringArg(may2015oddBarcodeFileOption, "Table of odd barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
-		p.addStringArg(may2015evenBarcodeFileOption, "Table of even barcode equivalence classes for single design from May 2015 (format: equiv_class	barcode_id	barcode_seq)", false, null);
-		p.addIntArg(may2015maxMismatchFirstBarcodeOption, "Max mismatches in initial barcode for single design from May 2015", false, -1);
-		p.addIntArg(may2015maxMismatchLastBarcodeOption, "Max mismatches in final barcode for single design from May 2015", false, -1);
-		p.addIntArg(may2015maxMismatchOddEvenBarcodeOption, "Max mismatches in odd/even barcode for single design from May 2015", false, -1);
-		p.addStringArg(july2015read1BarcodeFileOption, "Table of read1 barcodes for paired design from July 2015 (format: barcode_id	barcode_seq)", false, null);
-		p.addStringArg(rpmOrDpmOption, "RPM or DPM sequence for December 2015 design (depending on whether these are RNA or DNA reads", false, null);
-		p.addIntArg(maxMismatchRpmOrDpmOption, "Max mismatches in RPM or DPM for December 2015 design (depending on whether these are RNA or DNA reads", false, -1);
+		CommandLineParser p = CommandLineOption.createCommandLineParser();
 		p.parse(args);
-		if(p.getBooleanArg(debugOption)) {
+		if(p.getBooleanArg(CommandLineOption.DEBUG.getFlag())) {
 			ReadLayout.logger.setLevel(Level.DEBUG);
 			BarcodeSet.logger.setLevel(Level.DEBUG);
 			ReadLayoutFactory.logger.setLevel(Level.DEBUG);
@@ -923,51 +822,21 @@ public class BarcodeAnalysis {
 			ReadLayoutSequenceHash.logger.setLevel(Level.DEBUG);
 		}
 		
-		String outPrefix = p.getStringArg(outPrefixOption);
-		String fastq = p.getStringArg(fastqOption);
-		String fastq1 = p.getStringArg(fastq1Option);
-		String fastq2 = p.getStringArg(fastq2Option);
-		int readLength = p.getIntArg(readLengthOption);
-		int read1Length = p.getIntArg(read1LengthOption);
-		int read2Length = p.getIntArg(read2LengthOption);
-		String oddBarcodeList = p.getStringArg(oddBarcodeTableOption);
-		String evenBarcodeList = p.getStringArg(evenBarcodeTableOption);
-		String yShapeBarcodeList = p.getStringArg(yShapeBarcodeTableOption);
-		String rpm = p.getStringArg(rpmOption);
-		String dpm = p.getStringArg(dpmOption);
-		MAX_MISMATCH_BARCODE = p.getIntArg(maxMismatchBarcodeOption);
-		MAX_MISMATCH_BARCODE_READ1 = p.getIntArg(maxMismatchBarcodeRead1Option);
-		MAX_MISMATCH_EVEN_ODD_BARCODE_READ2 = p.getIntArg(maxMismatchEvenOddBarcodeRead2Option);
-		MAX_MISMATCH_Y_SHAPE_BARCODE_READ2 = p.getIntArg(maxMismatchYShapeBarcodeRead2Option);
-		MAX_MISMATCH_RPM = p.getIntArg(maxMismatchRpmOption);
-		MAX_MISMATCH_DPM = p.getIntArg(maxMismatchDpmOption);
-		boolean enforceOddEven = p.getBooleanArg(enforceOddEvenOption);
-		boolean countBarcodes = p.getBooleanArg(countBarcodesOption);
-		boolean verbose = p.getBooleanArg(verboseOption);
-		boolean batch = p.getBooleanArg(batchOption);
-		String designName = p.getStringArg(designNameOption);
+		String outPrefix = p.getStringArg(CommandLineOption.OUTPUT_PREFIX.getFlag());
+		String fastq = p.getStringArg(CommandLineOption.FASTQ.getFlag());
+		String fastq1 = p.getStringArg(CommandLineOption.FASTQ_1.getFlag());
+		String fastq2 = p.getStringArg(CommandLineOption.FASTQ_2.getFlag());
+		int read2Length = p.getIntArg(CommandLineOption.READ2_LENGTH.getFlag());
+		String oddBarcodeList = p.getStringArg(CommandLineOption.ODD_BARCODE_TABLE.getFlag());
+		String evenBarcodeList = p.getStringArg(CommandLineOption.EVEN_BARCODE_TABLE.getFlag());
+		String yShapeBarcodeList = p.getStringArg(CommandLineOption.Y_SHAPE_BARCODE_TABLE.getFlag());
+		int maxMismatchEvenOddBarcodeRead2 = p.getIntArg(CommandLineOption.MAX_MISMATCH_EVEN_ODD_BARCODE_READ2.getFlag());
+		int maxMismatchYShapeBarcodeRead2 = p.getIntArg(CommandLineOption.MAX_MISMATCH_Y_SHAPE_READ2.getFlag());
+		boolean countBarcodes = p.getBooleanArg(CommandLineOption.COUNT_BARCODES.getFlag());
+		boolean verbose = p.getBooleanArg(CommandLineOption.VERBOSE_OUTPUT.getFlag());
+		boolean batch = p.getBooleanArg(CommandLineOption.BATCH.getFlag());
+		String designName = p.getStringArg(CommandLineOption.DESIGN_NAME.getFlag());
 		LigationDesign design = LigationDesign.fromString(designName);
-		int totalNumBarcodes = p.getIntArg(totalNumBarcodesOption);
-		boolean splitOutputBySwitchesInLayout = p.getBooleanArg(splitOutFilesBySwitchesOption);
-		String suffixFastq = p.getStringArg(suffixFastqOption);
-		String suffixFastq1 = p.getStringArg(suffixFastq1Option);
-		String suffixFastq2 = p.getStringArg(suffixFastq2Option);
-		GET_LAST_BARCODES = p.getBooleanArg(getLastBarcodesOption);
-		int lastNumBarcodes = p.getIntArg(lastNumBarcodesOption);
-		String adapterSeqFasta = p.getStringArg(adapterSeqFastaOption);
-		MAX_MISMATCH_ADAPTER = p.getIntArg(maxMismatchAdapterOption);
-		if(lastNumBarcodes > 0) {
-			NUM_LAST_BARCODES = lastNumBarcodes;
-		}
-		String may2015firstBarcodeFile = p.getStringArg(may2015firstBarcodeFileOption);
-		String may2015OddBarcodeFile = p.getStringArg(may2015oddBarcodeFileOption);
-		String may2015EvenBarcodeFile = p.getStringArg(may2015evenBarcodeFileOption);
-		String may2015lastBarcodeFile = p.getStringArg(may2015lastBarcodeFileOption);
-		int may2015maxMismatchFirstBarcode = p.getIntArg(may2015maxMismatchFirstBarcodeOption);
-		int may2015maxMismatchLastBarcode = p.getIntArg(may2015maxMismatchLastBarcodeOption);
-		int may2015maxMismatchOddEvenBarcode = p.getIntArg(may2015maxMismatchOddEvenBarcodeOption);
-		String july2015firstBarcodeFile = p.getStringArg(july2015read1BarcodeFileOption);
-		int totalNumBarcodesRead2 = p.getIntArg(totalNumBarcodesRead2Option);		
 		
 		validateCommandLine(p);
 		
@@ -978,41 +847,10 @@ public class BarcodeAnalysis {
 				if(fastq1 != null && fastq2 != null) divideFastqAndFindBarcodesPairedFastq(p);
 			} else {
 				switch(design) {
-				case PAIRED_DESIGN_BARCODE_IN_READ2:
-					BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, 
-							readLength, MAX_MISMATCH_BARCODE, MAX_MISMATCH_RPM, enforceOddEven);
-					findBarcodes(fastq, layout1, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
-					break;
-				case SINGLE_DESIGN_WITH_SWITCH:
-					BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, 
-							rpm, dpm, readLength, MAX_MISMATCH_BARCODE, MAX_MISMATCH_RPM, MAX_MISMATCH_DPM, enforceOddEven);
-					findBarcodes(fastq, layout2, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
-					break;
-				case SINGLE_DESIGN:
-					BarcodedReadLayout layout3 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, dpm, readLength, 
-							MAX_MISMATCH_BARCODE, MAX_MISMATCH_DPM, enforceOddEven);
-					findBarcodes(fastq, layout3, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
-					break;
-				case SINGLE_DESIGN_MARCH_2015:
-					BarcodedReadLayout layout4 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMarch2015(evenBarcodeList, oddBarcodeList, totalNumBarcodes, adapterSeqFasta, 
-							readLength, MAX_MISMATCH_BARCODE, MAX_MISMATCH_ADAPTER, enforceOddEven);
-					findBarcodes(fastq, layout4, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
-					break;
-				case SINGLE_DESIGN_MAY_2015:
-					BarcodedReadLayout layout5 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignMay2015(may2015firstBarcodeFile, may2015OddBarcodeFile, may2015EvenBarcodeFile, 
-							may2015lastBarcodeFile, readLength, may2015maxMismatchFirstBarcode, may2015maxMismatchOddEvenBarcode, may2015maxMismatchLastBarcode);
-					findBarcodes(fastq, layout5, outPrefix, verbose, splitOutputBySwitchesInLayout, suffixFastq);
-					break;
-				case PAIRED_DESIGN_JULY_2015:
-					BarcodedReadLayout layout6read1 = ReadLayoutFactory.getRead1LayoutRnaDna3DPairedDesignJuly2015(july2015firstBarcodeFile, MAX_MISMATCH_BARCODE_READ1, read1Length);
-					BarcodedReadLayout layout6read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJuly2015(oddBarcodeList, evenBarcodeList, yShapeBarcodeList, totalNumBarcodesRead2, 
-							MAX_MISMATCH_EVEN_ODD_BARCODE_READ2, MAX_MISMATCH_Y_SHAPE_BARCODE_READ2, read2Length, enforceOddEven);
-					findBarcodes(fastq1, fastq2, layout6read1, layout6read2, outPrefix, suffixFastq1, suffixFastq2, verbose);
-					break;
 				case PAIRED_DESIGN_JANUARY_2016:
 					BarcodedReadLayout layout7read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJanuary2016(evenBarcodeList, oddBarcodeList, 
-							yShapeBarcodeList, MAX_MISMATCH_EVEN_ODD_BARCODE_READ2, MAX_MISMATCH_Y_SHAPE_BARCODE_READ2, read2Length);
-					findBarcodes(fastq, layout7read2, outPrefix, verbose, false);
+							yShapeBarcodeList, maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length);
+					findBarcodes(fastq, layout7read2, maxMismatchEvenOddBarcodeRead2, outPrefix, verbose, false);
 					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
@@ -1023,16 +861,6 @@ public class BarcodeAnalysis {
 		// Make histogram of barcodes
 		if(countBarcodes) {
 			switch(design) {
-			case PAIRED_DESIGN_BARCODE_IN_READ2:
-				BarcodedReadLayout layout1 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesign(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, readLength, MAX_MISMATCH_BARCODE, 
-						MAX_MISMATCH_RPM, enforceOddEven);
-				countBarcodes(fastq, layout1);
-				break;
-			case SINGLE_DESIGN_WITH_SWITCH:
-				BarcodedReadLayout layout2 = ReadLayoutFactory.getReadLayoutRnaDna3DSingleDesignWithRnaDnaSwitch(evenBarcodeList, oddBarcodeList, totalNumBarcodes, rpm, dpm, readLength, 
-						MAX_MISMATCH_BARCODE, MAX_MISMATCH_RPM, MAX_MISMATCH_DPM, enforceOddEven);
-				countBarcodes(fastq, layout2);
-				break;
 			default:
 				throw new IllegalArgumentException("Not implemented");			
 			}

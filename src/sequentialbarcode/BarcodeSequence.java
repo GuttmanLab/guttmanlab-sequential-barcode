@@ -17,6 +17,7 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * A possible set of barcodes identified with a fragment
+ * This class is designed to be mutable.
  * @author prussell
  *
  */
