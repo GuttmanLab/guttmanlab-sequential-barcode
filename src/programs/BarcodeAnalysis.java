@@ -282,9 +282,10 @@ public final class BarcodeAnalysis {
 	 * Obeys the switch scenario, so if using switches, this will also write multiple fastq files, one for each switch
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, String suffixFastq) throws IOException {
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, 
+			String suffixFastq) throws IOException {
 		logger.info("");
-		logger.info("Identifying barcodes and writing to table(s) "+ outFile +"...");
+		logger.info("Identifying barcodes in " + fastq + " and writing to table(s) "+ outFile +"...");
 		if(splitOutputBySwitchesInLayout) {
 			logger.info("Splitting output by value of switches in reads...");
 		}
@@ -850,7 +851,7 @@ public final class BarcodeAnalysis {
 				case PAIRED_DESIGN_JANUARY_2016:
 					BarcodedReadLayout layout7read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJanuary2016(evenBarcodeList, oddBarcodeList, 
 							yShapeBarcodeList, maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length);
-					findBarcodes(fastq, layout7read2, maxMismatchEvenOddBarcodeRead2, outPrefix, verbose, false);
+					findBarcodes(fastq2, layout7read2, maxMismatchEvenOddBarcodeRead2, outPrefix, verbose, false);
 					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");
