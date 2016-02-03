@@ -1,8 +1,8 @@
 package sequentialbarcode;
 
 import fragmentgroup.FragmentGroup;
+import guttmanlab.core.annotation.Annotation;
 import readlayout.ReadLayout;
-import nextgen.core.annotation.Annotation;
 
 /**
  * A fragment with a mapped location and collection of barcodes

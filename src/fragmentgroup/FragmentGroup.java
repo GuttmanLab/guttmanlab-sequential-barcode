@@ -1,11 +1,12 @@
 package fragmentgroup;
 
+import guttmanlab.core.annotation.Annotation;
+
 import java.util.Collection;
 
 import sequentialbarcode.BarcodeSequence;
 import sequentialbarcode.BarcodedFragment;
 
-import nextgen.core.annotation.Annotation;
 
 /**
  * A group of fragments sharing a barcode sequence

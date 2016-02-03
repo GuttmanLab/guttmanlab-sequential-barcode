@@ -1,6 +1,7 @@
 package sequentialbarcode;
 
-import nextgen.core.annotation.Annotation;
+
+import guttmanlab.core.annotation.Annotation;
 
 import org.apache.log4j.Logger;
 

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import matcher.BitapMatcher;
-import matcher.GenericElementMatcher;
 import readelement.FixedSequence;
 import readelement.ReadSequenceElement;
 import readelement.Switch;

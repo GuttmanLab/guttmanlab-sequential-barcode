@@ -1,6 +1,7 @@
 package avro;
 
 import guttmanlab.core.util.CommandLineParser;
+import guttmanlab.core.util.StringParser;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -11,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -30,7 +30,6 @@ import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
-import broad.core.parser.StringParser;
 import sequentialbarcode.BarcodeSequence;
 import guttmanlab.core.serialize.AvroStringIndex;
 import guttmanlab.core.serialize.sam.AvroSamRecord;
@@ -496,7 +495,7 @@ public final class Query3DBarcode {
 		if(chrBarcodeIntersection != null) {
 			StringParser s = new StringParser();
 			s.parse(chrBarcodeIntersection, ",");
-			List<String> chrs = s.getStringList();
+			String[] chrs = s.getStringArray();
 			if(sizeFile == null) {
 				throw new IllegalArgumentException("Must provide chr size file to query entire chromosome");
 			}

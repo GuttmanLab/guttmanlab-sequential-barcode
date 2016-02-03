@@ -1,5 +1,6 @@
 package readelement;
 
+import guttmanlab.core.util.FileUtil;
 import guttmanlab.core.util.StringParser;
 
 import java.io.BufferedReader;
@@ -15,7 +16,6 @@ import org.apache.log4j.Logger;
 import com.sleepycat.persist.model.Persistent;
 
 import matcher.MatchedElement;
-import nextgen.core.utils.FileUtil;
 
 /**
  * A single barcode

@@ -38,17 +38,17 @@ import sequentialbarcode.BarcodedFragment;
 import sequentialbarcode.BasicBarcodedFragment;
 import sequentialbarcode.BarcodedFragmentWithSwitches;
 import sequentialbarcode.BarcodedRNAFragment;
+import guttmanlab.core.datastructures.Pair;
 import guttmanlab.core.pipeline.Job;
 import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;
+import guttmanlab.core.pipeline.OGSUtils;
+import guttmanlab.core.pipeline.util.FastqParser;
+import guttmanlab.core.pipeline.util.FastqSequence;
 import guttmanlab.core.pipeline.util.FastqUtils;
 import matcher.BitapMatcher;
 import matcher.GenericElementMatcher;
 import matcher.HashMatcher;
-import nextgen.core.pipeline.util.OGSUtils;
-import broad.core.datastructures.Pair;
-import broad.pda.seq.fastq.FastqParser;
-import broad.pda.seq.fastq.FastqSequence;
 
 /**
  * Barcode identification and other analyses

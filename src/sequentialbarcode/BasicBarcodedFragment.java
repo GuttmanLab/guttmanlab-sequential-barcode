@@ -1,20 +1,16 @@
 package sequentialbarcode;
 
 
-import static com.sleepycat.persist.model.Relationship.MANY_TO_ONE;
 import fragmentgroup.FragmentGroup;
 import fragmentgroup.BarcodedFragmentGroup;
+import guttmanlab.core.annotation.Annotation;
+import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.util.StringParser;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import programs.BarcodedBamWriter;
 import readelement.Barcode;
 import readelement.BarcodeEquivalenceClass;
 import readelement.BarcodeEquivalenceClassSet;
@@ -22,36 +18,15 @@ import readelement.BarcodeSet;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 
-import com.sleepycat.je.DatabaseException;
-import com.sleepycat.je.EnvironmentMutableConfig;
-import com.sleepycat.persist.EntityCursor;
-import com.sleepycat.persist.PrimaryIndex;
-import com.sleepycat.persist.SecondaryIndex;
-import com.sleepycat.persist.model.Entity;
-import com.sleepycat.persist.model.PrimaryKey;
-import com.sleepycat.persist.model.SecondaryKey;
-
 import matcher.BitapMatcher;
-import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
-import net.sf.samtools.util.CloseableIterator;
-import nextgen.core.alignment.Alignment;
-import nextgen.core.annotation.Annotation;
-import nextgen.core.annotation.BasicAnnotation;
-import nextgen.core.berkeleydb.DatabaseEnvironment;
-import nextgen.core.berkeleydb.DatabaseStore;
-import nextgen.core.berkeleydb.JoinedEntityCursor;
-import nextgen.core.model.AlignmentModel;
 
 /**
  * A basic implementation of a barcoded fragment
  * @author prussell
  *
  */
-@Entity(version=0)
 public class BasicBarcodedFragment implements BarcodedFragment {
-	@PrimaryKey
 	protected String infoString;
 	protected String id;
 	protected String read1sequence;
@@ -61,8 +36,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 	protected ReadLayout read1layout;
 	protected ReadLayout read2layout;
 	protected BarcodeSequence barcodes;
-	@SecondaryKey(relate=MANY_TO_ONE)
-	private String barcodeString;
 	public static Logger logger = Logger.getLogger(BasicBarcodedFragment.class.getName());
 	protected FragmentGroup fragmentGroup;
 	
@@ -74,7 +47,7 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 	 * @param mappedEnd Mapped end
 	 */
 	public BasicBarcodedFragment(String fragmentId, BarcodeSequence barcodeSignature, String mappedChr, int mappedStart, int mappedEnd) {
-		this(fragmentId, barcodeSignature, new BasicAnnotation(mappedChr, mappedStart, mappedEnd));
+		this(fragmentId, barcodeSignature, new SingleInterval(mappedChr, mappedStart, mappedEnd));
 	}
 	
 	/**
@@ -87,7 +60,7 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
 		fragmentGroup = new BarcodedFragmentGroup(barcodes);
-		infoString = getInfoString(id, location.getChr(), location.getStart(), location.getEnd());
+		infoString = getInfoString(id, location.getReferenceName(), location.getReferenceStartPosition(), location.getReferenceEndPosition());
 	}
 	
 	/**
@@ -100,7 +73,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 	
 	private void setBarcodes(BarcodeSequence bs) {
 		barcodes = bs;
-		barcodeString = barcodes.toString();
 	}
 	
 	/**
@@ -124,36 +96,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 		return StringParser.firstField(samRecord.getReadName());
 	}
 	
-	/**
-	 * Instantiate from a SAM record by reading location and attributes
-	 * @param samRecord SAM record
-	 */
-	public BasicBarcodedFragment(SAMRecord samRecord) {
-		
-		String fragmentId = getIdFromSamRecord(samRecord);
-		read1sequence = null;
-		read2sequence = null;
-		String seq = samRecord.getReadString();
-		if(samRecord.getReadPairedFlag()) {
-			if(samRecord.getFirstOfPairFlag()) {
-				read1sequence = seq;
-			} else if(samRecord.getSecondOfPairFlag()) {
-				read2sequence = seq;
-			} 
-		} else {
-			unpairedSequence = seq;
-		}
-		String barcodeString = samRecord.getStringAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
-		BarcodeSequence barcodeSignature = BarcodeSequence.fromSamAttributeString(barcodeString);
-		
-		id = fragmentId;
-		setBarcodes(barcodeSignature);
-		location = new BasicAnnotation(samRecord);
-		fragmentGroup = BarcodedFragmentGroup.createFromSAMRecord(samRecord);
-		
-		infoString = getInfoString(id, location.getChr(), location.getStart(), location.getEnd());
-		
-	}
 	
 	/**
 	 * @param fragmentId Fragment ID
@@ -179,7 +121,7 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
 		fragmentGroup = new BarcodedFragmentGroup(barcodes);
-		infoString = getInfoString(id, location.getChr(), location.getStart(), location.getEnd());
+		infoString = getInfoString(id, location.getReferenceName(), location.getReferenceStartPosition(), location.getReferenceEndPosition());
 	}
 
 	/**
@@ -327,247 +269,8 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 
 	@Override
 	public final String getFullInfoString() {
-		return location.getFullInfoString();
+		return location.toBED();
 	}
-	
-	/**
-	 * Get data accessor for Berkeley DB for this entity type
-	 * @param environmentHome Database environment home
-	 * @param storeName Database entity store name
-	 * @param readOnly Database is read only
-	 * @param transactional Database is transactional
-	 * @return Data accessor
-	 */
-	public static final DataAccessor getDataAccessor(String environmentHome, String storeName, boolean readOnly, boolean transactional) {
-		logger.info("");
-		logger.info("Getting data accessor for database environment " + environmentHome + " and entity store " + storeName + ".");
-		return new DataAccessor(environmentHome, storeName, readOnly, transactional);
-	}
-	
-	/*
-	 * http://docs.oracle.com/cd/E17277_02/html/GettingStartedGuide/simpleda.html
-	 * http://docs.oracle.com/cd/E17277_02/html/GettingStartedGuide/persist_index.html
-	 */
-	/**
-	 * Data accessor which provides access to database
-	 * Opens a database environment
-	 * Must call close() when finished with this object
-	 * @author prussell
-	 *
-	 */
-	public static final class DataAccessor {
 		
-		PrimaryIndex<String, BasicBarcodedFragment> primaryIndex;
-		SecondaryIndex<String, String, BasicBarcodedFragment> secondaryIndexBarcodeString;
-		SecondaryIndex<String, String, BasicBarcodedFragment> secondaryIndexReadID;
-		private DatabaseEnvironment environment;
-		private DatabaseStore entityStore;
-		
-		/**
-		 * Data accessor object. MUST BE CLOSED WHEN DONE.
-		 * @param environmentHome Database environment home directory
-		 * @param storeName Name of database store
-		 * @param readOnly Whether environment should be read only
-		 * @param transactional Whether environment should be transactional
-		 */
-		public DataAccessor(String environmentHome, String storeName, boolean readOnly, boolean transactional) {
-		
-			/*
-			 * http://docs.oracle.com/cd/E17277_02/html/GettingStartedGuide/persist_first.html
-			 */
-			environment = new DatabaseEnvironment();
-			try {
-				environment.setup(new File(environmentHome), readOnly, transactional);
-			} catch(DatabaseException e) {
-				logger.error("Problem with environment setup: " + e.toString());
-				System.exit(-1);
-			}
-			
-			entityStore = new DatabaseStore();
-			try {
-				entityStore.setup(environment.getEnvironment(), storeName, readOnly);
-			} catch(DatabaseException e) {
-				logger.error("Problem with store setup: " + e.toString());
-				System.exit(-1);
-			}
-			
-			primaryIndex = entityStore.getStore().getPrimaryIndex(String.class, BasicBarcodedFragment.class);
-			secondaryIndexBarcodeString = entityStore.getStore().getSecondaryIndex(primaryIndex, String.class, "barcodeString");
-
-			// Attach shutdown hook to close
-			/*Runtime.getRuntime().addShutdownHook(new Thread() {
-				@Override
-				public void run() {
-					close();
-				}
-			});*/
-			
-		}
-		
-		/**
-		 * Set cache size as a percentage of JVM max memory
-		 * @param percent Percentage of JVM max memory to allocate to cache
-		 */
-		public void setCachePercent(int percent) {
-			EnvironmentMutableConfig config = environment.getEnvironment().getMutableConfig();
-			config.setCachePercentVoid(percent);
-			environment.getEnvironment().setMutableConfig(config);
-			logger.info("Changed cache size to " + environment.getEnvironment().getMutableConfig().getCacheSize());
-		}
-		
-		/*
-		 * http://docs.oracle.com/cd/E17277_02/html/GettingStartedGuide/simpleput.html
-		 */
-		public void put(Collection<BasicBarcodedFragment> fragments) {
-			for(BasicBarcodedFragment fragment : fragments) {
-				primaryIndex.put(fragment);
-			}
-		}
-		
-		public void put(BasicBarcodedFragment fragment) {
-			primaryIndex.putNoReturn(fragment);
-		}
-
-		
-		/**
-		 * Close the store and the environment
-		 */
-		public void close() {
-			logger.info("");
-			logger.info("Closing database environment and entity store.");
-			entityStore.close();
-			environment.close();
-		}
-		
-		/**
-		 * Get a cursor over all fragments
-		 * Must close when finished
-		 * Can either use an iterator over the cursor or treat like a collection
-		 * @return Cursor over all fragments
-		 */
-		public EntityCursor<BasicBarcodedFragment> getAllFragments() {
-			return primaryIndex.entities();
-		}
-		
-		
-		/**
-		 * Get an iterator over all fragments sharing barcodes with fragments mapping to the window
-		 * @param barcodedBam Barcoded bam file
-		 * @param chr Window chromsome
-		 * @param start Window start
-		 * @param end Window end
-		 * @param contained Fully contained reads only
-		 * @return Iterator over all fragments sharing barcodes with fragments mapping to the window, or null if the window contains no mappings
-		 * @throws Exception
-		 */
-		public JoinedEntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodesMatchingFragmentInChr(String barcodedBam, String chr) throws Exception {
-			return getAllFragmentsWithBarcodesMatchingFragmentInWindow(barcodedBam, chr, 0, Integer.MAX_VALUE, true);
-		}
-		
-
-		
-		/**
-		 * Get an iterator over all fragments sharing barcodes with fragments mapping to the window
-		 * @param barcodedBam Barcoded bam file
-		 * @param chr Window chromsome
-		 * @param start Window start
-		 * @param end Window end
-		 * @param contained Fully contained reads only
-		 * @return Iterator over all fragments sharing barcodes with fragments mapping to the window, or null if the window contains no mappings
-		 * @throws Exception
-		 */
-		public JoinedEntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodesMatchingFragmentInWindow(String barcodedBam, String chr, int start, int end, boolean contained) throws Exception {
-			SAMFileReader reader = new SAMFileReader(new File(barcodedBam));
-			SAMRecordIterator iter = reader.query(chr, start, end, contained);
-			List<EntityCursor<BasicBarcodedFragment>> cursors = new ArrayList<EntityCursor<BasicBarcodedFragment>>();
-			if(!iter.hasNext()) {
-				reader.close();
-				return null;
-			}
-			// First put all barcode sequences in a tree set so they are not duplicated
-			Collection<String> barcodeSeqs = new TreeSet<String>();
-			while(iter.hasNext()) {
-				try {
-					SAMRecord record = iter.next();
-					String b = record.getStringAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
-					barcodeSeqs.add(b);
-				} catch (Exception e) {
-					for(EntityCursor<BasicBarcodedFragment> c : cursors) {
-						c.close();
-					}
-					reader.close();
-					throw e;
-				}
-			}
-			for(String b : barcodeSeqs) {
-				try {
-					cursors.add(getAllFragmentsWithBarcodes(b));
-				} catch (Exception e) {
-					for(EntityCursor<BasicBarcodedFragment> c : cursors) {
-						c.close();
-					}
-					reader.close();
-					throw e;
-				}
-			}
-			reader.close();
-			return new JoinedEntityCursor<BasicBarcodedFragment>(cursors);
-		}
-		
-		/**
-		 * Get an iterator over all fragments sharing barcodes with fragments mapping to the region
-		 * @param alignmentModel Alignment model loaded with barcoded bam file
-		 * @param region Region to query
-		 * @param contained Fully contained reads only
-		 * @return Iterator over all fragments sharing barcodes with fragments mapping to the region, or null if the region contains no mappings
-		 * @throws Exception
-		 */
-		public JoinedEntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodesMatchingFragmentInWindow(AlignmentModel alignmentModel, Annotation region, boolean contained) {
-			CloseableIterator<Alignment> iter = alignmentModel.getOverlappingReads(region, contained);
-			List<EntityCursor<BasicBarcodedFragment>> cursors = new ArrayList<EntityCursor<BasicBarcodedFragment>>();
-			if(!iter.hasNext()) {
-				iter.close();
-				return null;
-			}
-			while(iter.hasNext()) {
-				try {
-					Alignment align = iter.next();
-					SAMRecord record = align.toSAMRecord();
-					String b = record.getStringAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
-					cursors.add(getAllFragmentsWithBarcodes(b));
-				} catch (Exception e) {
-					for(EntityCursor<BasicBarcodedFragment> c : cursors) {
-						c.close();
-					}
-					e.printStackTrace();
-				}
-			}
-			iter.close();
-			return new JoinedEntityCursor<BasicBarcodedFragment>(cursors);
-		}
-		
-		/**
-		 * Get a cursor over all fragments with a particular barcode string
-		 * Must close when finished
-		 * Can either use an iterator over the cursor or treat like a collection
-		 * @param barcodeString Barcode string
-		 * @return Cursor over all fragments with this barcode string
-		 */
-		public EntityCursor<BasicBarcodedFragment> getAllFragmentsWithBarcodes(String barcodeString) {
-			return secondaryIndexBarcodeString.subIndex(barcodeString).entities();
-		}
-		
-		/**
-		 * Get a cursor over all fragments with a particular ID
-		 * Must close when finished
-		 * Can either use an iterator over the cursor or treat like a collection
-		 * @param id ID
-		 * @return Cursor over all fragments with this ID
-		 */
-		public EntityCursor<BasicBarcodedFragment> getAllFragmentsWithID(String id) {
-			return secondaryIndexReadID.subIndex(id).entities();
-		}
-		
-	}
 	
 }
