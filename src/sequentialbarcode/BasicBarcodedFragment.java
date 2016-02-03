@@ -1,8 +1,6 @@
 package sequentialbarcode;
 
 
-import fragmentgroup.FragmentGroup;
-import fragmentgroup.BarcodedFragmentGroup;
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.util.StringParser;
@@ -37,7 +35,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 	protected ReadLayout read2layout;
 	protected BarcodeSequence barcodes;
 	public static Logger logger = Logger.getLogger(BasicBarcodedFragment.class.getName());
-	protected FragmentGroup fragmentGroup;
 	
 	/**
 	 * @param fragmentId Fragment ID
@@ -59,7 +56,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 		id = StringParser.firstField(fragmentId);
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
-		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 		infoString = getInfoString(id, location.getReferenceName(), location.getReferenceStartPosition(), location.getReferenceEndPosition());
 	}
 	
@@ -120,7 +116,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 		read2sequence = read2seq;
 		setBarcodes(barcodeSignature);
 		location = mappedLocation;
-		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 		infoString = getInfoString(id, location.getReferenceName(), location.getReferenceStartPosition(), location.getReferenceEndPosition());
 	}
 
@@ -137,7 +132,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 		read2sequence = read2seq;
 		read1layout = layoutRead1;
 		read2layout = layoutRead2;
-		fragmentGroup = new BarcodedFragmentGroup(barcodes);
 	}
 	
 	public final BarcodeSequence getBarcodes() {
@@ -255,16 +249,6 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 			if(l != 0) return l;
 		}
 		return id.compareTo(other.getId());
-	}
-
-	@Override
-	public final FragmentGroup getFragmentGroup() {
-		return fragmentGroup;
-	}
-
-	@Override
-	public final void addFragmentWithSameBarcodes(BarcodedFragment fragment) {
-		fragmentGroup.addFragment(fragment);
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package sequentialbarcode;
 
-import fragmentgroup.FragmentGroup;
 import guttmanlab.core.annotation.Annotation;
 import readlayout.ReadLayout;
 
@@ -64,16 +63,5 @@ public interface BarcodedFragment extends Comparable<BarcodedFragment> {
 	 */
 	public BarcodeSequence getBarcodes();
 	
-	/**
-	 * Get the fragment group that this fragment belongs to
-	 * @return The fragment group
-	 */
-	public FragmentGroup getFragmentGroup();
-	
-	/**
-	 * Add a fragment to the fragment group that this fragment belongs to, provided it has the same barcodes as this fragment
-	 * @param fragment New fragment to add to group
-	 */
-	public void addFragmentWithSameBarcodes(BarcodedFragment fragment);
 
 }
