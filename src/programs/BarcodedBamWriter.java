@@ -19,13 +19,13 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
+import contact.BarcodeSequence;
 import guttmanlab.core.pipeline.Job;
 import guttmanlab.core.pipeline.JobUtils;
 import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.OGSUtils;
 import guttmanlab.core.pipeline.Scheduler;
 import guttmanlab.core.pipeline.util.BamUtils;
-import sequentialbarcode.BarcodeSequence;
 import net.sf.samtools.BAMFileWriter;
 import net.sf.samtools.SAMFileReader;
 import net.sf.samtools.SAMFormatException;

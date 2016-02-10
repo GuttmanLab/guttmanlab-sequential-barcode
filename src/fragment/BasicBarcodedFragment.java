@@ -1,4 +1,4 @@
-package sequentialbarcode;
+package fragment;
 
 
 import guttmanlab.core.annotation.Annotation;
@@ -9,13 +9,13 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import readelement.Barcode;
+import contact.BarcodeSequence;
+import readelement.FragmentBarcode;
 import readelement.BarcodeEquivalenceClass;
 import readelement.BarcodeEquivalenceClassSet;
 import readelement.BarcodeSet;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
-
 import matcher.BitapMatcher;
 import net.sf.samtools.SAMRecord;
 
@@ -164,16 +164,16 @@ public class BasicBarcodedFragment implements BarcodedFragment {
 			for(int i = 0; i < readElements.size(); i++) {
 				ReadSequenceElement parentElement = readLayout.getElements().get(i);
 				Class<? extends ReadSequenceElement> cl = parentElement.getClass();
-				if(cl.equals(Barcode.class) || cl.equals(BarcodeSet.class)) {
+				if(cl.equals(FragmentBarcode.class) || cl.equals(BarcodeSet.class)) {
 					for(ReadSequenceElement elt : readElements.get(i)) {
-						barcodes.appendBarcode((Barcode)elt);
+						barcodes.appendBarcode(((FragmentBarcode)elt).getBarcode());
 					}
 					continue;
 				}
 				if(cl.equals(BarcodeEquivalenceClass.class) || cl.equals(BarcodeEquivalenceClassSet.class)) {
 					for(ReadSequenceElement elt : readElements.get(i)) {
 						BarcodeEquivalenceClass bec = (BarcodeEquivalenceClass) elt;
-						barcodes.appendBarcode(bec.toBarcode());
+						barcodes.appendBarcode(bec.toBarcode().getBarcode());
 					}
 					continue;
 				}

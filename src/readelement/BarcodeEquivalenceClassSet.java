@@ -95,8 +95,8 @@ public final class BarcodeEquivalenceClassSet extends AbstractReadSequenceElemen
 		return null;
 	}
 
-	public Barcode toBarcode() {
-		return new Barcode("NA", getId());
+	public FragmentBarcode toBarcode() {
+		return new FragmentBarcode("NA", getId());
 	}
 
 	@Override

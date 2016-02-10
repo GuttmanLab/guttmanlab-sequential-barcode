@@ -1,5 +1,6 @@
-package sequentialbarcode;
+package fragment;
 
+import contact.BarcodeSequence;
 import guttmanlab.core.annotation.Annotation;
 import readlayout.ReadLayout;
 

@@ -16,7 +16,7 @@ import org.apache.log4j.Logger;
  */
 public class BarcodeSet extends AbstractReadSequenceElement {
 	
-	protected Map<String, Collection<Barcode>> barcodesByPrefix; // Map of barcode prefix to barcode
+	protected Map<String, Collection<FragmentBarcode>> barcodesByPrefix; // Map of barcode prefix to barcode
 	public static Logger logger = Logger.getLogger(BarcodeSet.class.getName());
 	protected int length;
 	private String id;
@@ -25,14 +25,14 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	private FixedSequenceCollection stopSignalSeqCollection;
 	private int stopSignalMaxMismatches;
 	protected static int barcodePrefixLen = 2; // Length of barcode prefix to store for indexing
-	protected Collection<Barcode> barcodes;
+	protected Collection<FragmentBarcode> barcodes;
 	private int maxLevDist;
 	
 	/**
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet) {
+	public BarcodeSet(String setId, Collection<FragmentBarcode> barcodeSet) {
 		this(setId, barcodeSet, false);
 	}
 			
@@ -42,13 +42,13 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignalForRepeatable String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable) {
+	public BarcodeSet(String setId, Collection<FragmentBarcode> barcodeSet, boolean isRepeatable) {
 		id = setId;
 		repeatable = isRepeatable;
 		int len = barcodeSet.iterator().next().getLength();
-		barcodesByPrefix = new HashMap<String, Collection<Barcode>>();
+		barcodesByPrefix = new HashMap<String, Collection<FragmentBarcode>>();
 		maxLevDist = barcodeSet.iterator().next().maxLevenshteinDist();
-		for(Barcode b : barcodeSet) {
+		for(FragmentBarcode b : barcodeSet) {
 			if(b.getLength() != len) {
 				throw new IllegalArgumentException("All barcode sequences must have the same length");
 			}
@@ -57,13 +57,13 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 			}
 			String prefix = b.getSequence().substring(0, barcodePrefixLen);
 			if(!barcodesByPrefix.containsKey(prefix)) {
-				barcodesByPrefix.put(prefix, new HashSet<Barcode>());
+				barcodesByPrefix.put(prefix, new HashSet<FragmentBarcode>());
 			}
 			barcodesByPrefix.get(prefix).add(b);
 		}
 		length = len;
-		barcodes = new HashSet<Barcode>();
-		for(Collection<Barcode> bs : barcodesByPrefix.values()) {
+		barcodes = new HashSet<FragmentBarcode>();
+		for(Collection<FragmentBarcode> bs : barcodesByPrefix.values()) {
 			barcodes.addAll(bs);
 		}
 	}
@@ -75,7 +75,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	 * @param stopSignal String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
+	public BarcodeSet(String setId, Collection<FragmentBarcode> barcodeSet, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
 		this(setId, barcodeSet, isRepeatable);
 		setStopSignalAsString(stopSignal);
 		stopSignalMaxMismatches = stopSignalMaxMismatch;
@@ -88,7 +88,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	 * @param stopSignal Collection of strings whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public BarcodeSet(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, FixedSequenceCollection stopSignal) {
+	public BarcodeSet(String setId, Collection<FragmentBarcode> barcodeSet, boolean isRepeatable, FixedSequenceCollection stopSignal) {
 		this(setId, barcodeSet, isRepeatable);
 		setStopSignalAsFixedSequenceCollection(stopSignal);
 	}
@@ -104,7 +104,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	/**
 	 * @return The barcodes
 	 */
-	public final Collection<Barcode> getBarcodes() {
+	public final Collection<FragmentBarcode> getBarcodes() {
 		return barcodes;
 	}
 	
@@ -152,7 +152,7 @@ public class BarcodeSet extends AbstractReadSequenceElement {
 	@Override
 	public Map<String, ReadSequenceElement> sequenceToElement() {
 		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
-		for(Barcode barcode : barcodes) {
+		for(FragmentBarcode barcode : barcodes) {
 			rtrn.putAll(barcode.sequenceToElement());
 		}
 		return rtrn;

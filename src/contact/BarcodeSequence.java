@@ -1,4 +1,4 @@
-package sequentialbarcode;
+package contact;
 
 import guttmanlab.core.util.StringParser;
 
@@ -17,7 +17,7 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * A possible set of barcodes identified with a fragment
- * This class is designed to be mutable.
+ * This class is designed to be mutable and is not thread-safe.
  * @author prussell
  *
  */
@@ -42,33 +42,33 @@ public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 	public BarcodeSequence(List<Barcode> barcodeList) {
 		this();
 		appendBarcodes(barcodeList);
-		resetSamAttributeString();
+		refreshSamAttributeString();
 	}
 	
 	/**
-	 * Add a barcode to the end of the sequence
+	 * Add a barcode to the end of this sequence
 	 * @param barcode The barcode to add
 	 */
 	public void appendBarcode(Barcode barcode) {
 		barcodes.add(barcode);
-		resetSamAttributeString();
+		refreshSamAttributeString();
 	}
 	
 	/**
-	 * Add a list of barcodes to the end of the sequence
+	 * Add a list of barcodes to the end of this sequence
 	 * @param newBarcodes Ordered list of barcodes to add
 	 */
 	public void appendBarcodes(List<Barcode> newBarcodes) {
 		for(Barcode b : newBarcodes) {
-			appendBarcode(b);
+			barcodes.add(b);
 		}
-		resetSamAttributeString();
+		refreshSamAttributeString();
 	}
 	
 	/**
 	 * Refresh the SAM attribute string representing this sequence of barcodes
 	 */
-	private void resetSamAttributeString() {
+	private void refreshSamAttributeString() {
 		samAttributeString = getSamAttributeString();
 	}
 	
@@ -83,21 +83,11 @@ public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 	}
 	
 	/**
-	 * Create FragmentBarcodes object from a string representation as produced by toSamAttributeString()
+	 * Create Barcodes object from a string representation as produced by toSamAttributeString()
 	 * @param s The string representation
 	 * @return The barcode collection represented by the string
 	 */
 	public static BarcodeSequence fromSamAttributeString(String s) {
-		return fromSamAttributeString(s, -1);
-	}
-	
-	/**
-	 * Create FragmentBarcodes object from a string representation as produced by toSamAttributeString()
-	 * @param s The string representation
-	 * @param maxMismatches Max mismatches for each barcode
-	 * @return The barcode collection represented by the string
-	 */
-	public static BarcodeSequence fromSamAttributeString(String s, int maxMismatches) {
 		List<Barcode> barcodes = new ArrayList<Barcode>();
 		StringParser s1 = new StringParser();
 		StringParser s2 = new StringParser();
@@ -111,7 +101,7 @@ public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 			if(s2.getFieldCount() != 2) {
 				throw new IllegalArgumentException("String " + s + " is not of required form [id1]barcode1[id2]barcode2...");
 			}
-			barcodes.add(new Barcode(s2.asString(1), s2.asString(0), maxMismatches));
+			barcodes.add(new Barcode(s2.asString(1), s2.asString(0)));
 		}
 		return new BarcodeSequence(barcodes);
 	}
@@ -132,7 +122,7 @@ public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 		}
 		return rtrn;
 	}
-	
+		
 	/**
 	 * Get the SAM attribute string representing this sequence of barcodes
 	 * @return The SAM attribute string

@@ -22,7 +22,7 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 	 * @param setId Barcode set ID
 	 * @param barcodeSet The barcodes
 	 */
-	public BarcodeEquivalenceClass(String setId, Collection<Barcode> barcodeSet) {
+	public BarcodeEquivalenceClass(String setId, Collection<FragmentBarcode> barcodeSet) {
 		super(setId, barcodeSet);
 	}
 			
@@ -32,7 +32,7 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignalForRepeatable String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 */
-	public BarcodeEquivalenceClass(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable) {
+	public BarcodeEquivalenceClass(String setId, Collection<FragmentBarcode> barcodeSet, boolean isRepeatable) {
 		super(setId, barcodeSet, isRepeatable);
 	}
 	
@@ -43,7 +43,7 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 	 * @param stopSignal String whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
 	 */
-	public BarcodeEquivalenceClass(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
+	public BarcodeEquivalenceClass(String setId, Collection<FragmentBarcode> barcodeSet, boolean isRepeatable, String stopSignal, int stopSignalMaxMismatch) {
 		super(setId, barcodeSet, isRepeatable, stopSignal, stopSignalMaxMismatch);
 	}
 	
@@ -53,7 +53,7 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 	 * @param isRepeatable Whether to look for multiple matches in sequence
 	 * @param stopSignal Collection of strings whose presence in a read signals the end of the region that is expected to contain these barcodes
 	 */
-	public BarcodeEquivalenceClass(String setId, Collection<Barcode> barcodeSet, boolean isRepeatable, FixedSequenceCollection stopSignal) {
+	public BarcodeEquivalenceClass(String setId, Collection<FragmentBarcode> barcodeSet, boolean isRepeatable, FixedSequenceCollection stopSignal) {
 		super(setId, barcodeSet, isRepeatable, stopSignal);
 	}
 
@@ -61,8 +61,8 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 	 * Get a Barcode object for printing info only
 	 * @return Dummy barcode object with this ID
 	 */
-	public Barcode toBarcode() {
-		return new Barcode("NA", getId());
+	public FragmentBarcode toBarcode() {
+		return new FragmentBarcode("NA", getId());
 	}
 	
 	@Override
@@ -101,9 +101,9 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 		
 		Collection<BarcodeEquivalenceClass> rtrn = new ArrayList<BarcodeEquivalenceClass>();
 		for(String ec : allClasses.keySet()) {
-			Collection<Barcode> barcodes = new ArrayList<Barcode>();
+			Collection<FragmentBarcode> barcodes = new ArrayList<FragmentBarcode>();
 			for(String id : allClasses.get(ec).keySet()) {
-				barcodes.add(new Barcode(allClasses.get(ec).get(id), id, maxMismatchBarcodeEquivClass));
+				barcodes.add(new FragmentBarcode(allClasses.get(ec).get(id), id, maxMismatchBarcodeEquivClass));
 			}
 			rtrn.add(new BarcodeEquivalenceClass(ec, barcodes));
 		}
@@ -114,7 +114,7 @@ public final class BarcodeEquivalenceClass extends BarcodeSet {
 	@Override
 	public Map<String, ReadSequenceElement> sequenceToElement() {
 		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
-		for(Barcode barcode : barcodes) {
+		for(FragmentBarcode barcode : barcodes) {
 			rtrn.put(barcode.getSequence(), this);
 		}
 		return rtrn;

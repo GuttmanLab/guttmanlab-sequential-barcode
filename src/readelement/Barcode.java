@@ -7,15 +7,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.TreeSet;
-
-import org.apache.log4j.Logger;
 
 import com.sleepycat.persist.model.Persistent;
 
-import matcher.MatchedElement;
 
 /**
  * A single barcode
@@ -23,51 +18,16 @@ import matcher.MatchedElement;
  *
  */
 @Persistent
-public final class Barcode extends AbstractReadSequenceElement implements Comparable<Barcode> {
+public final class Barcode implements Comparable<Barcode> {
 	
-	protected String sequence;
-	protected String id;
-	private int maxNumMismatches;
-	public static Logger logger = Logger.getLogger(Barcode.class.getName());
-	private boolean repeatable;
-	private String stopSignal;
-	private int stopSignalMaxMismatches;
-	private int length;
+	private String sequence;
+	private String id;
 
-	
-	/**
+		/**
 	 * @param seq The barcode sequence
 	 */
 	public Barcode(String seq) {
-		this(seq, -1, false, null, -1);
-	}
-	
-	/**
-	 * @param seq The barcode sequence
-	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
-	 */
-	public Barcode(String seq, int maxMismatches) {
-		this(seq, maxMismatches, false, null, -1);
-	}
-	
-	/**
-	 * @param seq The barcode sequence
-	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
-	 * @param isRepeatable Whether this barcode can appear multiple times in tandem
-	 * @param stopSignalForRepeatable String whose presence in read signals the end of the region where this barcode is expected to be found
-	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
-	 */
-	public Barcode(String seq, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable, int stopSignalMaxMismatch) {
-		this(seq, null, maxMismatches, isRepeatable, stopSignalForRepeatable, stopSignalMaxMismatch);
-	}
-
-	/**
-	 * @param seq The barcode sequence
-	 * @param barcodeId Unique ID for this barcode
-	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
-	 */
-	public Barcode(String seq, String barcodeId, int maxMismatches) {
-		this(seq, barcodeId, maxMismatches, false, null, -1);
+		this(seq, null);
 	}
 	
 	/**
@@ -75,36 +35,18 @@ public final class Barcode extends AbstractReadSequenceElement implements Compar
 	 * @param barcodeId Unique ID for this barcode
 	 */
 	public Barcode(String seq, String barcodeId) {
-		this(seq, barcodeId, -1, false, null, -1);
-	}
-	
-	/**
-	 * @param seq The barcode sequence
-	 * @param barcodeId Unique ID for this barcode
-	 * @param maxMismatches Max allowable number of mismatches when identifying this barcode in reads
-	 * @param isRepeatable Whether this barcode can appear multiple times in tandem
-	 * @param stopSignalForRepeatable String whose presence in read signals the end of the region where this barcode is expected to be found
-	 * @param stopSignalMaxMismatch Max mismatches to count a match for stop signal
-	 */
-	public Barcode(String seq, String barcodeId, int maxMismatches, boolean isRepeatable, String stopSignalForRepeatable, int stopSignalMaxMismatch) {
 		sequence = seq;
 		id = barcodeId;
-		maxNumMismatches = maxMismatches;
-		repeatable = isRepeatable;
-		stopSignal = stopSignalForRepeatable;
-		stopSignalMaxMismatches = stopSignalMaxMismatch;
-		length = sequence.length();
 	}
 	
 	/**
 	 * Create a set of barcodes with IDs from a table file
 	 * Line format: barcode_id	barcode_sequence
 	 * @param tableFile Table file
-	 * @param maxMismatches Max allowable mismatches when matching barcodes
 	 * @return Collection of barcodes
 	 * @throws IOException
 	 */
-	public static Collection<Barcode> createBarcodesFromTable(String tableFile, int maxMismatches) throws IOException {
+	public static Collection<Barcode> createBarcodesFromTable(String tableFile) throws IOException {
 		FileReader r = new FileReader(tableFile);
 		BufferedReader b = new BufferedReader(r);
 		StringParser s = new StringParser();
@@ -119,7 +61,7 @@ public final class Barcode extends AbstractReadSequenceElement implements Compar
 				b.close();
 				throw new IllegalArgumentException("Format: barcode_id  barcode_sequence");
 			}
-			rtrn.add(new Barcode(s.asString(1), s.asString(0), maxMismatches));
+			rtrn.add(new Barcode(s.asString(1), s.asString(0)));
 		}
 		r.close();
 		b.close();
@@ -129,24 +71,22 @@ public final class Barcode extends AbstractReadSequenceElement implements Compar
 	/**
 	 * Create a set of barcodes without IDs from a list file
 	 * @param listFile File with one barcode sequence per line
-	 * @param maxMismatches Max allowable mismatches when matching barcodes
 	 * @return Collection of barcodes
 	 * @throws IOException
 	 */
-	public static Collection<Barcode> createBarcodesFromList(String listFile, int maxMismatches) throws IOException {
-		return createBarcodes(FileUtil.fileLinesAsList(listFile), maxMismatches);
+	public static Collection<Barcode> createBarcodesFromList(String listFile) throws IOException {
+		return createBarcodes(FileUtil.fileLinesAsList(listFile));
 	}
 	
 	/**
 	 * Create barcode objects from a collection of barcode sequences
 	 * @param barcodeSeqs Barcode sequences
-	 * @param maxMismatches Max allowable mismatches in each barcode when matching to read sequences
 	 * @return Collection of barcode objects
 	 */
-	public static Collection<Barcode> createBarcodes(Collection<String> barcodeSeqs, int maxMismatches) {
+	public static Collection<Barcode> createBarcodes(Collection<String> barcodeSeqs) {
 		Collection<Barcode> rtrn = new TreeSet<Barcode>();
 		for(String b : barcodeSeqs) {
-			rtrn.add(new Barcode(b, maxMismatches));
+			rtrn.add(new Barcode(b));
 		}
 		return rtrn;
 	}
@@ -160,12 +100,10 @@ public final class Barcode extends AbstractReadSequenceElement implements Compar
 		return id.compareTo(o.getId());
 	}
 
-	@Override
-	public int getLength() {
-		return length;
-	}
-
-	@Override
+	/**
+	 * Get the barcode ID
+	 * @return The barcode ID
+	 */
 	public String getId() {
 		return id;
 	}
@@ -179,49 +117,29 @@ public final class Barcode extends AbstractReadSequenceElement implements Compar
 	}
 
 	/**
-	 * Get the mismatch tolerance for this barcode
-	 * @return Max mismatches
+	 * Get the length of the sequence
+	 * @return Length of barcode sequence
 	 */
-	public int getMismatchTolerance() {
-		return maxNumMismatches;
+	public int getLength() {
+		return sequence.length();
 	}
 	
 	@Override
-	public String elementName() {
-		return "barcode";
+	public String toString() {
+		return id + ":" + sequence;
 	}
-
+	
 	@Override
-	public MatchedElement matchedElement(String s) {
-		throw new UnsupportedOperationException("NA");
+	public boolean equals(Object o) {
+		if(!o.getClass().equals(Barcode.class)) return false;
+		Barcode b = (Barcode)o;
+		return toString().equals(b.toString());
 	}
-
+	
 	@Override
-	public boolean isRepeatable() {
-		return repeatable;
+	public int hashCode() {
+		return toString().hashCode();
 	}
-
-	@Override
-	public ReadSequenceElement getStopSignalForRepeatable() {
-		return new FixedSequence("stop_signal", stopSignal, stopSignalMaxMismatches);
-	}
-
-	@Override
-	public Map<String, ReadSequenceElement> sequenceToElement() {
-		Map<String, ReadSequenceElement> rtrn = new HashMap<String, ReadSequenceElement>();
-		rtrn.put(sequence, this);
-		return rtrn;
-	}
-
-	@Override
-	public int minMatch() {
-		return length - maxNumMismatches;
-	}
-
-	@Override
-	public int maxLevenshteinDist() {
-		return maxNumMismatches; // TODO should there be separate parameters?
-	}
-
+	
 
 }

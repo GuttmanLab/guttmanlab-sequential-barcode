@@ -1,4 +1,4 @@
-package sequentialbarcode;
+package fragment;
 
 import java.util.ArrayList;
 import java.util.HashMap;

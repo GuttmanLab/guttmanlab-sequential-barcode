@@ -24,13 +24,13 @@ import net.sf.samtools.util.CloseableIterator;
 
 import org.apache.log4j.Logger;
 
+import contact.BarcodeSequence;
 import programs.BarcodedBamWriter;
 import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
-import sequentialbarcode.BarcodeSequence;
 import guttmanlab.core.serialize.AvroStringIndex;
 import guttmanlab.core.serialize.sam.AvroSamRecord;
 import guttmanlab.core.serialize.sam.AvroSamStringIndex;

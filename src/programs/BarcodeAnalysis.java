@@ -1,5 +1,7 @@
 package programs;
 
+import fragment.BarcodedFragmentWithSwitches;
+import fragment.BasicBarcodedFragment;
 import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.StringParser;
 
@@ -21,8 +23,9 @@ import org.apache.log4j.Logger;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.Session;
 
+import contact.BarcodeSequence;
 import readelement.AnySequence;
-import readelement.Barcode;
+import readelement.FragmentBarcode;
 import readelement.BarcodeSet;
 import readelement.FixedSequence;
 import readelement.ReadSequenceElement;
@@ -32,12 +35,6 @@ import readlayout.LigationDesign;
 import readlayout.ReadLayout;
 import readlayout.ReadLayoutFactory;
 import readlayout.ReadLayoutSequenceHash;
-import sequentialbarcode.BarcodeSequence;
-import sequentialbarcode.BarcodedDNAFragment;
-import sequentialbarcode.BarcodedFragment;
-import sequentialbarcode.BasicBarcodedFragment;
-import sequentialbarcode.BarcodedFragmentWithSwitches;
-import sequentialbarcode.BarcodedRNAFragment;
 import guttmanlab.core.datastructures.Pair;
 import guttmanlab.core.pipeline.Job;
 import guttmanlab.core.pipeline.JobUtils;
@@ -495,48 +492,6 @@ public final class BarcodeAnalysis {
 		return rtrn;
 	}
 	
-	/**
-	 * For RNA-DNA 3D barcoding method
-	 * Count instances of each barcode and print totals
-	 * @param fastq Fastq file
-	 * @param layout Barcoded read layout
-	 * @param maxMismatchBarcode Max mismatches in barcode
-	 * @throws IOException
-	 */
-	@SuppressWarnings("unused")
-	private static void countBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode) throws IOException {
-		logger.info("");
-		logger.info("Counting read2 barcodes for RNA-DNA-3D...");
-		Map<Barcode, Integer> barcodeCounts = new TreeMap<Barcode, Integer>();
-		for(Barcode b : layout.getAllBarcodes()) {
-			barcodeCounts.put(b, Integer.valueOf(0));
-		}
-		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, maxMismatchBarcode);
-		FastqParser iter = new FastqParser();
-		iter.start(new File(fastq));
-		int numDone = 0;
-		while(iter.hasNext()) {
-			FastqSequence record = iter.next();
-			String seq = record.getSequence();
-			String name = record.getName();
-			if(new HashMatcher(layout, seq, hash).getMatchedElements() != null) {
-			//if(new BitapMatcher(layout, seq).getMatchedElements() != null) {
-				BarcodedFragment f = new BasicBarcodedFragment(name, null, seq, null, layout);
-				BarcodeSequence barcodes = f.getBarcodes();
-				for(Barcode b : barcodes.getBarcodes()) {
-					barcodeCounts.put(b, Integer.valueOf(barcodeCounts.get(b).intValue() + 1));
-				}
-			}
-			if(numDone > 0 && numDone % 10000 == 0) {
-				logger.info("");
-				logger.info("Finished " + numDone + " reads.");
-				for(Barcode b : barcodeCounts.keySet()) {
-					System.out.println(b.getId() + "\t" + b.getSequence() + "\t" + barcodeCounts.get(b).intValue());
-				}
-			}
-			numDone++;
-		}
-	}
 	
 	/**
 	 * Check command line for required options for the given design
@@ -810,11 +765,9 @@ public final class BarcodeAnalysis {
 			BarcodeSet.logger.setLevel(Level.DEBUG);
 			ReadLayoutFactory.logger.setLevel(Level.DEBUG);
 			BarcodeSequence.logger.setLevel(Level.DEBUG);
-			Barcode.logger.setLevel(Level.DEBUG);
+			FragmentBarcode.logger.setLevel(Level.DEBUG);
 			BasicBarcodedFragment.logger.setLevel(Level.DEBUG);
 			FixedSequence.logger.setLevel(Level.DEBUG);
-			BarcodedDNAFragment.logger.setLevel(Level.DEBUG);
-			BarcodedRNAFragment.logger.setLevel(Level.DEBUG);
 			AnySequence.logger.setLevel(Level.DEBUG);
 			BarcodeAnalysis.logger.setLevel(Level.DEBUG);
 			GenericElementMatcher.logger.setLevel(Level.DEBUG);

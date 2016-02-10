@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.TreeSet;
 
-import readelement.Barcode;
+import readelement.FragmentBarcode;
 import readelement.BarcodeSet;
 import readelement.ReadSequenceElement;
 
@@ -15,7 +15,7 @@ import readelement.ReadSequenceElement;
  */
 public class BarcodedReadLayout extends ReadLayout {
 	
-	private Collection<Barcode> barcodes;
+	private Collection<FragmentBarcode> barcodes;
 	
 	/**
 	 * @param elementSequence Sequence of read elements
@@ -30,13 +30,13 @@ public class BarcodedReadLayout extends ReadLayout {
 	 * Initialize the barcodes based on the read elements
 	 */
 	private void initializeBarcodes() {
-		barcodes = new TreeSet<Barcode>();
+		barcodes = new TreeSet<FragmentBarcode>();
 		ArrayList<ReadSequenceElement> elements = getElements();
 		if(elements != null) {
 			for(int i = 0; i < elements.size(); i++) {
 				ReadSequenceElement parentElement = getElements().get(i);
-				if(parentElement.getClass().equals(Barcode.class)) {
-					Barcode barcode = (Barcode) parentElement;
+				if(parentElement.getClass().equals(FragmentBarcode.class)) {
+					FragmentBarcode barcode = (FragmentBarcode) parentElement;
 					barcodes.add(barcode);
 					continue;
 				}
@@ -49,7 +49,7 @@ public class BarcodedReadLayout extends ReadLayout {
 		}
 	}
 	
-	public Collection<Barcode> getAllBarcodes() {
+	public Collection<FragmentBarcode> getAllBarcodes() {
 		return barcodes;
 	}
 	
