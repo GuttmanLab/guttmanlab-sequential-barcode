@@ -4,6 +4,7 @@ package fragment;
 import guttmanlab.core.annotation.Annotation;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.util.StringParser;
+import htsjdk.samtools.SAMRecord;
 
 import java.util.List;
 
@@ -17,7 +18,6 @@ import readelement.BarcodeSet;
 import readelement.ReadSequenceElement;
 import readlayout.ReadLayout;
 import matcher.BitapMatcher;
-import net.sf.samtools.SAMRecord;
 
 /**
  * A basic implementation of a barcoded fragment

@@ -26,11 +26,14 @@ import guttmanlab.core.pipeline.OGSJob;
 import guttmanlab.core.pipeline.OGSUtils;
 import guttmanlab.core.pipeline.Scheduler;
 import guttmanlab.core.pipeline.util.BamUtils;
-import net.sf.samtools.BAMFileWriter;
-import net.sf.samtools.SAMFileReader;
-import net.sf.samtools.SAMFormatException;
-import net.sf.samtools.SAMRecord;
-import net.sf.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMFileWriter;
+import htsjdk.samtools.SAMFileWriterFactory;
+import htsjdk.samtools.SAMFormatException;
+import htsjdk.samtools.SAMRecord;
+import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 
 /**
  * Tools to add barcode tag to a bam file and write new bam file
@@ -168,12 +171,13 @@ public final class BarcodedBamWriter {
 		logger.info("Writing barcoded version of " + inputBam + " to " + outputBam + "...");
 		//logger.info("Writing mapping of read names to shortened IDs to " + outputNames + "...");
 		
-		BAMFileWriter w = new BAMFileWriter(new File(outputBam));
+		// Get header from original bam file
+		SamReader r = SamReaderFactory.makeDefault().open(new File(inputBam));
+ 
+		SAMFileHeader header = r.getFileHeader();
+		SAMFileWriter w = new SAMFileWriterFactory().makeBAMWriter(header, false, new File(outputBam));
 		//FileWriter nw = new FileWriter(outputNames);
 		
-		// Get header from original bam file
-		SAMFileReader r = new SAMFileReader(new File(inputBam));
-		w.setHeader(r.getFileHeader());
 		
 		int numDone = 0;
 		int skipped = 0;

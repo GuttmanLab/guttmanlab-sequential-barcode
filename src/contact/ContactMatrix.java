@@ -1,7 +1,8 @@
 package contact;
 
+import java.util.Collection;
+
 import guttmanlab.core.annotation.Annotation;
-import guttmanlab.core.annotationcollection.AnnotationCollection;
 
 /**
  * An interface representing a 2D matrix of fragment contacts
@@ -11,7 +12,7 @@ import guttmanlab.core.annotationcollection.AnnotationCollection;
  * @param <T> Annotation type parameter for the fragments
  * @param <S> AnnotationCollection type parameter for fragment clusters
  */
-public interface ContactMatrix<T extends Annotation, S extends AnnotationCollection<T>> {
+public interface ContactMatrix<T extends Annotation, S extends Collection<T>> {
 	
 	/**
 	 * Record a new contact between two fragments in the matrix

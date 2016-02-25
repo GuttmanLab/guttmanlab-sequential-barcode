@@ -306,7 +306,6 @@ public final class BarcodeAnalysis {
 			if(record == null) {
 				continue;
 			}
-			record.removeAtSymbolFromName();
 			String seq = record.getSequence();
 			String name = record.getName();
 			String line = StringParser.firstField(name) + "\t";
@@ -411,10 +410,8 @@ public final class BarcodeAnalysis {
 			if(record1 == null && record2 == null) {
 				continue;
 			}
-			record1.removeAtSymbolFromName();
 			String seq1 = record1.getSequence();
 			String name1 = StringParser.firstField(record1.getName());
-			record2.removeAtSymbolFromName();
 			String seq2 = record2.getSequence();
 			String name2 = StringParser.firstField(record2.getName());
 			if(!name1.equals(name2)) {
