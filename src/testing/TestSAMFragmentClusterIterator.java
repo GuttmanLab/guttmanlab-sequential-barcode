@@ -2,11 +2,13 @@ package testing;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collections;
 
 import org.apache.log4j.Logger;
 
 import contact.SAMFragmentCluster;
 import contact.function.FragmentClusterFunction;
+import contact.function.SAMRecordPredicate;
 import contact.iterator.SAMFragmentClusterIterator;
 import guttmanlab.core.coordinatespace.CoordinateSpace;
 import guttmanlab.core.util.CommandLineParser;
@@ -25,7 +27,7 @@ public class TestSAMFragmentClusterIterator {
 		String bam = p.getStringArg("-b");
 		String chr = p.getStringArg("-c");
 		String out = p.getStringArg("-o");
-		SAMFragmentClusterIterator iter = new SAMFragmentClusterIterator(bam, new CoordinateSpace(chr));
+		SAMFragmentClusterIterator iter = new SAMFragmentClusterIterator(bam, new CoordinateSpace(chr), Collections.singletonList(new SAMRecordPredicate.PrimaryMapping()));
 		FileWriter writer = new FileWriter(out);
 		while(iter.hasNext()) {
 			SAMFragmentCluster cluster = iter.next();
