@@ -7,11 +7,28 @@ import guttmanlab.core.coordinatespace.CoordinateSpace;
 import htsjdk.samtools.fork.SAMRecord;
 import net.sf.samtools.util.CloseableIterator;
 import contact.SAMFragmentCluster;
+import contact.function.SAMRecordPredicate;
 
+/**
+ * Iterator that returns successive SAMFragmentClusters being read from a bam file
+ * @author prussell
+ *
+ */
 public class SAMFragmentClusterIterator implements CloseableIterator<SAMFragmentCluster> {
 	
-	private SAMRecordBarcodeClusterIterator iter;
+	private IteratorCommonBarcodeSAMRecordCollection iter;
 	private CoordinateSpace coordSpace;
+	
+	/**
+	 * Instantiate with default SAMRecord filters
+	 * @param bamFile Bam file
+	 * @param coordSpace Coordinate space
+	 * any predicate evaluates to false will not be included
+	 */
+	public SAMFragmentClusterIterator(String bamFile, CoordinateSpace coordSpace) {
+		this.coordSpace = coordSpace;
+		iter = new IteratorCommonBarcodeSAMRecordCollection(bamFile, SAMRecordPredicate.DEFAULT);
+	}
 	
 	/**
 	 * @param bamFile Bam file
@@ -21,7 +38,7 @@ public class SAMFragmentClusterIterator implements CloseableIterator<SAMFragment
 	 */
 	public SAMFragmentClusterIterator(String bamFile, CoordinateSpace coordSpace, List<Predicate<SAMRecord>> requiredConditions) {
 		this.coordSpace = coordSpace;
-		iter = new SAMRecordBarcodeClusterIterator(bamFile, requiredConditions);
+		iter = new IteratorCommonBarcodeSAMRecordCollection(bamFile, requiredConditions);
 	}
 	
 	@Override

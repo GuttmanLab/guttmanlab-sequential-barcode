@@ -3,7 +3,6 @@ package contact.iterator;
 import htsjdk.samtools.fork.FilteredSAMRecordIterator;
 import htsjdk.samtools.fork.SAMFileHeader.SortOrder;
 import htsjdk.samtools.fork.SAMRecord;
-import htsjdk.samtools.fork.SAMRecordIterator;
 import htsjdk.samtools.fork.SamReader;
 import htsjdk.samtools.fork.SamReaderFactory;
 
@@ -26,12 +25,12 @@ import util.SAMConversionUtil;
  * @author prussell
  *
  */
-public class SAMRecordBarcodeClusterIterator implements CloseableIterator<Collection<net.sf.samtools.SAMRecord>> {
+class IteratorCommonBarcodeSAMRecordCollection implements CloseableIterator<Collection<net.sf.samtools.SAMRecord>> {
 	
 	private SamReader reader;
 	private FilteredSAMRecordIterator iter;
 	private net.sf.samtools.SAMRecord prevRecord;
-	private static Logger logger = Logger.getLogger(SAMRecordBarcodeClusterIterator.class.getName());
+	private static Logger logger = Logger.getLogger(IteratorCommonBarcodeSAMRecordCollection.class.getName());
 	private static int numFragmentsDone = 0;
 	private static int numClustersDone = 0;
 	
@@ -40,7 +39,7 @@ public class SAMRecordBarcodeClusterIterator implements CloseableIterator<Collec
 	 * @param requiredConditions Collection of predicates for filtered SAMRecord iterator. SAMRecords for which
 	 * any predicate evaluates to false will not be included
 	 */
-	public SAMRecordBarcodeClusterIterator(String bamFile, List<Predicate<SAMRecord>> requiredConditions) {
+	IteratorCommonBarcodeSAMRecordCollection(String bamFile, List<Predicate<SAMRecord>> requiredConditions) {
 		reader = SamReaderFactory.makeDefault().open(new File(bamFile));
 		iter = new FilteredSAMRecordIterator(reader.iterator());
 		for(Predicate<SAMRecord> predicate : requiredConditions) iter.addRequiredCondition(predicate);
