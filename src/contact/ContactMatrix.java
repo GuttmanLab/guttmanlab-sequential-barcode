@@ -27,6 +27,14 @@ public interface ContactMatrix<T extends Annotation, S extends Collection<T>> {
 	 */
 	public void addContacts(FragmentCluster<T, S> fragmentCluster);
 	
+	//TODO
+	/**
+	 * Get 2D matrix of bin counts
+	 * @param binSize Bin size
+	 * @return 2D matrix of bin counts
+	 */
+	public Matrix getMatrix(int binSize);
+	
 	/**
 	 * Write the matrix data to a file
 	 * @param outFile Output file
