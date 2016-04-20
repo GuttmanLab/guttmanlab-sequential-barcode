@@ -13,8 +13,6 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import com.sleepycat.persist.model.Persistent;
-
 import matcher.MatchedElement;
 
 /**
@@ -22,7 +20,6 @@ import matcher.MatchedElement;
  * @author prussell
  *
  */
-@Persistent
 public final class FragmentBarcode extends AbstractReadSequenceElement implements Comparable<FragmentBarcode> {
 	
 	private Barcode barcode;

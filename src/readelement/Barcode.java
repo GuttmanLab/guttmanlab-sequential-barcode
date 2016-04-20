@@ -9,15 +9,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.TreeSet;
 
-import com.sleepycat.persist.model.Persistent;
-
 
 /**
  * A single barcode
  * @author prussell
  *
  */
-@Persistent
 public final class Barcode implements Comparable<Barcode> {
 	
 	private String sequence;

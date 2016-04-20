@@ -9,15 +9,12 @@ import org.apache.log4j.Logger;
 
 import readelement.ReadSequenceElement;
 
-import com.sleepycat.persist.model.Persistent;
-
 /**
  * A sequence of read elements that should be present in a read
  * Can have other stuff between them
  * @author prussell
  *
  */
-@Persistent
 public class ReadLayout {
 	
 	private ArrayList<ReadSequenceElement> elements;	

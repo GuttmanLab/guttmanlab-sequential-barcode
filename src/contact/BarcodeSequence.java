@@ -11,8 +11,6 @@ import org.apache.log4j.Logger;
 import programs.BarcodedBamWriter;
 import readelement.Barcode;
 
-import com.sleepycat.persist.model.Persistent;
-
 import net.sf.samtools.SAMRecord;
 
 /**
@@ -21,7 +19,6 @@ import net.sf.samtools.SAMRecord;
  * @author prussell
  *
  */
-@Persistent
 public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 	
 	private List<Barcode> barcodes;

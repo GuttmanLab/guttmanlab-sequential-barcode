@@ -530,13 +530,13 @@ public final class BarcodeAnalysis {
 		}
 		
 		switch(design) {
-		case PAIRED_DESIGN_JANUARY_2016:
+		case PAIRED_DESIGN_APRIL_2016:
 			CommandLineOption.ODD_BARCODE_TABLE.validateCommandLine(commandLineParser);
 			CommandLineOption.EVEN_BARCODE_TABLE.validateCommandLine(commandLineParser);
 			CommandLineOption.Y_SHAPE_BARCODE_TABLE.validateCommandLine(commandLineParser);
 			CommandLineOption.READ2_LENGTH.validateCommandLine(commandLineParser);
 			if(maxMismatchBarcodeRead2 < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_JANUARY_2016.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_APRIL_2016.toString() + ".");
 			}
 			CommandLineOption.MAX_MISMATCH_Y_SHAPE_READ2.validateCommandLine(commandLineParser);
 			break;
@@ -798,8 +798,8 @@ public final class BarcodeAnalysis {
 				if(fastq1 != null && fastq2 != null) divideFastqAndFindBarcodesPairedFastq(p);
 			} else {
 				switch(design) {
-				case PAIRED_DESIGN_JANUARY_2016:
-					BarcodedReadLayout layout7read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignJanuary2016(evenBarcodeList, oddBarcodeList, 
+				case PAIRED_DESIGN_APRIL_2016:
+					BarcodedReadLayout layout7read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignApril2016(evenBarcodeList, oddBarcodeList, 
 							yShapeBarcodeList, maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length);
 					findBarcodes(fastq2, layout7read2, maxMismatchEvenOddBarcodeRead2, outPrefix, verbose, false);
 					break;
