@@ -255,14 +255,14 @@ public final class BarcodeAnalysis {
 	 * Identify barcodes in reads and write to a table
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
-	 * @param maxMismatchBarcode Max mismatches in barcode
 	 * @param outFilePrefix Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix, boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
-		findBarcodes(fastq, layout, maxMismatchBarcode, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFilePrefix,
+			boolean verbose, boolean splitOutputBySwitchesInLayout) throws IOException {
+		findBarcodes(fastq, layout, outFilePrefix, verbose, splitOutputBySwitchesInLayout, null);
 	}
 	
 	/**
@@ -270,7 +270,6 @@ public final class BarcodeAnalysis {
 	 * Identify barcodes in reads and write to a table
 	 * @param fastq Fastq file
 	 * @param layout Barcoded read layout
-	 * @param maxMismatchBarcode Max mismatches in barcode
 	 * @param outFile Output table
 	 * @param verbose Verbose table output
 	 * @param splitOutputBySwitchesInLayout Write separate tables based on values of switch(es) within the reads
@@ -279,7 +278,7 @@ public final class BarcodeAnalysis {
 	 * Obeys the switch scenario, so if using switches, this will also write multiple fastq files, one for each switch
 	 * @throws IOException
 	 */
-	private static void findBarcodes(String fastq, BarcodedReadLayout layout, int maxMismatchBarcode, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, 
+	private static void findBarcodes(String fastq, BarcodedReadLayout layout, String outFile, boolean verbose, boolean splitOutputBySwitchesInLayout, 
 			String suffixFastq) throws IOException {
 		logger.info("");
 		logger.info("Identifying barcodes in " + fastq + " and writing to table(s) "+ outFile +"...");
@@ -289,7 +288,7 @@ public final class BarcodeAnalysis {
 		if(suffixFastq != null) {
 			logger.info("Also writing fastq file(s) of reads without matched elements to " + suffixFastq + "...");
 		}
-		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout, maxMismatchBarcode);
+		ReadLayoutSequenceHash hash = new ReadLayoutSequenceHash(layout);
 		FileWriter tableWriter = new FileWriter(outFile); // Write to table
 		BufferedWriter singleFastqWriter = suffixFastq != null ? new BufferedWriter(new FileWriter(suffixFastq)) : null; // Fastq writer if using and not using switches
 		Map<String, FileWriter> switchTableWriters = new HashMap<String, FileWriter>(); // Writers for tables if using switches
@@ -390,8 +389,8 @@ public final class BarcodeAnalysis {
 		if(suffixFastq2 != null) {
 			logger.info("Also writing fastq file of read2 minus matched elements to " + suffixFastq2 + "...");
 		}
-		ReadLayoutSequenceHash hash1 = new ReadLayoutSequenceHash(layout1, maxMismatchBarcodeRead1);
-		ReadLayoutSequenceHash hash2 = new ReadLayoutSequenceHash(layout2, maxMismatchBarcodeRead2);
+		ReadLayoutSequenceHash hash1 = new ReadLayoutSequenceHash(layout1);
+		ReadLayoutSequenceHash hash2 = new ReadLayoutSequenceHash(layout2);
 		FileWriter tableWriter = new FileWriter(outFile); // Write to table
 		BufferedWriter singleFastqWriter1 = suffixFastq1 != null ? new BufferedWriter(new FileWriter(suffixFastq1)) : null; // Fastq writer if using and not using switches
 		BufferedWriter singleFastqWriter2 = suffixFastq2 != null ? new BufferedWriter(new FileWriter(suffixFastq2)) : null; // Fastq writer if using and not using switches
@@ -530,13 +529,23 @@ public final class BarcodeAnalysis {
 		}
 		
 		switch(design) {
-		case PAIRED_DESIGN_APRIL_2016:
+		case PAIRED_DESIGN_APRIL_2016_4BARCODE:
 			CommandLineOption.ODD_BARCODE_TABLE.validateCommandLine(commandLineParser);
 			CommandLineOption.EVEN_BARCODE_TABLE.validateCommandLine(commandLineParser);
 			CommandLineOption.Y_SHAPE_BARCODE_TABLE.validateCommandLine(commandLineParser);
 			CommandLineOption.READ2_LENGTH.validateCommandLine(commandLineParser);
 			if(maxMismatchBarcodeRead2 < 0) {
-				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_APRIL_2016.toString() + ".");
+				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_APRIL_2016_4BARCODE.toString() + ".");
+			}
+			CommandLineOption.MAX_MISMATCH_Y_SHAPE_READ2.validateCommandLine(commandLineParser);
+			break;
+		case PAIRED_DESIGN_APRIL_2016_5BARCODE:
+			CommandLineOption.ODD_BARCODE_TABLE.validateCommandLine(commandLineParser);
+			CommandLineOption.EVEN_BARCODE_TABLE.validateCommandLine(commandLineParser);
+			CommandLineOption.Y_SHAPE_BARCODE_TABLE.validateCommandLine(commandLineParser);
+			CommandLineOption.READ2_LENGTH.validateCommandLine(commandLineParser);
+			if(maxMismatchBarcodeRead2 < 0) {
+				throw new IllegalArgumentException("Must provide max mismatches in barcode in read 2 for " + LigationDesign.PAIRED_DESIGN_APRIL_2016_5BARCODE.toString() + ".");
 			}
 			CommandLineOption.MAX_MISMATCH_Y_SHAPE_READ2.validateCommandLine(commandLineParser);
 			break;
@@ -798,10 +807,15 @@ public final class BarcodeAnalysis {
 				if(fastq1 != null && fastq2 != null) divideFastqAndFindBarcodesPairedFastq(p);
 			} else {
 				switch(design) {
-				case PAIRED_DESIGN_APRIL_2016:
+				case PAIRED_DESIGN_APRIL_2016_4BARCODE:
 					BarcodedReadLayout layout7read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignApril2016(evenBarcodeList, oddBarcodeList, 
-							yShapeBarcodeList, maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length);
+							yShapeBarcodeList, maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length, 4);
 					findBarcodes(fastq2, layout7read2, maxMismatchEvenOddBarcodeRead2, outPrefix, verbose, false);
+					break;
+				case PAIRED_DESIGN_APRIL_2016_5BARCODE:
+					BarcodedReadLayout layout8read2 = ReadLayoutFactory.getRead2LayoutRnaDna3DPairedDesignApril2016(evenBarcodeList, oddBarcodeList, 
+							yShapeBarcodeList, maxMismatchEvenOddBarcodeRead2, maxMismatchYShapeBarcodeRead2, read2Length, 5);
+					findBarcodes(fastq2, layout8read2, maxMismatchEvenOddBarcodeRead2, outPrefix, verbose, false);
 					break;
 				default:
 					throw new IllegalArgumentException("Not implemented");

@@ -24,7 +24,6 @@ public final class ReadLayoutSequenceHash {
 	
 	public static final Logger logger = Logger.getLogger(ReadLayoutSequenceHash.class.getName());
 	
-	private int maxMismatches;
 	/*
 	 * Overall key is number of mismatches. HashMap key is sequence. Hashmap value is index of represented element in array
 	 */
@@ -33,16 +32,18 @@ public final class ReadLayoutSequenceHash {
 	
 	/**
 	 * @param layout Read layout
-	 * @param maxNumMismatches Max number of mismatches in cached imperfect matches
 	 */
-	public ReadLayoutSequenceHash(ReadLayout layout, int maxNumMismatches) {
-		maxMismatches = maxNumMismatches;
+	public ReadLayoutSequenceHash(ReadLayout layout) {
 		initialize(layout);
 	}
 	
 	private void initialize(ReadLayout layout) {
 		// Initialize the map of number of mismatches to imperfect sequence to element index
 		seqToElementIndex = new HashMap<Integer, HashMap<String, Integer>>();
+		int maxMismatches = 0;
+		for(ReadSequenceElement elt : layout.getElements()) {
+			if(elt.maxLevenshteinDist() > maxMismatches) maxMismatches = elt.maxLevenshteinDist();
+		}
 		for(int i = 0; i <= maxMismatches; i++) {
 			seqToElementIndex.put(Integer.valueOf(i), new HashMap<String, Integer>());
 		}
@@ -67,10 +68,11 @@ public final class ReadLayoutSequenceHash {
 		// Store mapping from number of mismatches to mutated sequence to index of element
 		logger.debug("");
 		for(int eltIndex = 0; eltIndex < elements.length; eltIndex++) {
-			String seq = elements[eltIndex].getSequence();
+			ReadSequenceElement elt = elements[eltIndex];
+			String seq = elt.getSequence();
 			logger.debug("");
 			logger.debug("Getting representatives for element " + eltIndex + "\t" + elements[eltIndex].getId() + "\t" + seq);
-			for(int numMismatch = 0; numMismatch <= maxMismatches; numMismatch++) {
+			for(int numMismatch = 0; numMismatch <= elt.maxLevenshteinDist(); numMismatch++) {
 				logger.debug(numMismatch + " mismatches:");
 				Collection<String> mutatedSeqs = MismatchGenerator.getRepresentatives(seq, numMismatch);
 				for(String mutated : mutatedSeqs) {
@@ -91,9 +93,10 @@ public final class ReadLayoutSequenceHash {
 	/**
 	 * Get best element match for a sequence
 	 * @param sequence Actual observed sequence
+	 * @param maxMismatches Max mismatches
 	 * @return Cached element match with fewest mismatches
 	 */
-	public ReadSequenceElement bestMatch(String sequence) {
+	public ReadSequenceElement bestMatch(String sequence, int maxMismatches) {
 		for(int i = 0; i <= maxMismatches; i++) {
 			Integer index = seqToElementIndex.get(Integer.valueOf(i)).get(sequence);
 			if(index != null) {

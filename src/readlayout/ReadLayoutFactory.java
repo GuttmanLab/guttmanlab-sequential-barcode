@@ -32,17 +32,21 @@ public final class ReadLayoutFactory {
 	 * @param maxMismatchOddEven Max mismatch in odd/even barcodes
 	 * @param maxMismatchYshape Max mismatch in Y shape barcode
 	 * @param read2length Read 2 length
+	 * @param totalNumBarcodes 4 or 5
 	 * @return Read 2 layout
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignApril2016(String evenBarcodesFile, String oddBarcodesFile, String yShapeBarcodesFile, int maxMismatchOddEven, int maxMismatchYshape, int read2length) throws IOException {
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignApril2016(String evenBarcodesFile, String oddBarcodesFile, 
+			String yShapeBarcodesFile, int maxMismatchOddEven, int maxMismatchYshape, int read2length, int totalNumBarcodes) throws IOException {
 		Collection<FragmentBarcode> oddBarcodes = FragmentBarcode.createBarcodesFromTable(oddBarcodesFile, maxMismatchOddEven);
 		Collection<FragmentBarcode> evenBarcodes = FragmentBarcode.createBarcodesFromTable(evenBarcodesFile, maxMismatchOddEven);
 		Collection<FragmentBarcode> yBarcodes = FragmentBarcode.createBarcodesFromTable(yShapeBarcodesFile, maxMismatchYshape);
-		return getRead2LayoutRnaDna3DPairedDesignApril2016(evenBarcodes, oddBarcodes, yBarcodes, read2length);
+		if(totalNumBarcodes == 4) return getRead2LayoutRnaDna3DPairedDesignApril2016_4barcode(evenBarcodes, oddBarcodes, yBarcodes, read2length);
+		if(totalNumBarcodes == 5) return getRead2LayoutRnaDna3DPairedDesignApril2016_5barcode(evenBarcodes, oddBarcodes, yBarcodes, read2length);
+		throw new IllegalArgumentException("Total barcodes must be 4 or 5");
 	}
 
 	/**
-	 * April 2016 design
+	 * April 2016 design with 5 barcodes
 	 * RPM or DPM is in read 1, barcodes are in read 2
 	 * @param evenBarcodes Even barcodes
 	 * @param oddBarcodes Odd barcodes
@@ -50,7 +54,8 @@ public final class ReadLayoutFactory {
 	 * @param read2length Read 2 length
 	 * @return Read 2 layout
 	 */
-	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignApril2016(Collection<FragmentBarcode> evenBarcodes, Collection<FragmentBarcode> oddBarcodes, Collection<FragmentBarcode> yShapeBarcodes, int read2length) {
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignApril2016_5barcode(Collection<FragmentBarcode> evenBarcodes, 
+			Collection<FragmentBarcode> oddBarcodes, Collection<FragmentBarcode> yShapeBarcodes, int read2length) {
 		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
 		BarcodeSet yShapeBarcodesSet = new BarcodeSet("y_shape_barcodes", yShapeBarcodes);
 		BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes);
@@ -60,6 +65,28 @@ public final class ReadLayoutFactory {
 		eltsSequence.add(oddBarcodesSet);
 		eltsSequence.add(evenBarcodesSet);
 		eltsSequence.add(oddBarcodesSet);
+		return new BarcodedReadLayout(eltsSequence, read2length);
+	}
+	
+	/**
+	 * April 2016 design with 4 barcodes
+	 * RPM or DPM is in read 1, barcodes are in read 2
+	 * @param evenBarcodes Even barcodes
+	 * @param oddBarcodes Odd barcodes
+	 * @param yShapeBarcodes Y shape barcodes
+	 * @param read2length Read 2 length
+	 * @return Read 2 layout
+	 */
+	public static BarcodedReadLayout getRead2LayoutRnaDna3DPairedDesignApril2016_4barcode(Collection<FragmentBarcode> evenBarcodes, 
+			Collection<FragmentBarcode> oddBarcodes, Collection<FragmentBarcode> yShapeBarcodes, int read2length) {
+		ArrayList<ReadSequenceElement> eltsSequence = new ArrayList<ReadSequenceElement>();
+		BarcodeSet yShapeBarcodesSet = new BarcodeSet("y_shape_barcodes", yShapeBarcodes);
+		BarcodeSet oddBarcodesSet = new BarcodeSet("odd_barcodes", oddBarcodes);
+		BarcodeSet evenBarcodesSet = new BarcodeSet("even_barcodes", evenBarcodes);
+		eltsSequence.add(yShapeBarcodesSet);
+		eltsSequence.add(evenBarcodesSet);
+		eltsSequence.add(oddBarcodesSet);
+		eltsSequence.add(evenBarcodesSet);
 		return new BarcodedReadLayout(eltsSequence, read2length);
 	}
 	

@@ -30,7 +30,7 @@ public final class HashMatcher extends GenericElementMatcher {
 	@Override
 	public MatchedElement getMatchedElement(ReadSequenceElement toMatch, int startPosOnRead) {
 		int len = toMatch.getLength();
-		ReadSequenceElement bestMatch = hash.bestMatch(readSequence.substring(startPosOnRead, startPosOnRead + len));
+		ReadSequenceElement bestMatch = hash.bestMatch(readSequence.substring(startPosOnRead, startPosOnRead + len), toMatch.maxLevenshteinDist());
 		if(toMatch.sequenceToElement().values().contains(bestMatch)) {
 			if(len != toMatch.getLength()) {
 				throw new IllegalStateException("Length of query element must equal length of matched element");

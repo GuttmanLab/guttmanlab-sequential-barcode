@@ -15,9 +15,17 @@ public enum LigationDesign {
 	 * Design from April 2016
 	 * Read 1 contains RPM or DPM at known position
 	 * Assume data have been divided into RNA/DNA and RPM/DPM removed before running this
-	 * Barcodes are in read2
+	 * Barcodes are in read2: Y, even, odd, even, odd
 	 */
-	PAIRED_DESIGN_APRIL_2016("paired_design_april_2016");
+	PAIRED_DESIGN_APRIL_2016_5BARCODE("paired_design_april_2016_5_barcode"),
+	
+	/**
+	 * Design from April 2016
+	 * Read 1 contains RPM or DPM at known position
+	 * Assume data have been divided into RNA/DNA and RPM/DPM removed before running this
+	 * Barcodes are in read2: Y, even, odd, even
+	 */
+	PAIRED_DESIGN_APRIL_2016_4BARCODE("paired_design_april_2016_4_barcode");
 	
 	private LigationDesign(String name) {
 		this.name = name;
@@ -44,6 +52,9 @@ public enum LigationDesign {
 	 * @return The design
 	 */
 	public static LigationDesign fromString(String name) {
+		if(!fromName.containsKey(name)) {
+			throw new IllegalArgumentException("Ligation design names: " + getNamesAsCommaSeparatedList());
+		}
 		return fromName.get(name);
 	}
 	
