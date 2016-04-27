@@ -23,7 +23,11 @@ public abstract class AbstractReadSequenceElement implements ReadSequenceElement
 		AbstractReadSequenceElement a = (AbstractReadSequenceElement)o;
 		if(!a.elementName().equals(elementName())) return false;
 		if(!a.getId().equals(getId())) return false;
-		if(!a.getSequence().equals(getSequence())) return false;
+		if(a.getSequence() != null && getSequence() != null) {
+			if(!a.getSequence().equals(getSequence())) return false;
+		}
+		if(a.getSequence() == null && getSequence() != null) return false;
+		if(a.getSequence() != null && getSequence() == null) return false;
 		if(a.sequenceToElement().hashCode() != sequenceToElement().hashCode()) return false;
 		return true;
 	}
