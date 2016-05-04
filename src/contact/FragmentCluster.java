@@ -1,7 +1,6 @@
 package contact;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import guttmanlab.core.annotation.Annotation;
@@ -42,7 +41,7 @@ public interface FragmentCluster<T extends Annotation, S extends Collection<T>> 
 	
 	/**
 	 * Add another mapped fragment
-	 * Implementations should have already verified that the new fragment contacts the ones already in the collection
+	 * Implementations should verify that the new fragment contacts the ones already in the collection
 	 * @param region New mapped location to add
 	 */
 	public void addLocation(T region);

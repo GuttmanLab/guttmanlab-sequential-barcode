@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * Static classes representing SAMRecord predicates
+ * Static methods returning SAMRecord predicates
  * @author prussell
  *
  */
@@ -23,7 +23,7 @@ public class SAMRecordPredicate {
 	 */
 	private static final List<Predicate<SAMRecord>> defaultPredicates() {
 		List<Predicate<SAMRecord>> rtrn = new ArrayList<Predicate<SAMRecord>>();
-		rtrn.add(new MinMappingQuality(2));
+		rtrn.add(minMappingQuality(2));
 		return rtrn;
 	}
 	
@@ -32,12 +32,14 @@ public class SAMRecordPredicate {
 	 * @author prussell
 	 *
 	 */
-	public static final class PrimaryMapping implements Predicate<SAMRecord> {
+	public static final Predicate<SAMRecord> isPrimaryMapping() {
 		
-		@Override
-		public boolean test(SAMRecord t) {
-			return !t.getNotPrimaryAlignmentFlag();
-		}
+		return new Predicate<SAMRecord>() {
+			@Override
+			public boolean test(SAMRecord t) {
+				return !t.getNotPrimaryAlignmentFlag();
+			}
+		};
 		
 	}
 	
@@ -46,22 +48,17 @@ public class SAMRecordPredicate {
 	 * @author prussell
 	 *
 	 */
-	public static final class MinMappingQuality implements Predicate<SAMRecord> {
+	public static final Predicate<SAMRecord> minMappingQuality(int minMapq) {
 		
-		private int minMapq;
-		
-		/**
-		 * @param minMappingQuality Minimum mapping quality
-		 */
-		public MinMappingQuality(int minMappingQuality) {
-			minMapq = minMappingQuality;
-		}
+		return new Predicate<SAMRecord>() {
 
-		@Override
-		public boolean test(SAMRecord t) {
-			return t.getMappingQuality() >= minMapq;
-		}
-				
+			@Override
+			public boolean test(SAMRecord record) {
+				return record.getMappingQuality() >= minMapq;
+			}
+			
+		};
+		
 	}
 	
 }
