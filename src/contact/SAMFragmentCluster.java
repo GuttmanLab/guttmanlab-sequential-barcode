@@ -14,7 +14,7 @@ import guttmanlab.core.coordinatespace.CoordinateSpace;
  * @author prussell
  *
  */
-public class SAMFragmentCluster extends AbstractFragmentCluster<SAMFragment, FeatureCollection<SAMFragment>> {
+public class SAMFragmentCluster implements FragmentCluster<SAMFragment, FeatureCollection<SAMFragment>> {
 	
 	private FeatureCollection<SAMFragment> locations;
 	private BarcodeSequence barcodes;

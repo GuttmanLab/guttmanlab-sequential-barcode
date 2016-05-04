@@ -25,7 +25,7 @@ public interface FragmentCluster<T extends Annotation, S extends Collection<T>> 
 	 * Get the number of barcodes in the barcode sequence shared by this cluster
 	 * @return Number of barcodes
 	 */
-	public int getNumBarcodes();
+	public default int getNumBarcodes() {return getBarcodes().getNumBarcodes();}
 	
 	/**
 	 * Get a pointer to the mutable collection of locations
@@ -38,7 +38,7 @@ public interface FragmentCluster<T extends Annotation, S extends Collection<T>> 
 	 * Get the number of mapped locations in the cluster
 	 * @return The number of locations
 	 */
-	public int getNumLocations();
+	public default int getNumLocations() {return getLocations().size();}
 	
 	/**
 	 * Add another mapped fragment
@@ -48,10 +48,11 @@ public interface FragmentCluster<T extends Annotation, S extends Collection<T>> 
 	public void addLocation(T region);
 	
 	/**
-	 * Apply a function with no return value to this object, such as a filter that removes some fragments
+	 * Apply a function to this object, such as a filter that removes some fragments
 	 * @param function Function to apply
+	 * @return A new FragmentCluster that is the result of the function
 	 */
-	public void apply(Consumer<FragmentCluster<T, S>> function);
+	public default FragmentCluster<T, S> apply(Function<FragmentCluster<T, S>, FragmentCluster<T, S>> function) {return function.apply(this);}
 	
 	/**
 	 * Get a string representation of this fragment cluster, e.g. to write to an output file

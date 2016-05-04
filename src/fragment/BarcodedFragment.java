@@ -54,11 +54,6 @@ public interface BarcodedFragment extends Comparable<BarcodedFragment> {
 	public String getFullInfoString();
 	
 	/**
-	 * Find the barcodes in the fragment
-	 */
-	public void findBarcodes();
-		
-	/**
 	 * Get the sequence of barcodes found in the fragment
 	 * @return The sequence of barcodes
 	 */

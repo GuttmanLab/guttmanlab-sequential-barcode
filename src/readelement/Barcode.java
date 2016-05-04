@@ -12,6 +12,7 @@ import java.util.TreeSet;
 
 /**
  * A single barcode
+ * Instances are immutable
  * @author prussell
  *
  */

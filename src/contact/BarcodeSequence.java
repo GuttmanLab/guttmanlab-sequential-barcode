@@ -15,7 +15,7 @@ import net.sf.samtools.SAMRecord;
 
 /**
  * A possible set of barcodes identified with a fragment
- * This class is designed to be mutable and is not thread-safe.
+ * Instances are immutable
  * @author prussell
  *
  */
@@ -26,28 +26,12 @@ public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 	private String samAttributeString;
 
 	/**
-	 * Instantiate with no barcodes
-	 */
-	public BarcodeSequence() {
-		barcodes = new ArrayList<Barcode>();
-	}
-	
-	/**
 	 * Instantiate with an initial set of barcodes
 	 * @param barcodeList Ordered list of barcodes
 	 */
 	public BarcodeSequence(List<Barcode> barcodeList) {
-		this();
+		barcodes = new ArrayList<Barcode>();
 		appendBarcodes(barcodeList);
-		refreshSamAttributeString();
-	}
-	
-	/**
-	 * Add a barcode to the end of this sequence
-	 * @param barcode The barcode to add
-	 */
-	public void appendBarcode(Barcode barcode) {
-		barcodes.add(barcode);
 		refreshSamAttributeString();
 	}
 	
@@ -55,7 +39,7 @@ public final class BarcodeSequence implements Comparable<BarcodeSequence> {
 	 * Add a list of barcodes to the end of this sequence
 	 * @param newBarcodes Ordered list of barcodes to add
 	 */
-	public void appendBarcodes(List<Barcode> newBarcodes) {
+	private void appendBarcodes(List<Barcode> newBarcodes) {
 		for(Barcode b : newBarcodes) {
 			barcodes.add(b);
 		}
