@@ -1,6 +1,7 @@
 package contact;
 
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import guttmanlab.core.annotation.Annotation;
@@ -49,9 +50,8 @@ public interface FragmentCluster<T extends Annotation, S extends Collection<T>> 
 	/**
 	 * Apply a function to this object, such as a filter that removes some fragments
 	 * @param function Function to apply
-	 * @return A new FragmentCluster that is the result of the function
 	 */
-	public default FragmentCluster<T, S> apply(Function<FragmentCluster<T, S>, FragmentCluster<T, S>> function) {return function.apply(this);}
+	public default void apply(Consumer<FragmentCluster<T, S>> function) {function.accept(this);}
 	
 	/**
 	 * Get a string representation of this fragment cluster, e.g. to write to an output file
