@@ -1,4 +1,4 @@
-package programs;
+package programs.barcode;
 
 import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.StringParser;

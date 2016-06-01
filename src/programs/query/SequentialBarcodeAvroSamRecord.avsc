@@ -1,0 +1,219 @@
+{
+	"namespace": "caltech",
+	"type": "record",
+	"name": "SamRecord",
+	"fields": [
+		{
+			"name": "qname",
+			"type": "string"
+		},
+		{
+			"name": "flag",
+			"type": "int"
+		},
+		{
+			"name": "rname",
+			"type": "string"
+		},
+		{
+			"name": "pos",
+			"type": "int"
+		},
+		{
+			"name": "mapq",
+			"type": "int"
+		},
+		{
+			"name": "cigar",
+			"type": "string"
+		},
+		{
+			"name": "rnext",
+			"type": "string"
+		},
+		{
+			"name": "pnext",
+			"type": "int"
+		},
+		{
+			"name": "tlen",
+			"type": "int"
+		},
+		{
+			"name": "seq",
+			"type": "string"
+		},
+		{
+			"name": "qual",
+			"type": "string"
+		},
+		{
+			"name": "tagAM",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagAS",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagBC",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagBQ",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagCC",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagCM",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagCO",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagCP",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagCQ",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagCS",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagCT",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagE2",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagFI",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagFS",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagLB",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagH0",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagH1",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagH2",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagHI",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagIH",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagMC",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagMD",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagMQ",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagNH",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagNM",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagOQ",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagOP",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagOC",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagPG",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagPQ",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagPT",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagPU",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagQT",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagQ2",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagR2",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagRT",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagSA",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagSM",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagTC",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagU2",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagUQ",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagXB",
+			"type": ["null", "string"]
+		}
+	]
+}

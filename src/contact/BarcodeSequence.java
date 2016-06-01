@@ -8,9 +8,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import programs.BarcodedBamWriter;
+import programs.barcode.BarcodedBamWriter;
 import readelement.Barcode;
-
 import net.sf.samtools.SAMRecord;
 
 /**

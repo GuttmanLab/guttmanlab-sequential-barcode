@@ -1,4 +1,4 @@
-package avro;
+package programs.query;
 
 import guttmanlab.core.util.CommandLineParser;
 import guttmanlab.core.util.StringParser;
@@ -25,12 +25,15 @@ import net.sf.samtools.util.CloseableIterator;
 import org.apache.log4j.Logger;
 
 import contact.BarcodeSequence;
-import programs.BarcodedBamWriter;
+import programs.barcode.BarcodedBamWriter;
+import guttmanlab.core.annotation.BEDFileRecord;
+import guttmanlab.core.annotation.BlockedAnnotation;
 import guttmanlab.core.annotation.Gene;
 import guttmanlab.core.annotation.SingleInterval;
 import guttmanlab.core.annotation.io.BEDFileIO;
 import guttmanlab.core.annotationcollection.AnnotationCollection;
 import guttmanlab.core.annotationcollection.FeatureCollection;
+import guttmanlab.core.coordinatespace.CoordinateSpace;
 import guttmanlab.core.serialize.AvroStringIndex;
 import guttmanlab.core.serialize.sam.AvroSamRecord;
 import guttmanlab.core.serialize.sam.AvroSamStringIndex;
@@ -105,7 +108,7 @@ public final class Query3DBarcode {
 	}
 	
 	/**
-	 * Print the records to std out
+	 * Print the records to std out and optionally to a bed file
 	 * @param records Records to print
 	 * @param outputBed Write in bed format to this location, or null if stdout
 	 * @throws IOException 
@@ -232,7 +235,8 @@ public final class Query3DBarcode {
 	 * @return The set of unique locations represented as strings
 	 * @throws IOException
 	 */
-	private static Set<String> getUniqueLocationsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
+	private static Set<String> getUniqueLocationsOfAllReadsWithBarcodesMatchingRegion(AvroSamStringIndex index, SAMFileReader samReader, 
+			String chr, int start, int end, boolean excludeSelfMatches) throws IOException {
 		Collection<String> barcodes = getBarcodesOfReadsInRegion(samReader, chr, start, end);
 		Collection<String> ids = null;
 		if(excludeSelfMatches) {
@@ -529,13 +533,13 @@ public final class Query3DBarcode {
 			throw new IllegalArgumentException("Choose one: query by barcode or query by region");
 		}
 		
-		AnnotationCollection<Gene> regionsToExclude = null;
+		AnnotationCollection<? extends BlockedAnnotation> regionsToExclude = null;
 		
 		if(excludeBed != null) {
 			if(sizeFile == null) {
 				throw new IllegalArgumentException("If excluding regions with -be, must provide chromosome size file with -c.");
 			}
-			regionsToExclude = BEDFileIO.loadFromFile(excludeBed, sizeFile);
+			regionsToExclude = BEDFileIO.loadFromFile(excludeBed, new CoordinateSpace(sizeFile));
 		}
 		
 		AvroSamStringIndex index = new AvroSamStringIndex(avroFile, schemaFile, indexedField, regionsToExclude);

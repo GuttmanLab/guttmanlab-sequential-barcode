@@ -1,4 +1,4 @@
-package programs;
+package programs.barcode;
 
 import fragment.BarcodedFragmentWithSwitches;
 import fragment.BasicBarcodedFragment;

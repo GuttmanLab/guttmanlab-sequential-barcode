@@ -16,7 +16,7 @@ import java.util.function.Predicate;
 import org.apache.log4j.Logger;
 
 import net.sf.samtools.util.CloseableIterator;
-import programs.BarcodedBamWriter;
+import programs.barcode.BarcodedBamWriter;
 import util.SAMConversionUtil;
 
 /**
