@@ -214,6 +214,10 @@
 		{
 			"name": "tagXB",
 			"type": ["null", "string"]
+		},
+		{
+			"name": "tagXT",
+			"type": ["null", "string"]
 		}
 	]
 }
