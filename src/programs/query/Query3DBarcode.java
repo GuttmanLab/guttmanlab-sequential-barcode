@@ -72,9 +72,6 @@ public final class Query3DBarcode {
 		SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
 		while(iter.hasNext()) {
 			SAMRecord record = iter.next();
-			if(!AvroSamRecord.mappingQualityIsOk(record)) {
-				continue;
-			}
 			String barcodeString = (String) record.getAttribute(BarcodedBamWriter.BARCODES_SAM_TAG);
 			if(numBarcodesOk(barcodeString)) {
 				rtrn.add(barcodeString);
@@ -97,9 +94,6 @@ public final class Query3DBarcode {
 		SAMRecordIterator iter = samReader.queryOverlapping(chr, start, end);
 		while(iter.hasNext()) {
 			SAMRecord record = iter.next();
-			if(!AvroSamRecord.mappingQualityIsOk(record)) {
-				continue;
-			}
 			String id = record.getReadName();
 			rtrn.add(id);
 		}
@@ -191,9 +185,6 @@ public final class Query3DBarcode {
 		Map<String, Set<String>> rtrn = new TreeMap<String, Set<String>>();
 		while(iter.hasNext()) {
 			SAMRecord record = iter.next();
-			if(!AvroSamRecord.mappingQualityIsOk(record)) {
-				continue;
-			}
 			String location = record.getReferenceName() + ":" + record.getAlignmentStart() + "-" + record.getAlignmentEnd();
 			Set<String> interactors = getUniqueLocationsOfInteractors(record, index, regionReadIDs);
 			if(rtrn.containsKey(location)) {
@@ -465,16 +456,10 @@ public final class Query3DBarcode {
 		p.addStringArg("-be", "Bed file of regions to exclude from matches (remove matches that overlap this annotation", false, null);
 		p.addStringArg("-cbi", "Print barcodes that are present on all of this comma-separated list of chromosomes", false, null);
 		p.addLongArg("-mr", "Max records to get for each barcode. If more than this amount, don't get any", false, AvroStringIndex.MAX_RECORDS_TO_GET);
-		p.addIntArg("-mmq", "Min mapping quality to apply to all sam records", false, AvroSamRecord.MIN_MAPPING_QUALITY);
 		p.addStringArg("-ob", "Output bed file, omit if printing to standard out", false, null);
 		p.addBooleanArg("-ncr", "For -pc option, normalize counts by RPKM of the query region", false, false);
 		p.addLongArg("-trc", "Total read count for RPKM calculation in -ncr option. If omitted, calculate on the fly.", false, -1);
 		p.parse(args);
-		AvroSamRecord.MIN_MAPPING_QUALITY = p.getIntArg("-mmq");
-		if(AvroSamRecord.MIN_MAPPING_QUALITY > 0) {
-			// If there is a min mapq, also make sure mapq is not 255 (means unavailable)
-			AvroSamRecord.MAX_MAPPING_QUALITY = 254;
-		}
 		AvroStringIndex.MAX_RECORDS_TO_GET = p.getLongArg("-mr");
 		String avroFile = p.getStringArg("-a");
 		String barcode = p.getStringArg("-b");

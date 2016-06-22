@@ -212,7 +212,43 @@
 			"type": ["null", "int"]
 		},
 		{
+			"name": "tagYT",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagXN",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagXM",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagXS",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagXO",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagXG",
+			"type": ["null", "int"]
+		},
+		{
+			"name": "tagXA",
+			"type": ["null", "string"]
+		},
+		{
 			"name": "tagXB",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagXR",
+			"type": ["null", "string"]
+		},
+		{
+			"name": "tagXF",
 			"type": ["null", "string"]
 		},
 		{
