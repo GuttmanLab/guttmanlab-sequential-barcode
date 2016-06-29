@@ -31,6 +31,7 @@ import guttmanlab.core.pipeline.util.BamUtils;
 import guttmanlab.core.serialize.sam.AvroSamRecord;
 import guttmanlab.core.serialize.sam.AvroSamStringIndex;
 import guttmanlab.core.util.CommandLineParser;
+import guttmanlab.core.util.StringParser;
 
 /**
  * Query an avro database for interactors
@@ -169,28 +170,81 @@ public class SequentialBarcodeQuery {
 	
 	/**
 	 * Check if a SAM record has the custom overlap tag indicating that it overlaps the feature
-	 * @param feature The feature
+	 * @param featureName The feature name
 	 * @return True if the record has the tag including the feature name
 	 */
-	private static boolean hasOverlapTag(SAMRecord record, BlockedAnnotation feature) {
+	private static boolean hasOverlapTag(SAMRecord record, String featureName) {
 		String tag = record.getStringAttribute(CustomSamTag.TRANSCRIPT_OVERLAPPERS);
 		if(tag == null) return false;
 		if(tag.equals("")) return false;
-		return CustomSamTag.transcriptIDs(tag).contains(feature.getName());
+		return CustomSamTag.transcriptIDs(tag).contains(featureName);
 	}
 	
+	/**
+	 * A genomic interval with ref, start, end
+	 * @author prussell
+	 *
+	 */
+	private static class Interval {
+		
+		public String ref;
+		public int start;
+		public int end;
+		
+		/**
+		 * @param ucsc Interval in UCSC format chr:start-end
+		 */
+		public Interval(String ucsc) {
+			StringParser s = new StringParser();
+			s.parse(ucsc, ":");
+			if(s.getFieldCount() != 2) throw new IllegalArgumentException("Invalid UCSC format: " + ucsc);
+			ref = s.asString(0);
+			String coord = s.asString(1);
+			s.parse(coord, "-");
+			if(s.getFieldCount() != 2) throw new IllegalArgumentException("Invalid UCSC format: " + ucsc);
+			start = s.asInt(0);
+			end = s.asInt(1);
+		}
+		
+	}
+	
+	private boolean isFeatureName(String s) {
+		if(featuresByName.containsKey(s)) return true;
+		else {
+			try {
+				Interval in = new Interval(s);
+			} catch(IllegalArgumentException e) {
+				throw new IllegalArgumentException("Not a valid feature ID or UCSC-formatted interval: " + s);
+			}
+			return false;
+		}
+	}
 	
 	/**
-	 * Get reads overlapping the feature
-	 * @param feature Feature
-	 * @return Reads that overlap the feature
+	 * Get reads overlapping the region
+	 * @param region Feature ID or interval in UCSC format. If a feature, 
+	 * require reads to report overlap with this feature in their XT tag
+	 * @return Reads that overlap the region
 	 */
-	private Collection<SAMRecord> getOverlappers(BlockedAnnotation feature) {
+	private Collection<SAMRecord> getOverlappers(String region) {
 		Collection<SAMRecord> rtrn = new ArrayList<SAMRecord>();
-		SAMRecordIterator iter = samReader.query(feature.getReferenceName(), feature.getReferenceStartPosition(), feature.getReferenceEndPosition(), false);
-		iter.forEachRemaining(record -> {if(hasOverlapTag(record, feature) && Filters.passesAll(record, readFilters)) rtrn.add(record);});
-		iter.close();
-		return rtrn;
+		
+		if(isFeatureName(region)) {
+			BlockedAnnotation feature = featuresByName.get(region);
+			SAMRecordIterator iter = samReader.query(feature.getReferenceName(), feature.getReferenceStartPosition(), feature.getReferenceEndPosition(), false);
+			iter.forEachRemaining(record -> {if(hasOverlapTag(record, region) && Filters.passesAll(record, readFilters)) rtrn.add(record);});
+			iter.close();
+			return rtrn;
+		}
+		
+		else {
+			Interval interval = new Interval(region);
+			SAMRecordIterator iter = samReader.query(interval.ref, interval.start, interval.end, false);
+			iter.forEachRemaining(record -> {if(Filters.passesAll(record, readFilters)) rtrn.add(record);});
+			iter.close();
+			return rtrn;
+		}
+		
 	}
 	
 	/**
@@ -223,26 +277,27 @@ public class SequentialBarcodeQuery {
 	}
 	
 	/**
-	 * Get records that share a barcode with a record overlapping the given feature
-	 * @param feature Query feature
-	 * @return Stream of records that share a barcode sequence with a record overlapping the given feature
+	 * Get records that share a barcode with a record overlapping the given region
+	 * @param region Query feature ID or interval in UCSC format
+	 * @return Stream of records that share a barcode sequence with a record overlapping the given region
 	 */
-	public Stream<AvroSamRecord> getInteractingRecords(BlockedAnnotation feature) {
-		logger.info("Getting interacting records for feature " + feature.getName());
-		return getRecordsWithBarcodeSequenceIn(getAllBarcodes(getOverlappers(feature)));
+	public Stream<AvroSamRecord> getInteractingRecords(String region) {
+		logger.info("Getting interacting records for region " + region);
+		return getRecordsWithBarcodeSequenceIn(getAllBarcodes(getOverlappers(region)));
 	}
 	
 	/**
-	 * Get the names of features that share a barcode sequence with a record overlapping the given feature
-	 * @param feature Query feature
-	 * @return Names of features that share a barcode sequence with a record overlapping the given feature
+	 * Get the names of features that share a barcode sequence with a record overlapping the given region
+	 * @param region Query feature ID or interval in UCSC format
+	 * @return Names of features that share a barcode sequence with a record overlapping the given region
 	 */
-	public Set<String> getInteractingFeatureNames(BlockedAnnotation feature) {
-		logger.info("Getting interacting feature names for feature " + feature.getName());
-		return getTranscriptOverlapperNames(getInteractingRecords(feature));
+	public Set<String> getInteractingFeatureNames(String region) {
+		logger.info("Getting interacting feature names for feature " + region);
+		return getTranscriptOverlapperNames(getInteractingRecords(region));
 				
 	}
 	
+	@SuppressWarnings("unused")
 	private static void print(Collection<String> strings) {
 		System.out.println(strings.stream().collect(Collectors.joining("\n")));
 	}
@@ -267,7 +322,7 @@ public class SequentialBarcodeQuery {
 		p.addStringArg("-fb", "Bed file of features that match the XT tag in bam file", true);
 		p.addStringArg("-g", "Name of genome e.g. mm10", true);
 		p.addStringArg("-bb", "Coordinate-sorted bam file with custom tags: XA (if using), XB (required), XT (required)", true);
-		p.addStringArg("-f", "Name of feature to get interactors", true);
+		p.addStringArg("-f", "Query region (feature ID or interval in UCSC format)", true);
 		p.addStringArg("-op", "Output prefix", true);
 		p.parse(args);
 		File avroFile = new File(p.getStringArg("-ad"));
@@ -275,7 +330,7 @@ public class SequentialBarcodeQuery {
 		File featureBed = new File(p.getStringArg("-fb"));
 		String genome = p.getStringArg("-g");
 		File bamFile = new File(p.getStringArg("-bb"));
-		String queryFeatureName = p.getStringArg("-f");
+		String queryRegion = p.getStringArg("-f");
 		String outPrefix = p.getStringArg("-op");
 		
 		// Create file names
@@ -292,12 +347,11 @@ public class SequentialBarcodeQuery {
 		builder.setReadFilters(Filters.defaultSamFilters());
 		builder.setSamReader(bamFile);
 		SequentialBarcodeQuery query = builder.get();
-		BlockedAnnotation queryFeature = query.featuresByName.get(queryFeatureName);
 
 		// Write names of interacting features
 		System.out.println("\n");
 		logger.info("Writing interacting transcripts to " + table);
-		write(query.getInteractingFeatureNames(queryFeature), new File(table));
+		write(query.getInteractingFeatureNames(queryRegion), new File(table));
 			
 		// Write SAM file of interactors
 		System.out.println("");
@@ -305,7 +359,7 @@ public class SequentialBarcodeQuery {
 		SAMFileHeader header = new SAMFileHeader();
 		header.setTextHeader(query.samReader.getFileHeader().getTextHeader().replaceAll("SO:coordinate", "SO:unsorted"));
 		header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-		AvroSamRecord.writeToSAM(query.getInteractingRecords(queryFeature), header, new File(sam));
+		AvroSamRecord.writeToSAM(query.getInteractingRecords(queryRegion), header, new File(sam));
 		System.out.println("");
 		BamUtils.samToBam(new File(sam), new File(bam));
 		System.out.println("");
