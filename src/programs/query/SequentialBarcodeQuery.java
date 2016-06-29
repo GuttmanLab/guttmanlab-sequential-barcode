@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
+import util.BinCounts;
 import util.CustomSamTag;
 import util.Filters;
 import net.sf.samtools.SAMFileHeader;
@@ -187,9 +188,9 @@ public class SequentialBarcodeQuery {
 	 */
 	private static class Interval {
 		
-		public String ref;
-		public int start;
-		public int end;
+		private String ref;
+		private int start;
+		private int end;
 		
 		/**
 		 * @param ucsc Interval in UCSC format chr:start-end
@@ -212,6 +213,7 @@ public class SequentialBarcodeQuery {
 		if(featuresByName.containsKey(s)) return true;
 		else {
 			try {
+				@SuppressWarnings("unused")
 				Interval in = new Interval(s);
 			} catch(IllegalArgumentException e) {
 				throw new IllegalArgumentException("Not a valid feature ID or UCSC-formatted interval: " + s);
@@ -324,6 +326,7 @@ public class SequentialBarcodeQuery {
 		p.addStringArg("-bb", "Coordinate-sorted bam file with custom tags: XA (if using), XB (required), XT (required)", true);
 		p.addStringArg("-f", "Query region (feature ID or interval in UCSC format)", true);
 		p.addStringArg("-op", "Output prefix", true);
+		p.addIntArg("-bs", "Bin size for count table", false, 1000000);
 		p.parse(args);
 		File avroFile = new File(p.getStringArg("-ad"));
 		File schemaFile = new File(p.getStringArg("-as"));
@@ -332,6 +335,7 @@ public class SequentialBarcodeQuery {
 		File bamFile = new File(p.getStringArg("-bb"));
 		String queryRegion = p.getStringArg("-f");
 		String outPrefix = p.getStringArg("-op");
+		int binSize = p.getIntArg("-bs");
 		
 		// Create file names
 		String sam = outPrefix + ".interactions.sam";
@@ -366,6 +370,12 @@ public class SequentialBarcodeQuery {
 		BamUtils.sortBam(new File(bam), new File(sortedBam));
 		System.out.println("");
 		BamUtils.indexBam(new File(sortedBam));
+		
+		// Write table of bin counts
+		System.out.println("");
+		String binFile = outPrefix + ".binCounts.txt";
+		logger.info("Writing bin counts to " + binFile);
+		BinCounts.writeCounts(new File(sortedBam), CoordinateSpace.forGenome(genome), binSize, new File(binFile));
 		
 		logger.info("");
 		logger.info("All done.");
