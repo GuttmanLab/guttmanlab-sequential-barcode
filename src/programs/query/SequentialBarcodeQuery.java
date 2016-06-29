@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
@@ -332,7 +333,7 @@ public class SequentialBarcodeQuery {
 		File schemaFile = new File(p.getStringArg("-as"));
 		File featureBed = new File(p.getStringArg("-fb"));
 		String genome = p.getStringArg("-g");
-		File bamFile = new File(p.getStringArg("-bb"));
+		File barcodedBam = new File(p.getStringArg("-bb"));
 		String queryRegion = p.getStringArg("-f");
 		String outPrefix = p.getStringArg("-op");
 		int binSize = p.getIntArg("-bs");
@@ -349,7 +350,7 @@ public class SequentialBarcodeQuery {
 		builder.setAvroIndex(avroFile, schemaFile);
 		builder.setFeatures(featureBed, genome);
 		builder.setReadFilters(Filters.defaultSamFilters());
-		builder.setSamReader(bamFile);
+		builder.setSamReader(barcodedBam);
 		SequentialBarcodeQuery query = builder.get();
 
 		// Write names of interacting features
@@ -375,7 +376,7 @@ public class SequentialBarcodeQuery {
 		System.out.println("");
 		String binFile = outPrefix + ".binCounts.txt";
 		logger.info("Writing bin counts to " + binFile);
-		BinCounts.writeCounts(new File(sortedBam), CoordinateSpace.forGenome(genome), binSize, new File(binFile));
+		BinCounts.writeCounts(new File(sortedBam), Optional.of(barcodedBam), CoordinateSpace.forGenome(genome), binSize, new File(binFile));
 		
 		logger.info("");
 		logger.info("All done.");

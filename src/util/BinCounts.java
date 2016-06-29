@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
@@ -68,42 +69,71 @@ public class BinCounts {
 	
 	private static Logger logger = Logger.getLogger(BinCounts.class.getName());
 	private Map<Bin, Integer> counts;
+	private Map<Bin, Double> normalizedCounts;
 	
 	/**
 	 * Create the bin counts
 	 * @param bam Bam file
+	 * @param normalize Other bam file to normalize by (optional)
 	 * @param genome Coordinate space
 	 * @param binSize Bin size
 	 */
-	public BinCounts(File bam, CoordinateSpace genome, int binSize) {
-		makeCounts(bam, genome, binSize);
+	public BinCounts(File bam, Optional<File> normalize, CoordinateSpace genome, int binSize) {
+		makeCounts(bam, normalize, genome, binSize);
+	}
+	
+	/**
+	 * Get number of mappings in a bam file
+	 * @param bin Bin to count mappings over
+	 * @param bamFile Bam file
+	 * @return Number of mappings
+	 */
+	private static int getCount(Bin bin, File bamFile) {
+		SamReader reader = SamReaderFactory.makeDefault().open(bamFile);
+		SAMRecordIterator iter = reader.query(bin.ref, bin.start, bin.end, false);
+		int count = 0;
+		while(iter.hasNext()) {
+			@SuppressWarnings("unused")
+			SAMRecord r = iter.next();
+			count++;
+		}
+		iter.close();
+		try {
+			reader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
+		return count;
 	}
 	
 	/**
 	 * Make the counts
 	 * @param bam Bam file
+	 * @param normalize Other bam file to normalize by (optional)
 	 * @param genome Coordinate space
 	 * @param binSize Bin size
 	 */
-	private void makeCounts(File bam, CoordinateSpace genome, int binSize) {
+	private void makeCounts(File bam, Optional<File> normalize, CoordinateSpace genome, int binSize) {
 		logger.info("Making counts for file " + bam.getAbsolutePath() + " with bin size " + binSize + "...");
-		SamReader reader = SamReaderFactory.makeDefault().open(bam);
 		counts = new TreeMap<Bin, Integer>();
+		normalizedCounts = new TreeMap<Bin, Double>();
 		for(String ref : genome.getRefSeqLengths().keySet()) {
 			logger.info(ref);
 			int start = 0;
 			while(start <= genome.getRefSeqLengths().get(ref).intValue() - binSize) {
 				int end = start + binSize;
-				SAMRecordIterator iter = reader.query(ref, start, end, false);
-				int count = 0;
-				while(iter.hasNext()) {
-					@SuppressWarnings("unused")
-					SAMRecord r = iter.next();
-					count++;
-				}
-				iter.close();
 				Bin bin = new Bin(ref, start, end);
+				int count = getCount(bin, bam);
 				counts.put(bin, Integer.valueOf(count));
+				if(normalize.isPresent()) {
+					if(count > 0) {
+						int c = getCount(bin, normalize.get());
+						double nor = (double) count / (double) c;
+						normalizedCounts.put(bin, Double.valueOf(nor));
+					}
+					else normalizedCounts.put(bin, Double.valueOf(0));
+				}
 				start += binSize;
 			}
 		}
@@ -117,7 +147,11 @@ public class BinCounts {
 		try {
 			FileWriter w = new FileWriter(out);
 			for(Bin bin : counts.keySet()) {
-				w.write(bin.toString() + "\t" + counts.get(bin) + "\n");
+				String line = bin.toString() + "\t" + counts.get(bin);
+				if(normalizedCounts.containsKey(bin)) {
+					line += "\t" + normalizedCounts.get(bin);
+				}
+				w.write(line + "\n");
 			}
 			w.close();
 		} catch(IOException e) {
@@ -129,12 +163,13 @@ public class BinCounts {
 	/**
 	 * Write bin counts to a table
 	 * @param bamFile Bam file
+	 * @param normalize Other bam file to normalize by (optional)
 	 * @param genome Coordinate space
 	 * @param binSize Bin size
 	 * @param output Output file
 	 */
-	public static void writeCounts(File bamFile, CoordinateSpace genome, int binSize, File output) {
-		BinCounts bc = new BinCounts(bamFile, genome, binSize);
+	public static void writeCounts(File bamFile, Optional<File> normalize, CoordinateSpace genome, int binSize, File output) {
+		BinCounts bc = new BinCounts(bamFile, normalize, genome, binSize);
 		bc.writeTable(output);
 	}
 	
