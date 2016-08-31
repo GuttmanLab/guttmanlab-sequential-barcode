@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -44,12 +45,13 @@ public class SequentialBarcodeQuery {
 	
 	public static final String BARCODE_FIELD_NAME = "tagXB";
 	public static final String TRANSCRIPT_OVERLAPPER_FIELD_NAME = "tagXT";
+	public static final String MOLECULE_TYPE_FIELD_NAME = "tagXX";
 	
 	private SAMFileReader samReader; // Reader for bam file with barcode and gene overlap information
 	private AvroSamStringIndex avroIndex;
 	private Map<String, BlockedAnnotation> featuresByName;
-	private Collection<Predicate<SAMRecord>> readFilters;
-	private Collection<Predicate<AvroSamRecord>> avroFilters;
+	private Collection<Predicate<AvroSamRecord>> avroFilters; // Filters for records in the avro database
+	private Collection<Predicate<SAMRecord>> samFilters; // Filters for records in the bam file
 	
 	private static final Logger logger = Logger.getLogger(SequentialBarcodeQuery.class.getName());
 	
@@ -100,14 +102,14 @@ public class SequentialBarcodeQuery {
 		public void setFeatures(File featureBed, String genome) {query.featuresByName = featuresByName(featureBed, genome);}
 		
 		/**
-		 * @param readFilters Read filters for barcoded bam file
-		 */
-		public void setReadFilters(Collection<Predicate<SAMRecord>> readFilters) {query.readFilters = readFilters;}
-		
-		/**
 		 * @param avroFilters Filters for avro records from database
 		 */
 		public void setAvroFilters(Collection<Predicate<AvroSamRecord>> avroFilters) {query.avroFilters = avroFilters;}
+		
+		/**
+		 * @param samFilters Filters for SAM records from BAM file
+		 */
+		public void setSamFilters(Collection<Predicate<SAMRecord>> samFilters) {query.samFilters = samFilters;}
 		
 		/**
 		 * Get the constructed query environment object
@@ -117,8 +119,8 @@ public class SequentialBarcodeQuery {
 			if(query.samReader == null) throw new IllegalStateException("Provide SAM reader");
 			if(query.avroIndex == null) throw new IllegalStateException("Provide avro index");
 			if(query.featuresByName == null) throw new IllegalStateException("Provide features");
-			if(query.readFilters == null) throw new IllegalStateException("Provide read filters");
 			if(query.avroFilters == null) throw new IllegalStateException("Provide avro record filters");
+			if(query.samFilters == null) throw new IllegalStateException("Provide SAM record filters");
 			return query;
 		}
 		
@@ -224,7 +226,21 @@ public class SequentialBarcodeQuery {
 	}
 	
 	/**
+	 * Add a filter to an existing set of filters immutably
+	 * @param filters Existing filters
+	 * @param newFilter Filter to add
+	 * @return New set of filters with the additional filter added
+	 */
+	private static Collection<Predicate<SAMRecord>> add(Collection<Predicate<SAMRecord>> filters, Predicate<SAMRecord> newFilter) {
+		Collection<Predicate<SAMRecord>> rtrn = new ArrayList<Predicate<SAMRecord>>(filters);
+		rtrn.add(newFilter);
+		return rtrn;
+	}
+	
+	/**
 	 * Get reads overlapping the region
+	 * This method detects whether the passed region is a DNA region or a transcript
+	 * Filters reads for DNA or RNA tag as appropriate for the input region
 	 * @param region Feature ID or interval in UCSC format. If a feature, 
 	 * require reads to report overlap with this feature in their XT tag
 	 * @return Reads that overlap the region
@@ -235,7 +251,7 @@ public class SequentialBarcodeQuery {
 		if(isFeatureName(region)) {
 			BlockedAnnotation feature = featuresByName.get(region);
 			SAMRecordIterator iter = samReader.query(feature.getReferenceName(), feature.getReferenceStartPosition(), feature.getReferenceEndPosition(), false);
-			iter.forEachRemaining(record -> {if(hasOverlapTag(record, region) && Filters.passesAll(record, readFilters)) rtrn.add(record);});
+			iter.forEachRemaining(record -> {if(hasOverlapTag(record, region) && Filters.passesAll(record, add(samFilters, Filters.readIsRNA))) rtrn.add(record);});
 			iter.close();
 			return rtrn;
 		}
@@ -243,7 +259,7 @@ public class SequentialBarcodeQuery {
 		else {
 			Interval interval = new Interval(region);
 			SAMRecordIterator iter = samReader.query(interval.ref, interval.start, interval.end, false);
-			iter.forEachRemaining(record -> {if(Filters.passesAll(record, readFilters)) rtrn.add(record);});
+			iter.forEachRemaining(record -> {if(Filters.passesAll(record, add(samFilters, Filters.readIsDNA))) rtrn.add(record);});
 			iter.close();
 			return rtrn;
 		}
@@ -267,11 +283,13 @@ public class SequentialBarcodeQuery {
 	
 	/**
 	 * Get the names of transcripts listed in the transcript overlapper tag of records in the stream
+	 * Only include records marked as RNA
 	 * @param recordStream Stream of AvroSamRecords
 	 * @return Set of transcript IDs listed in the transcript overlapper tag of any of the records in the stream
 	 */
 	private static Set<String> getTranscriptOverlapperNames(Stream<AvroSamRecord> recordStream) {
 		return recordStream
+				.filter(Filters.recordIsRNA)
 				.map(record -> record.getStringAttribute(TRANSCRIPT_OVERLAPPER_FIELD_NAME))
 				.filter(opt -> opt.isPresent())
 				.map(opt -> opt.get())
@@ -316,9 +334,7 @@ public class SequentialBarcodeQuery {
 		}
 	}
 	
-	
-	public static void main(String[] args) {
-		
+	private static CommandLineParser cmmdLineParser(String[] args) {
 		CommandLineParser p = new CommandLineParser();
 		p.addStringArg("-ad", "Avro database file", true);
 		p.addStringArg("-as", "Avro schema file", true);
@@ -329,6 +345,33 @@ public class SequentialBarcodeQuery {
 		p.addStringArg("-op", "Output prefix", true);
 		p.addIntArg("-bs", "Bin size for count table", false, 1000000);
 		p.parse(args);
+		return p;
+	}
+	
+	/**
+	 * Write AvroSamRecords to SAM and BAM files; sort and index the BAM
+	 * @param records Records
+	 * @param sam SAM output file
+	 * @param bam BAM output file
+	 * @param sortedBam Sorted BAM output file
+	 * @param addlFilters Additional filters to apply to records before writing
+	 */
+	private void write(Stream<AvroSamRecord> records, String sam, String bam, String sortedBam, Collection<Predicate<AvroSamRecord>> addlFilters) {
+		SAMFileHeader header = new SAMFileHeader();
+		header.setTextHeader(samReader.getFileHeader().getTextHeader().replaceAll("SO:coordinate", "SO:unsorted"));
+		header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
+		AvroSamRecord.writeToSAM(records.filter(record -> Filters.passesAll(record, addlFilters)), header, new File(sam));
+		System.out.println("");
+		BamUtils.samToBam(new File(sam), new File(bam));
+		System.out.println("");
+		BamUtils.sortBam(new File(bam), new File(sortedBam));
+		System.out.println("");
+		BamUtils.indexBam(new File(sortedBam));
+	}
+	
+	public static void main(String[] args) {
+		
+		CommandLineParser p = cmmdLineParser(args);
 		File avroFile = new File(p.getStringArg("-ad"));
 		File schemaFile = new File(p.getStringArg("-as"));
 		File featureBed = new File(p.getStringArg("-fb"));
@@ -339,17 +382,23 @@ public class SequentialBarcodeQuery {
 		int binSize = p.getIntArg("-bs");
 		
 		// Create file names
-		String sam = outPrefix + ".interactions.sam";
 		String table = outPrefix + ".interactions.features.txt";
+		String sam = outPrefix + ".interactions.sam";
 		String bam = sam.replaceAll(".sam", ".bam");
 		String sortedBam = bam.replaceAll(".bam", ".sorted.bam");
+		String samR = outPrefix + ".interactions.RNA.sam";
+		String bamR = samR.replaceAll(".sam", ".bam");
+		String sortedBamR = bamR.replaceAll(".bam", ".sorted.bam");
+		String samD = outPrefix + ".interactions.DNA.sam";
+		String bamD = samD.replaceAll(".sam", ".bam");
+		String sortedBamD = bamD.replaceAll(".bam", ".sorted.bam");
 
 		// Build the query object
 		QueryEnvironmentBuilder builder = new QueryEnvironmentBuilder();
 		builder.setAvroFilters(Filters.defaultAvroFilters());
+		builder.setSamFilters(Filters.defaultSamFilters());
 		builder.setAvroIndex(avroFile, schemaFile);
 		builder.setFeatures(featureBed, genome);
-		builder.setReadFilters(Filters.defaultSamFilters());
 		builder.setSamReader(barcodedBam);
 		SequentialBarcodeQuery query = builder.get();
 
@@ -358,19 +407,16 @@ public class SequentialBarcodeQuery {
 		logger.info("Writing interacting transcripts to " + table);
 		write(query.getInteractingFeatureNames(queryRegion), new File(table));
 			
-		// Write SAM file of interactors
+		// Write SAM and BAM files of interactors
 		System.out.println("");
 		logger.info("Writing interacting records to " + sam);
-		SAMFileHeader header = new SAMFileHeader();
-		header.setTextHeader(query.samReader.getFileHeader().getTextHeader().replaceAll("SO:coordinate", "SO:unsorted"));
-		header.setSortOrder(SAMFileHeader.SortOrder.unsorted);
-		AvroSamRecord.writeToSAM(query.getInteractingRecords(queryRegion), header, new File(sam));
+		query.write(query.getInteractingRecords(queryRegion), sam, bam, sortedBam, Collections.emptySet());
 		System.out.println("");
-		BamUtils.samToBam(new File(sam), new File(bam));
+		logger.info("Writing interacting records (RNA) to " + samR);
+		query.write(query.getInteractingRecords(queryRegion), samR, bamR, sortedBamR, Collections.singleton(Filters.recordIsRNA));
 		System.out.println("");
-		BamUtils.sortBam(new File(bam), new File(sortedBam));
-		System.out.println("");
-		BamUtils.indexBam(new File(sortedBam));
+		logger.info("Writing interacting records (DNA) to " + samD);
+		query.write(query.getInteractingRecords(queryRegion), samD, bamD, sortedBamD, Collections.singleton(Filters.recordIsDNA));
 		
 		// Write table of bin counts
 		System.out.println("");
