@@ -33,9 +33,9 @@ public class BamTranscriptOverlapTag {
 	 * @param featureBed Bed file of features
 	 * @param genome Name of assembly e.g. mm10
 	 */
-	private BamTranscriptOverlapTag(String featureBed, String genome) {
+	private BamTranscriptOverlapTag(String featureBed, CoordinateSpace genome) {
 		try {
-			transcripts = (FeatureCollection<? extends BlockedAnnotation>) BEDFileIO.loadFromFile(featureBed, CoordinateSpace.forGenome(genome));
+			transcripts = (FeatureCollection<? extends BlockedAnnotation>) BEDFileIO.loadFromFile(featureBed, genome);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);
@@ -105,9 +105,21 @@ public class BamTranscriptOverlapTag {
 		p.addStringArg("-i", "Input bam file", true);
 		p.addStringArg("-o", "Output bam file", true);
 		p.addStringArg("-f", "Feature bed file", true);
-		p.addStringArg("-c", "Genome name e.g. mm10", true);
+		p.addStringArg("-g", "Genome name e.g. mm10. Provide either this or coordinate space file.", false);
+		p.addStringArg("-cs", "Coordinate space file. Provide either this or genome name.", false);
 		p.parse(args);
-		BamTranscriptOverlapTag b = new BamTranscriptOverlapTag(p.getStringArg("-f"), p.getStringArg("-c"));
+		String genome = p.getStringArg("-g");
+		String chrFile = p.getStringArg("-cs");
+		CoordinateSpace cs = null;
+		if(genome != null) {
+			if(chrFile != null) throw new IllegalArgumentException("Provide genome name or coordinate space file, not both");
+			cs = CoordinateSpace.forGenome(genome);
+		} else if (chrFile != null) {
+			cs = new CoordinateSpace(chrFile);
+		} else {
+			throw new IllegalArgumentException("Provide genome name or coordinate space file");
+		}
+		BamTranscriptOverlapTag b = new BamTranscriptOverlapTag(p.getStringArg("-f"), cs);
 		b.addTag(new File(p.getStringArg("-i")), new File(p.getStringArg("-o")));
 		
 	}
